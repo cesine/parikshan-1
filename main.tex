@@ -54,8 +54,11 @@
 %%%
 \thispagestyle{plain}
 \strut \vfill
-\centerline{\LARGE 
-Dedication text
+{
+\centering\LARGE{ 
+To my parents, and my sister for their unwavering support, 
+and to my wife for her constant encouragement and the final push.
+}
 }
 \vfill \strut
 \cleardoublepage
@@ -88,15 +91,13 @@ Dedication text
 }
 \pagestyle{plain}
 
-\chapter{Introduction}
-\label{section:intro}
-\input{intro}
+\input{intro/intro}
 
-\part{Title for the first part}
+\part{\parikshan: Sandboxed, Online Debugging of Production Bugs with No Overhead}
 \label{sec:corpus}
-\input{sample-part}
+\input{parikshan/sandbox}
 
-\part{Title for the second part}
+\part{\iprobe: Live debugging friendly applications}
 \label{sec:corpus}
 \input{sample-part}
 

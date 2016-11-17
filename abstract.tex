@@ -34,8 +34,8 @@ This \debugcontainer provides a sandbox environment, for safe execution of test-
 %Our sandboxes have independent network name-spaces, and resource management for the processes executing the test/debug cases.
 As a part of this framework, we have designed customized-network proxy agents, which replicate inputs from clients to both the production and test-container, as well safely discard all outputs from the test-container.
 Together the network proxy, and the debug container ensure both compute and network isolation of the debugging environment, while at the same time allowing the user to debug the application.
-As a part of this thesis proposal, we have also looked into \textit{light-weight instrumentation techniques}, which can complement our \livedebugging environment.
-Additionally, we propose a \textit{statistical debugging mechanism} that can be applied in the debug-container to gain insight and localize the error in real-time. 
+As a part of this thesis, we have also looked into \textit{light-weight instrumentation techniques}, which can complement our \livedebugging environment.
+Additionally, we will demonstrate a \textit{statistical debugging mechanism} that can be applied in the debug-container to gain insight and localize the error in real-time. 
 We believe that this piece of work provides the first of it's kind practical real-time debugging of large multi-tier and cloud applications, without requiring any application down-time, and minimal performance impact.
 
 %Further, we look towards analysis for guided debugging in a live debugging environment as created in \parikshan.
@@ -52,9 +52,9 @@ We believe that this piece of work provides the first of it's kind practical rea
 %In this context, we discuss \iprobe, a novel dynamic instrumentation technique, which allows for patching and instrumentation at runtime.
 %\iprobe has a significant performance advantage on existing techniques, which use interrupt based mechanisms to insert trampolines for instrumentation in the kernel code.
 
-The principal hypothesis of this proposal is that, for large-scale service-oriented-applications(SOA) it is possible to provide a \livedebugging environment, which allows the developer to debug the target application without impacting the performance of the production system.
+The principal hypothesis of this dissertation is that, for large-scale service-oriented-applications(SOA) it is possible to provide a \livedebugging environment, which allows the developer to debug the target application without impacting the performance of the production system.
 Primarily, we will present an approach for \livedebugging of production systems.
-This involves discussion of \parikshan framework which forms the backbone of this proposal.
+This involves discussion of \parikshan framework which forms the backbone of this dissertation.
 We will discuss how to clone the containers, split and isolate network traffic, and aggregate it for communication to both upstream and downstream tiers, in a multi-tier SOA infrastructure.
 
 Secondly, we will present \iprobe a new type of instrumentation framework, which uses a combination of static and dynamic instrumentation, to have an order-of-magnitude better performance than existing instrumentation techniques. 
@@ -66,7 +66,7 @@ This will be split in two different kinds of techniques: Firstly, we will provid
 Secondly: we will provide a reactive mechanism to modify instrumentation overhead. 
 We will use the buffer size and usage as a trigger and present novel sampling techniques together with statistical testing mechanism to effectively isolate bugs.
 
-Lastly, while \parikshan is an platform to quickly attack bugs, in itself it's a debugging platform. For the last section of our proposal we look at how various existing debugging techniques can be adapted to \livedebugging, making it more effective. We compare a variety of techniques and compare how they traditionally work and how they can be more effective with \parikshan. As a part of this we will propose \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container.
+Lastly, while \parikshan is an platform to quickly attack bugs, in itself it's a debugging platform. For the last section of our dissertation we look at how various existing debugging techniques can be adapted to \livedebugging, making it more effective. We compare a variety of techniques and compare how they traditionally work and how they can be more effective with \parikshan. As a part of this we will demonstrate \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container.
 
 %Third, we will describe a set of \emph{guidelines} that can be followed by developers to assist in the formulation and development of \livedebugging friendly applications.
 %These will add flags and triggers which can be used with the approaches above for a clean and assisted separation of the debugging container when cloned from the \productioncontainer.
