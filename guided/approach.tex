@@ -1,0 +1,49 @@
+\subsection{Approach}
+\label{sec:guided-approach}
+
+In Figure~\ref{fig:offline-debugging}, we show the traditional mechanism of testing or validating patch/fixes in an application. 
+In offline environments, developers apply patches and run the relevant inputs to verify that the patch works correctly. 
+This is an interactive process, which allows one to verify the result and corrections before applying it to the production system.
+Several cycles of this process is required, which may be followed by staged testing to ensure correctness before applying the update to the production.
+
+
+\activedebugging (see figure~\ref{fig:active-debugging}) allows debuggers to apply fixes, modify binaries and apply hotpatches to applications. 
+The main idea is to do a fork/exec, or parallel execution of an unmodified application.
+The unmodified binary continues execution without any change in the input.
+The debug-container should ideally mimic the behavior of the production, so as to allow for forward progress in the application as the debug-container will receive the same input as production.
+The target process will be forked at the call of the testing function, the forked process can then be tested, the input can be transformed, or alternatively the same input can be used to validate any test-condition. 
+At the end of the execution the test-process output can be checked and killed. 
+The advantage of this technique is that any tests/fixes can be validated in the run-time environment itself.
+This reduces the time to fix and resolve the error. 
+The tests and fixes should have a local impact and should not be allowed to continue 
+
+For Java programs, since there is no “fork”, we can utilize a JNI call to a simple native C program which executes the fork. 
+Performing a fork creates a copy-on-write version of the original process, so that the process running the unit test has its own writable memory area and cannot affect the in-process memory of the original. 
+Once the test is invoked, the application can continue its normal execution, while the unit test runs in the other process. 
+Note that the application and the unit test run in parallel in two processes; the test does not block normal operation of the application after the fork is performed.
+
+The fork-exec design of test-isolation ensures that the ``in-process'' memory of the process execution is effectively isolated. 
+The production/debug containers are completely isolated hence the test does not impact the production in any way. 
+To ensure further isolation, we propose to allow the test fork to only call wrapper libraries which allow write operations in a cloned cow filesystem.
+This can be done using a COW supported filesystem with cloning functionality which are supported in ZFS and BTRFS.
+For instance BTRFS provides a clone operation that atomically creates a copy-on-write snapshot of a file. By cloning the file system does not create a new link pointing to an existing inode; instead it creates a new inode that initially shares the same disk blocks with the original file. As a result cloning works only within the boundaries of the same BTRFS file system, and modifications to any of the cloned files are not visible to the original file and vice versa. 
+This will ofcourse mean that we will constrain the debug/production environment to the File System of our choice.
+We further propose that all test-cases in the debug-container share the test file system.
+
+\begin{figure*}[h]
+	\centering
+	\begin{subfigure}[h]{0.25\textwidth}
+		\centering
+		\includegraphics[width=0.95\textwidth]{guided/figs/offline.png}
+		\caption{Offline Debugging}
+		\label{fig:offline-debugging}
+	\end{subfigure}%
+	~ 	
+	\begin{subfigure}[h]{0.75\textwidth}
+		\centering
+		\includegraphics[width=0.95\textwidth]{guided/figs/active-debugging.png}
+		\caption{Active Debugging}
+		\label{fig:active-debugging}
+	\end{subfigure}
+	\caption{Debugging Strategies for Offline and Active Debugging}
+\end{figure*}

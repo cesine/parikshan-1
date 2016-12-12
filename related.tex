@@ -1,0 +1,103 @@
+\chapter{Related Work}
+
+\section{Related Work for Parikshan}
+
+
+\subsection{Record and Replay Systems:}  
+Record and Replay~\cite{odr,revirt,guo2008r2,geels2007friday,doubleplay} has been an active area of research in the academic community for several years. 
+These systems offer highly faithful re-execution in lieu of performance overhead. 
+For instance, ODR~\cite{odr} reports 1.6x, and Aftersight~\cite{aftersight} reports 5\% overhead, although with much higher worst-case overheads.
+\parikshan avoids run-time overhead, but its cloning suspend time may be viewed as an amortized cost in comparison to the overhead in record-replay systems.
+Among record and replay systems, the work most closely related to ours is Aftersight~\cite{aftersight}. 
+Aftersight records a production system and replays it concurrently in a parallel VM.
+While both Aftersight and \parikshan allow debuggers an almost real-time diagnosis facility, Aftersight suffers from recording overhead in the production VM.
+Additionally, it needs the diagnosis VM to either catch up with the production VM, which further slows down the application, or to allow it to proceed with divergence.
+The average slow-down in Aftersight is 5\% and can balloon upto 31\% to 2.6x for worst-case scenario.
+VARAN~\cite{Hosek:2015:VUE:2694344.2694390} is an N-version execution monitor that maintains replicas of an existing app, while checking for divergence.
+\parikshan's debug containers are effectively replicas: however, while VARAN replicates applications at the system call level, \parikshan's lower overhead mechanism does not impact the performance of the master (production) app.
+Unlike lower-level replay based systems, \parikshan tolerates a greater amount of divergence from the original application: i.e., the replica may continue to run even if the analysis slightly modifies it.
+
+
+\subsection{Real-Time techniques:}
+This is a category of approaches which attempt to do real-time diagnosis.
+Chaos Monkey~\cite{chaosmonkey} uses fault injection in real production systems to do fault tolerance testing.
+It randomly injects time-outs, resource hogs etc. in production systems. 
+This allows Netflix to test the robustness of their system at scale, and avoid large-scale system crashes.  
+Another approach called AB Testing~\cite{abtesting} probabilistically tests updates or beta releases on some percentage of users, 
+while letting the majority of the application users work on the original system.
+AB Testing allows the developer to understand user-response to any new additions to the software, while most users get the same software.
+Unlike \parikshan, these approaches are restricted to software testing and directly impact the user.
+
+
+\subsection{Live Migration \& Cloning}
+Live migration of virtual machines facilitates fault management, load balancing, and low-level system maintenance for the administrator.
+Most existing approaches use a \textit{pre-copy} approach that copies the memory state over several iterations, and then copies the process state.
+This includes hypervisors such as VMWare~\cite{nelson2005fast}, Xen~\cite{clark2005live}, and KVM~\cite{kivity2007kvm}.
+VM Cloning, on the other hand, is usually done offline by taking a snapshot of a suspended/ shutdown VM and restarting it on another machine.
+Cloning is helpful for scaling out applications, which use multiple instances of the same server.
+There has also been limited work towards live cloning. 
+For example Sun et al.~\cite{Sun:2009:FLC:1581383.1582148} use copy-on-write mechanisms, to create a duplicate of the target VM without shutting it down.
+Similarly, another approach ~\cite{gebhart2009dynamic} uses live-cloning to do cluster-expansion of systems.
+However, unlike \parikshan, both these approaches starts a VM with a new network identity and may require re-configuration of the duplicate node.
+
+
+\subsection{Micro-Service Architectures}
+
+\subsection{Devops and Agile Programming}
+
+\subsection{Container vs Virtual Machine Virtualization}
+
+\section{Related Work for iProbe}
+
+
+%iProbe is motivated by existing production monitoring tools such as dtrace\cite{dtrace,lttng,systemtap}, and dynamic instrumentation available in several kernels. While iProbe does not focus on providing a very declarative query language or methodology, we have instead combined these approaches with compiler instrumentation mechanisms which can be applied using most compiler frameworks using either existing flags or analysis tools such as LLVM\cite{llvm}, gimple\cite{gimple}, or rose\cite{rose}. 
+
+\begin{figure*}[ht]
+	\begin{center}
+		\includegraphics[width=0.9\textwidth]{iprobe/Images/related.eps}
+		\caption{Advantages of iProbe over existing monitoring frameworks DTrace/SystemTap and DynInst}
+		\label{fig:related}
+	\end{center}
+\end{figure*}
+
+\noindent \textbf{Source Code or Compiler Instrumentation Mechanisms}: \quad
+Source code instrumentation is one of the most widely available mechanisms for monitoring. 
+In essence, users can insert debug statements with runtime flags to dump and inspect program status with varying verbosity levels. 
+The log4j~\cite{log4j} and log4c~\cite{log4c} frameworks are commonly used libraries to perform program tracing in many open source projects in the source code level. 
+Additionally compilers have several inbuilt profilers which can be used along with tools such as gprof and jprof to gather statistics about program execution.
+While source code techniques allow very light weight instrumentation, by design they are static and can only be changed at the start of application execution. 
+iProbe on the other hand offers run-time instrumentation that allows dynamic decisions on tracing with comparable overhead.
+
+
+\noindent \textbf{Run-time Instrumentation Mechanisms}: \quad
+There are several kernel level tracing tools such as DTrace, LTTng, SystemTap \cite{dtrace,lttng,systemtap} developed by researchers over the years.
+iProbe differs from these approaches mainly in two ways: Firstly, all of these approaches use a technique similar to software interrupt to switch to kernel space and generate a log event by overwriting the target instructions. 
+They then execute the instrumentation code, and either generate a trampoline mechanism or re-execute the overwritten target instructions and then jump back to the subsequent instructions. 
+As shown in Figure.\ref{fig:related} this introduces context-switches between user-space and the kernel, causing needless overhead. 
+iProbe avoids this overhead by having a completely user-space based design.
+Secondly, all these approaches require to perform complex checks for correctness which can cause unnecessary overhead at both hotpatching, and when running an instrumented binary. 
+%debug information at run-time to find the target function requested by the user. This requirement may not be met in production binaries, and iProbe does not require it in the binaries.
+
+Fay \cite{fay} is a platform-dependent approach which uses the empty spaces at the start of the functions available in Windows binaries for instrumentation. 
+To ensure the capture of the entry and exit of functions, Fay calls the target function within its instrumentation thereby introducing an extra stack frame for each target instrumentation. 
+This operation is similar to a mini-trampoline and hence incurs an overhead. 
+Fay logs function execution in the kernel space and hence also has a context-switch overhead.
+iProbe avoids such overhead by introducing markers at the beginning and end of
+each function using a 
+
+Another well known tool is DynInst\cite{dyninst}. This tool provides a rich dynamic instrumentation capability and has pure back box solution towards instrumentation of any application.
+However, as shown in Figure.\ref{fig:related} it is also based on traditional trampoline mechanisms, and induces a high overhead because of unnecessary jump instructions.
+Additionally it can have higher overhead because of complex security checks. 
+Other similar trampoline based tools like kaho and pannus\cite{pannus,kaho} have also been proposed, but they focus more towards patching binaries to add \emph{fixes} to correct a bug.
+
+% platform independent 
+%compiler technique.
+
+\noindent \textbf{Debuggers}: \quad
+Instrumentation is a commonly used technique in debugging. Many debuggers such as gdb \cite{gdb} and Eclipse have breakpoints and watchpoints which can stop the execution of programs and inspect program conditions. These features are based on various techniques including \texttt{ptrace} and hardware debugging support (single step mode and debug registers). While they provide such powerful instrumentation capabilities, there are in general not adequate for beyond the debugging purposes due to overwhelming overhead.
+
+\noindent \textbf{Dynamic Translation Tools}: \quad
+Software engineering communities have been using dynamic translation tools such as Pin \cite{pin} and Valgrind \cite{valgrind} to inspect program characteristics. 
+These tools dynamically translate program code before execution and allow users to insert custom instrumentation code flexibly. They are capable to instrument non-debug binaries and provide versatile tools such as memory checkers and program profilers. However, similar to debuggers, they are generally considered as debugging tools and their overhead is significantly higher than runtime tracers.
+
+

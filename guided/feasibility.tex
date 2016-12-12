@@ -1,0 +1,18 @@
+\subsection{Feasibility}
+\label{sec:guided_feasibility}
+
+The current prototype for \activedebugging is in the early stages of development.
+We have explored hotpatching in ~\cite{iprobe} and were able to successfully patch ELF binaries. 
+Specifically our \iprobe tool enables dynamic instrumentation, and has been tested on several production level instrumentation techniques.
+Other tools like Dyninst~\cite{dyninst}, and systemtap~\cite{systemtap} may also be used in tandem with ~\iprobe for our active debugging.
+
+We have also explored previous approaches in the lab called INVITE (invivo testing~\cite{invivo}), which has looked into isolating test-cases in production environment. 
+The core idea in invivo testing is to probabilistically trigger tests in the production environment. 
+Furthermore, invivo ensures that these tests should not impact the production.
+Other tools such as Java Assist, JAVA ASM also allow for binary modification and class re-loading in JAVA.
+Applications like Tomcat, allow for dynamic class re-loading to speedup development. 
+This inherently supports our design as we can design custom classes with forks which can do the test in the debug-container by generating two forks and killing them.
+While complete isolation is not ensured in these approaches, forking execution does allow for process level isolation.
+We have also explored file-system level isolation approaches using COW supported cloning mechanisms in BTRFS
+The current approach will look at iteratively improving test-isolation guarantees in the debug-container, while the framework itself will provide complete isolation from production-container.
+As part of the thesis we will integrate these approaches in the debug-container, and explore other applications for \livedebugging

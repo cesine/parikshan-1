@@ -1,0 +1,64 @@
+\message{ !name(sandbox.tex)}%\newcount\draft\draft=0  % set to 0 for submission
+
+\documentclass[10pt,preprint,numbers]{sigplanconf}
+
+\input{packages}  % package imports
+\input{macros}    % handy macros
+
+\begin{document}
+
+\message{ !name(sandbox.tex) !offset(-3) }
+
+
+% conference info %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \conferenceinfo{ASPLOS~'16}{April 2--6, 2016, Atlanta, Georgia, USA} 
+% \copyrightyear{2016} 
+% \copyrightdata{978-1-4503-4091-5/16/04} 
+% \copyrightdoi{2872362.2872406} 
+% \publicationrights{licensed}
+
+% title & authors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Parikshan\xspace: Live Debugging of Production Systems in Isolation}
+
+\input{usenix_authors}
+
+\maketitle
+
+% abstract & classification %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{abstract}
+
+{\footnotesize
+\category{D.3.3}{Programming Languages}{Language Constructs and Features}[Data
+    types and structures]
+%\terms  % terms are optional
+%$  $Software Debugging; Record and Replay
+\keywords
+Live Migration; Software Debugging; Record and Replay
+}
+
+% the actual paper! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{introduction_jon}
+%\input{introduction}
+%\input{introduction_alternate}
+\input{motivation}
+\input{design}
+\input{implementation}
+%\input{trigger}
+%\input{network-issues}
+\input{survey}
+\input{casestudy}
+\input{evaluation}
+\input{applications}
+\input{challenges}
+\input{related}
+%\input{futurework}
+\input{conclusion}
+
+% bibliography %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{abbrvnat}
+\bibliography{sandbox}
+
+\end{document}
+
+\message{ !name(sandbox.tex) !offset(-64) }

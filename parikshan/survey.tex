@@ -1,0 +1,25 @@
+\section{Survey}
+\label{sec:survey}
+
+\begin{table}[]
+	\centering
+	\begin{tabular}{@{}|c|c|c|c|@{}}
+		\toprule
+		& \textbf{Apache} & \textbf{MySQL} & \textbf{Hadoop/HBase} \\ \midrule
+		\textbf{Performance} & 3 & 10 &  \\ \midrule
+		\textbf{Semantic} & 36 & 73 &  \\ \midrule
+		\textbf{Concurrency} & 1 & 7 &  \\ \midrule
+		\textbf{Resource Leak} & 5 & 6 &  \\ \midrule
+		\textbf{Fault Tolerance} & 0 & 2 &  \\ \bottomrule
+	\end{tabular}
+	\caption{Survey of MySQL, and Apache Bugs}
+	\label{tab:survey}
+\end{table}
+
+We did a survey of production bugs in bugzilla for MySQL and Apache httpd webserver, and categorized them into the following categories: performance, semantic, concurrency, resource-leak and fault-tolerance. 
+The process of classification of these bugs was as follows - We first took a random time-line from bugzilla after filtering out all the bugs which were fixed, we manually went through each of them. 
+In this manual process, we filtered out any bugs which did not happen in production systems, or required a restart to be triggered, or happened because of compilation failure, or during the startup of the application. 
+We then classified each of these bugs into the categories mentioned earlier.
+Most of these bug reports, included the patch for the bug fix, and the way to trigger the bug itself. 
+
+We found that a majority of bugs in service oriented applications, can be classified as semantic bugs which are left in the software because some edge condition check was not made or tested and the logic needs to be updated to manage the reported scenario.

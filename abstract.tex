@@ -7,19 +7,19 @@ In particular, production systems bugs can be a result of complex interactions b
 Hence it is important, to be able to gain insight in the entire workflow of the system, both breadth-wise (across application tiers and network boundaries), and depth wise (across the execution stack from application to kernel).
 
 In addition to the inherent complexity in software debugging, it is also essential to have a short time to bug diagnosis to reduce the financial impact of any error.
-Recent trends towards DevOps\cite{devops}, and Agile\cite{agile} software engineering paradigms further emphasize the need to having shorter debug cycles.
+Recent trends towards DevOps~\cite{devops}, and Agile~\cite{agile} software engineering paradigms further emphasize the need of having shorter debug cycles.
 DevOps stresses on close coupling between software developers and operators, and to merge the operations of both.
 Most companies which have adopted DevOps have very frequent releases and hence require a very short time to a bug fix, test, patch and release in order to realize continuous delivery (Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day).
 Similarly agile programming has shorter development cycles called \textit{sprints}, which focus on faster releases, and quick debugging.
 
-Existing debugging mechanisms allow on light-weight instrumentation which tracks execution flow in the application by instrumenting important points of execution.
+Existing debugging mechanisms provide light-weight instrumentation which can track execution flow in the application by instrumenting important points in the application code.
 These are followed by inference based mechanisms to find the root-cause of the problem.
-Unfortunately, these techniques are usually used to provide a clue towards the bug, and might not be able to localize the error.
+While such techniques are useful in getting a clue about the bug, they are limited in their ability to discover the root-cause.
 Another body of work uses record-and-replay infrastructures, which record the execution and then replay the execution offline.
 While record and replay infrastructures generate a high fidelity representative framework for bug diagnosis, they suffer a heavy overhead generally not acceptable in user-facing production systems.
 
-In order to meet the demands of a low-latency distributed computing environment of modern service oriented systems, it is important to have debugging tools which have \textit{minimal to negligible impact} on the application, and can provide a fast update to the operator to allow for \textit{shorter time to debug}.
-In order to meet this goals, we introduce a new debugging paradigm called \livedebugging.
+Therefore, to meet the demands of a low-latency distributed computing environment of modern service oriented systems, it is important to have debugging tools which have \textit{minimal to negligible impact} on the application, and can provide a fast update to the operator to allow for \textit{shorter time to debug}.
+To this end, we introduce a new debugging paradigm called \livedebugging.
 There are two goals that any \livedebugging infrastructure must meet:
 Firstly, it must offer real-time insight and bug diagnosis and localization, which is paramount when errors happen in service-oriented-application. 
 Several modern day 24*7 applications have developers serving as operators who are available in \textit{shifts} at all times to tackle any problems that occur in the system.
@@ -29,12 +29,12 @@ In large distributed applications, non-crashing bugs which impact only a small p
 In such scenarios, debugging a small part of the application should not impact the entire system.
 
 With the above stated goals in mind, we have designed a platform called \parikshan, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of \livedebugging. 
-\parikshan is driven by a  live-cloning process, which generates a \debugcontainer for debugging or testing, cloned from a \productioncontainer, which provides the real output to the user.
-This \debugcontainer provides a sandbox environment, for safe execution of test-cases/debugging done by the users without any perturbation to the execution environment.
+\parikshan is driven by a  live-cloning process, which generates a replica (\debugcontainer) of production services for debugging or testing, cloned from a \productioncontainer which provides the real output to the user.
+The \debugcontainer provides a sandbox environment, for safe execution of test-cases/debugging done by the users without any perturbation to the execution environment.
 %Our sandboxes have independent network name-spaces, and resource management for the processes executing the test/debug cases.
 As a part of this framework, we have designed customized-network proxy agents, which replicate inputs from clients to both the production and test-container, as well safely discard all outputs from the test-container.
 Together the network proxy, and the debug container ensure both compute and network isolation of the debugging environment, while at the same time allowing the user to debug the application.
-As a part of this thesis, we have also looked into \textit{light-weight instrumentation techniques}, which can complement our \livedebugging environment.
+This thesis also looks into \textit{light-weight instrumentation techniques}, which can complement our \livedebugging environment.
 Additionally, we will demonstrate a \textit{statistical debugging mechanism} that can be applied in the debug-container to gain insight and localize the error in real-time. 
 We believe that this piece of work provides the first of it's kind practical real-time debugging of large multi-tier and cloud applications, without requiring any application down-time, and minimal performance impact.
 
@@ -56,17 +56,25 @@ The principal hypothesis of this dissertation is that, for large-scale service-o
 Primarily, we will present an approach for \livedebugging of production systems.
 This involves discussion of \parikshan framework which forms the backbone of this dissertation.
 We will discuss how to clone the containers, split and isolate network traffic, and aggregate it for communication to both upstream and downstream tiers, in a multi-tier SOA infrastructure.
+As a part of this description, we will also show case-studies demonstrating how network replay is enough for triggering most bugs in real-world application. 
+To show this, we have presented 16 real-world bugs, which were triggered using our network duplication techniques. 
+Additionally, we present a survey of 270+ bugs from bug reports of SOA applications which were found to be similar to the 16 mentioned above.
 
 Secondly, we will present \iprobe a new type of instrumentation framework, which uses a combination of static and dynamic instrumentation, to have an order-of-magnitude better performance than existing instrumentation techniques. 
 While \livedebugging does not put any performance impact on the production, it is still important to have the debug-container as much in sync with the production container as possible. 
 \iprobe makes applications live debugging friendly, and provides an easy way for the debuggers to apply probes in the debugging sandboxed environment.
 
+\iffalse
 Thirdly, we will present a mechanism to create overhead budgets for instrumentation in the debug container to make \livedebugging more robust, and longer lasting.
 This will be split in two different kinds of techniques: Firstly, we will provide pro-active mechanism to find an instrumentation overhead budget. This is based on queuing theory, simulations, and testing results. 
 Secondly: we will provide a reactive mechanism to modify instrumentation overhead. 
 We will use the buffer size and usage as a trigger and present novel sampling techniques together with statistical testing mechanism to effectively isolate bugs.
+\fi
 
-Lastly, while \parikshan is an platform to quickly attack bugs, in itself it's a debugging platform. For the last section of our dissertation we look at how various existing debugging techniques can be adapted to \livedebugging, making it more effective. We compare a variety of techniques and compare how they traditionally work and how they can be more effective with \parikshan. As a part of this we will demonstrate \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container.
+Lastly, while \parikshan is a platform to quickly attack bugs, in itself it's a debugging platform. 
+For the last section of this dissertation we look at how various existing debugging techniques can be adapted to \livedebugging, making it more effective. 
+We compare a variety of techniques and compare how they traditionally work and how they can be more effective with \parikshan. 
+As a part of this we will discuss two new approaches: Firstly, we will discuss \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container. Secondly, we will discuss a budget limited instrumentation approach to increase the time for continuous live debugging.
 
 %Third, we will describe a set of \emph{guidelines} that can be followed by developers to assist in the formulation and development of \livedebugging friendly applications.
 %These will add flags and triggers which can be used with the approaches above for a clean and assisted separation of the debugging container when cloned from the \productioncontainer.

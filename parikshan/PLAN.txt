@@ -1,0 +1,8 @@
+Evaluations that we need:
+
+1. Experiment showing that just using network data is OK
+2. Overhead of cloning sandbox
+3. Latency from network copying
+4. Debug window - does this matter that much?
+
+Can we allow for arbitrarily long debug window?

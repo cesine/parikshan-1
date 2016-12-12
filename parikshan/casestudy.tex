@@ -1,0 +1,411 @@
+\chapter{Is network replay enough?}
+
+\section{Overview}
+\label{sec:netReplayOverview}
+
+Several existing record and replay have a much higher overhead as they record low level of non-determinism in order to capture and replay the exact state of execution. 
+However, most bugs in service oriented application do not require such low level of recording.
+We hypothesize that network input with live cloning is enough to trigger most bugs in user-facing services.
+
+To validate this insight, we selected sixteen real-world bugs, applied \parikshan, reproduced them in a production container, and observed whether they were also simultaneously reproduced in the replica.
+For each of the sixteen bugs that we triggered in the production environments, \parikshan faithfully reproduced them in the replica. 
+
+We selected our bugs from those examined in previous studies \cite{bugbench,simpleTesting}, focusing on bugs that involved performance, resource-leaks, semantics, concurrency, and configuration. 
+We have further categorized these bugs whether they lead to a crash or not, and if they can be deterministically reproduced.
+Table \ref{tab:casestudy} presents an overview of our study.
+
+In the rest of this section we discuss the bug-reproduction technique in each of these case-studies in further detail.
+
+\input{parikshan/casestudy-table1}
+
+\section{Case Studies}
+\label{sec:casestudy}
+
+\xxx{How did we select these bugs? Randomly? How did we try to reproduce them?}
+
+\xxx{This part that was here and I commented out makes no sense in this section - maybe worthwhile moving it to somewhere else to explain *why* someone would use parikshan. but here, we are talking about our core assumption, that network replay is sufficient. This section should be about the study we did to show that this insight is grounded.}
+
+
+\subsection{Semantic Bugs}
+The majority of the bugs found in production SOA systems can be categorized as semantic bugs.
+These bugs often happen because an edge condition was not checked during the development stage or there was a logical error in the algorithm etc.
+Many such errors result in an unexpected output or possibly can crash the system.
+We recreated 4 real-world production bugs from Redis~\cite{redis} queuing system, and Cassandra~\cite{cassandra} a NoSQL database.
+
+
+\subsubsection{Redis \#761}
+
+In this subsection we describe the Redis\#761 semantic bug \\
+
+\noindent \textbf{Cause of the error:}\\
+
+
+\noindent The Redis\#761 is an integer overflow error. 
+This error is triggered, when the client tries to insert and store a very large number. 
+This leads to an unmanaged exception, which crashes the production system. 
+Integer overflow, is a common error in several applications. 
+We classify this as a semantic bug, which could have been fixed with an error checking condition for large integers. \\
+
+
+\noindent \textbf{Steps for reproduction:}\\
+
+\begin{adjustwidth}{0.5cm}{}
+\begin{enumerate}
+	\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+	\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+	\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\item Send the following request through the redis client: 
+	
+		\texttt{zinterstore out 9223372036854775807 zset zset2}
+		
+		This tries to set the variable to the integer in the request, and leads to an integer overflow error. The integer overflow error is simultaneously triggered both in the production and the debug containers.
+	
+\end{enumerate}
+\end{adjustwidth}
+
+\subsubsection{Redis \#487}
+
+In this subsection we describe the Redis\#487 semantic bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+Redis\#487 resulted in expired keys still being retained in Redis, because of an unchecked edge condition.
+While this error does not lead to any exception or any error report in application logs, it gives the user a wrong output.
+In the case of such logical errors, the application keeps processing, but the internal state can stay incorrect.
+The bug impacts only clients who set keys, and then expire them.\\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+			\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+			\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+			\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+			\item flush all keys using \texttt{flushall} command 
+			\item set multiple keys using \texttt{set key value} command 
+			\item expire a key from one of them using \texttt{expire s 5} command
+			\item run the \texttt{keys *} command. This will list keys which should have expired
+	\end{enumerate}
+
+\end{adjustwidth}
+
+
+At the end it can be seen that the expired keys can be listed and accessed in both the production and debug container. This is a persistent error, which does not impact most other aspects of the service. The debug container can be used to look at the transactional logs, and have further instrumentation to understand the root cause of the error.
+
+\subsubsection{Cassandra \#5225}
+
+In this subsection we describe the Cassandra\#5225 semantic bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+Missing columns when requesting specific columns from a wide row. 
+The data is still in the table, just it might not be returned to the user. 
+Taking closer look, Cassandra is reading from the wrong column index. 
+A problem was found with the index checking algorithm. 
+In fact, it was written in reverse.\\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a cassandra service in the production container
+		\item Use \parikshan's live cloning facility to create a clone of cassandra in the debug-container.
+		\item Connect to cassandra using a python client
+		\item Insert a large number of columns into cassandra (so that it is a wide row). For our testing we used \texttt{pycassa} python cassandra client. 
+		\item Fetch the columns in a portion of ranges
+		\item At the end of this test case you can observe that some columns were dropped in the response to the client.
+	\end{enumerate}
+
+\end{adjustwidth}
+
+To facilitate re-creating this bug, we have provided dockerized containers, which install the correct version of Cassandra which has this bug as well as it's dependencies. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We also provide a python script for the cassandra client to trigger the bug conditions.
+
+\subsubsection{Cassandra \#1837}
+
+In this subsection we describe the Cassandra\#1837 semantic bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+The main symptom of this error was that deleted columns become available again after doing a flush.
+With some domain knowledge, a developer found the error. 
+This happens because of a bug in a the way deleted rows are not interpreted once they leave the memtable in the CFS.getRangeSlice code i.e. the flush does not recognize the delete and the purged data does not contain the delete operation. 
+Thus querying for the data shows  content as well.
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a cassandra service in the production container
+		\item Use \parikshan's live cloning facility to create a clone of cassandra in the debug-container.
+		\item Using cassandra's command line client, insert columns into cassandra without flushing
+		\item delete the inserted column
+		\item flush the columns so that the deletion should be committed
+		\item query for the columns in the table
+		\item observe that the columns have not been deleted and are retained.
+	\end{enumerate}
+\end{adjustwidth}
+
+Once again we have provide dockerized containers for Cassandra, as well as execution scripts for the client.
+
+\subsection{Performance Bugs}
+
+These bugs do not lead to crashes but cause significant impact to user satisfaction.
+A casestudy~\cite{shanluPerf} showed that a large percentage of real-world performance bugs can be attributed to uncoordinated functions, executing functions that can be skipped, and inefficient synchronization among threads (for example locks held for too long etc.).
+Typically, such bugs can be caught by function level execution tracing and tracking the time taken in each execution function.
+Another key insight provided in~\cite{shanluPerf} was that two-thirds of the bugs manifested themselves when special input conditions were met, or execution was done at scale. 
+Hence, it is difficult to capture these bugs with traditional offline white-box testing mechanisms.
+
+
+\subsubsection{MySQL \#26257}
+
+In this subsection we describe the MySQL\#15811 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start an instance of the MySQL server in the production container
+		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
+		\item Start network duplicator to duplicate network traffic to both the production and debug containers
+		\item connect to the production container using \texttt{mysqlclient}
+		
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+\subsubsection{MySQL \#49491}
+
+In this subsection we describe the MySQL\#15811 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start an instance of the MySQL server in the production container
+		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
+		\item Start network duplicator to duplicate network traffic to both the production and debug containers
+		\item connect to the production container using \texttt{mysqlclient}
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+
+\subsubsection{MySQL \#15811}
+
+In this subsection we describe the MySQL\#15811 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+For one of the bugs in  MySQL\#15811, it was reported that some of the user requests which were dealing with complex scripts (Chinese, Japanese), were running significantly slower than others.
+To evaluate \parikshan, we re-created a two-tier client-server setup with the server (container) running a buggy MySQL server and sent queries to the production container with complex scripts (Chinese).
+These queries were asynchronously replicated, in the debug container. To further investigate the bug-diagnosis process, we also turned on execution tracing in the debug container using SystemTap~\cite{systemtap}.
+This gives us the added advantage, of being able to profile and identify the functions responsible for the slow-down, without the tracing having any impact on production.\\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start an instance of the MySQL server in the production container
+		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
+		\item Start network duplicator to duplicate network traffic to both the production and debug containers
+		\item connect to the production container using \texttt{mysqlclient}
+		\item Create a table with default charset as latin1:
+			\texttt{create table t1(c1 char(10)) engine=myisam default charset=latin1;}
+		\item Repeat the following line several times to generate a large dataset
+			\texttt{insert into t1 select * from t1;}
+		\item Now create a mysqldump of the table
+		\item Load this table back again, and observe a significant slow response for large table insert requests. This is magnified several times when using complex scripts
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+
+\subsection{Resource Leaks}
+Resource leaks can be either memory leak or un-necessary zombie processes.
+Memory leaks are common errors in service-oriented systems, especially in C/C++ based applications which allow low-level memory management by users.
+These leaks build up over time and can cause slowdowns because of resource shortage, or crash the system.
+Debugging leaks can be done either using systematic debugging tools like Valgrind, which use shadow memory to track all objects, or memory profiling tools like VisualVM, mTrace, or PIN, which track allocations, de-allocations, and heap size.
+Although Valgrind is more complete, it has a very high overhead and needs to capture the execution from the beginning to the end (i.e., needs application restart).
+On the other hand, profiling tools are much lighter and can be dynamically patched to a running process.
+
+Let us take Redis\#417 for instance, here we had a redis master and slave set up for both production and debug container.
+We then triggered the bug by running concurrent requests through the client which can trigger the memory leak.
+The memory leak was easily visible in the debug container by turning on debug tracing, which showed a growing memory usage. 
+
+
+\subsubsection{Redis \#417}
+
+In this subsection we describe the Redis\#417 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+\subsubsection{Redis \#614}
+
+In this subsection we describe the Redis\#614 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\end{enumerate}
+\end{adjustwidth}
+
+
+
+\subsection{Concurrency Bugs}
+One of the most subtle bugs in production systems is caused due to concurrency errors.
+These bugs are hard to reproduce, as they are non-deterministic, and may or may not happen in a given execution.
+Unfortunately, \parikshan cannot guarantee that if a buggy execution is triggered in the production container, an identical execution will trigger the same error in the debug container.
+However, given that the debug container is a live-clone of the production container, and that it replicates the state of the production container entirely, we believe that the chances of the bug also being triggered in the debug container are quite high.
+Additionally, the debug container is a useful tracing utility to track thread lock and unlock sequences, to get an idea of the concurrency bug.
+
+\subsubsection{Apache \#25520}
+
+In this subsection we describe the Apache\#25520 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\end{enumerate}
+\end{adjustwidth}
+
+
+\subsubsection{Apache \#21287}
+
+In this subsection we describe the Apache\#21287 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\end{enumerate}
+\end{adjustwidth}
+
+
+\subsubsection{MySQL \#644}
+
+In this subsection we describe the MySQL\#644 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start an instance of the MySQL server in the production container
+		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
+		\item Start network duplicator to duplicate network traffic to both the production and debug containers
+		\item connect to the production container using \texttt{mysqlclient}
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+\subsubsection{MySQL \#169}
+
+In this subsection we describe the MySQL\#169 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start an instance of the MySQL server in the production container
+		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
+		\item Start network duplicator to duplicate network traffic to both the production and debug containers
+		\item connect to the production container using \texttt{mysqlclient}
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+\subsubsection{MySQL \#791}
+
+In this subsection we describe the MySQL\#791 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start an instance of the MySQL server in the production container
+		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
+		\item Start network duplicator to duplicate network traffic to both the production and debug containers
+		\item connect to the production container using \texttt{mysqlclient}
+	\end{enumerate}
+\end{adjustwidth}	
+
+
+\subsection{Configuration Bugs}
+Configuration errors are usually caused by wrongly configured parameters, i.e., they are not bugs in the application, but bugs in the input (configuration).
+These bugs usually get triggered at scale or for certain edge cases, making them extremely difficult to catch.
+
+A simple example of such a bug is Redis\#957, here the slave is unable to sync with the master.
+The connection with the slave times out and it's unable to sync because of the large data.
+While the bug is partially a semantic bug, as it could potentially have checks and balances in the code. 
+The root cause itself is a lower output buffer limit.
+Once again, it can be easily observed in our debug-containers that the slave is not synced, and can be investigated further by the debugger.
+
+\subsubsection{Redis \#957}
+
+In this subsection we describe the Redis\#957 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\end{enumerate}
+\end{adjustwidth}
+
+
+\subsubsection{HDFS \#1904}
+
+In this subsection we describe the HDFS\#1904 performance bug \\
+
+\noindent \textbf{Cause of the error:} \\
+
+\noindent \textbf{Steps for reproduction:} \\
+
+\begin{adjustwidth}{0.5cm}{}
+	\begin{enumerate}
+		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
+		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+	\end{enumerate}
+\end{adjustwidth}

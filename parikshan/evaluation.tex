@@ -1,0 +1,55 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+To evaluate the performance of \parikshan, we pose and answer the following research questions:
+
+\begin{itemize}
+\item \textbf{RQ1:} How long does it take to create a live clone of a production container and what is it's impact on the performance of the production container?\\
+\item \textbf{RQ2:} What is the size of the debugging window, and how does it depend on resource constraints?\\ 
+\item \textbf{RQ3:} Can we generalize the results of our case study to see if \parikshan can target even more real bugs?
+\end{itemize}
+
+We evaluated the \textbf{internal mode} on two identical VM's with an Intel i7 CPU, with 4 Cores, and 16GB RAM each in the same physical host (one each for production and debug containers).
+We evaluated the \textbf{external mode} on two identical host nodes with Intel Core 2 Duo Processor, 8GB of RAM.
+All evaluations were performed on CentOS 6.5.
+
+%In Section~\ref{sec:performance}, we evaluate live cloning on real-world applications and workloads as well as a micro-benchmark to understand its performance in different scenarios.
+%In Section~\ref{sec:timewindowPerformance}, we first provide debug-window sizes for varying workloads run on a live production system. 
+%For a more systematic understanding of the debug-window size, we also provide simulation results to show the relationship of buffer overflow with buffer size, the incoming workload, and the instrumentation overhead.
+%Finally, in Section~\ref{sec:survey}, we present a survey of 217 real-world bugs, picked from three different applications.
+%\xxx{What is the environment we evaluated in? Hardware? Software? Why do we have both real and simulated data?}
+
+\subsection{Live Cloning Performance}
+\label{sec:performance}
+
+As explained in Section \ref{sec:design}, a short suspend time during live cloning is necessary to ensure that both containers are in the exact same system state.
+The suspend time during live cloning can be divided in 4 parts: 
+(1) Suspend \& Dump: time taken to pause and dump the container, 
+(2) Pcopy after suspend: time required to complete rsync operation 
+(3) Copy Dump File: time taken to copy an initial dump file.
+(4) Undump \& Resume: time taken to resume the containers. 
+To evaluate ``live cloning'', we ran a micro-benchmark of I/O operations, and evaluated live-cloning on some real-world applications running real-workloads.
+\input{parikshan/realWorldCloneEval}
+
+\input{parikshan/microCloneEval}
+
+
+\begin{tcolorbox}[breakable, enhanced]
+	To answer \textbf{RQ1}, live cloning introduces a short suspend time in the production container dependent on the workload. 
+	Write intensive workloads will lead to longer suspend times, while read intensive workloads will take much less. 
+	Suspend times in real workload on real-world systems vary from 2-3 seconds for webserver workloads to 10-11 seconds for application/database server workloads. 
+	Compared to external mode, internal mode had a shorter suspend time. 
+	A production-quality implementation could reduce suspend time further by rate-limiting incoming requests in the proxy, or using copy-on-write mechanisms and faster shared file system/storage devices already available in several existing live migration solutions.
+\end{tcolorbox}
+
+\input{parikshan/windowEval}
+
+
+
+\input{parikshan/bugTriggerEval}
+
+
+\begin{tcolorbox}[breakable, enhanced]
+	To answer \textbf{RQ3}, we found that almost 80\% of bugs were semantic in nature, while less than 6\% of the bugs are non-deterministic.
+	About 13-14\% of bugs are performance and resource-leak bugs, which are generally persistent in the system.
+\end{tcolorbox}

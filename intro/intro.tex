@@ -1,0 +1,452 @@
+\chapter{Introduction}
+\label{section:intro}
+
+Although software bugs are nothing new, the complexities of virtualized environments coupled with large distributed systems have made bug localization harder.
+The large size of distributed systems means that any downtime has significant financial penalties for all parties involved.
+Hence, it is increasingly important to localize and fix bugs in a very short period of time.
+
+Existing state-of-art techniques for monitoring production systems~\cite{dtrace,winetw,systemtap} rely on light-weight dynamic instrumentation to capture execution traces.
+Operators then feed these traces to analytic tools~\cite{magpie,clue} to find the root-cause of the error.
+However, dynamic instrumentation has a trade-off between granularity of tracing and the performance overhead.
+Operators keep instrumentation granularity low, to avoid higher overheads in the production environment.
+This often leads to multiple iterations between the debugger and the operator, to increase instrumentation in specific modules, in order to diagnose the root-cause of the bug.
+
+Another body of work has looked into record-and-replay~\cite{odr,revirt,laadan2010transparent,geels2007friday} systems which capture the log of the system, in order to faithfully replay the trace in an offline environment.
+Replay systems try and capture system level information, user-input, as well as all possible sources of non-determinism, to allow for in-depth \textit{post-facto} analysis of the error.
+%Another tool, aftersight~\cite{aftersight} looks into recording, and replaying the execution in parallel, to allow for decoupled analysis.
+However, owing to the amount of instrumentation required, record-and-replay tools deal with an even heavier overhead, making them impractical for real-world production systems.
+
+This thesis is centered around the idea of a new debugging paradigm called \emph{``live debugging''}, whereby developers can do in-situ debugging without impacting the performance of the application.
+The key idea behind this approach is to give faster time-to-bug localization, deeper insight into the health and activity within the system, and to allow operators to dynamically debug applications without fear of changing application behavior.
+We leverage existing work in live migration and light-weight user-space container virtualization, to provide an end-to-end workflow for real-time debugging.
+
+Our work is inspired by three key observations in modern service oriented applications.
+Firstly, we observe that most service oriented applications(SOA) are launched on cloud based infrastructures.
+These applications use virtualization to share physical resources, maintained by third-party vendors like Amazon EC2~\cite{ec2}, or google compute~\cite{gcompute} platforms.
+Furthermore, there is an increasing trend towards light-weight user-space container virtualization, which is less resource hungry, and makes sharing physical resources easier.
+Frameworks like docker~\cite{docker} allow for scaled out application deployment, by allowing each application service instance to be launched in it's own container.
+For instance, an application server, and a database server making up a web-service, can be hosted on their own containers, thereby sandboxing each service, and making it easier to scale out.
+
+Secondly, we observe a trend towards DevOps~\cite{devops} by the software engineering industry.
+DevOps stresses on close coupling between software developers and operators, in order to have shorter release cycles (Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day~\cite{10DevOps}).
+This re-emphasizes the need to have a very short time to diagnose and fix a bug especially in service oriented application.
+We believe by providing a means to observe the application when the bug is active, we will significantly reduce the time to bug localization.
+
+Lastly, our key insight is that for most service-oriented applications (SOA), a failure can be reproduced simply by replaying the network inputs passed on to the application.
+For these failures, capturing very low-level sources of non-determinism (e.g. thread scheduling or general system calls, often with high overhead) is unnecessary to successfully and automatically reproduce the buggy execution in a development environment. 
+We have evaluated this insight by studying 16 real-world bugs, which we were able to trigger by only duplicating and replaying network packets.
+Furthermore we categorized 217 bugs from three real-world applications, finding that most were similar in nature to the 16 that were reproduced, suggesting that our approach would be applicable to them as well.
+\xxx{Please look at section so and so for further details regarding the above}
+
+\noindent This thesis will make the following contributions:
+
+First, in Chapter~\ref{ch:parikshan} we will present a framework for ``live debugging'' applications while they are running in the production environment.
+This will involve a description of our system called \parikshan\footnote{\parikshan is the Sanskrit word for  testing}, which allows \textbf{real-time debugging} without any performance impact on the production service.
+We provide a facility to sandbox the production and debug environments so that any modifications in the debug environment do not impact user-facing operations.
+\parikshan avoids the need of large test-clusters, and can target specific sections of a large scale distributed application.
+In particular, \parikshan allows debuggers to apply debugging techniques with deeper granularity instrumentation, and profiling, without impacting application performance.
+
+This chapter will also present details of our case-study presenting real-world bugs which were triggered by network input alone, and which show why using \parikshan would be enough to capture most real-world bugs. 
+Each case study presents a different variety of bugs from the following classes: performance, semantic, non-deterministic, configuration and resource leak. 
+We believe that these bugs form the most common classification of bugs in service oriented applications.
+
+Second, in Chapter~\ref{ch:iprobe} we will present a dynamic instrumentation mechanism called \iprobe, which can assist developers in making applications \parikshan ready.
+iProbe uses a novel two-stage design, and offloads much of the dynamic instrumentation complexity to an offline compilation stage.
+It leverages standard compiler flags to introduce ``place-holders" for hooks in the program executable.
+Then it utilizes an efficient user-space ``HotPatching'' mechanism which modifies the functions to be traced and enables execution of instrumented code in a safe and secure manner.
+
+In the final chapter~\ref{ch:activedebugging} of this thesis we focus on applications of live debuggging. 
+In particular we discuss several existing techniques and how they can be coupled with live debugging. 
+We discuss step-by-step scenarios where debugging on the fly can be helpful, and how it can be applied.
+
+We also briefly introduce two new techniques: Firstly, a \textbf{budget limited instrumentation} technique for live debugging.
+This technique leverages existing work on statistical debugging, and queuing theory to lay a statistical foundation for allocating buffer sizes and various configuration parameters.
+It proposes a reactive mechanism to adapt to the overhead of instrumentation bounds using sampling techniques.
+Secondly, we introduce the concept of active debugging.
+This allows for debuggers to add a patch/or a fix in the debug-container and check if it fixes the error. 
+Similarly tests can be performed while ensuring the production container output is not changed, and forward progress is ensured.
+We isolate tests in \debugcontainer to ensure forward progress, and no impact on the production-container.
+
+The rest of this section is organized as follows.
+Firstly in section~\ref{sec:introDefinition} we define terms and terminologies used in the rest of this thesis.
+Section~\ref{sec:introProblemStatement} further defines the scope of our problem statement, definitions, and classifications of the bugs.
+Section~\ref{sec:introRequirements} illustrates the requirements this thesis must meet.
+Next, in section~\ref{sec:introScope} we define the scope of the techniques presented in this thesis.
+Section~\ref{sec:introApproach} briefly goes over the proposed approach presented in this thesis.
+In section~\ref{sec:introHypothesis} we give the hypothesis of this thesis.
+Section~\ref{sec:introAssumptions} lists some of the assumptions made in this thesis, and section~\ref{sec:introOutline} gives an outline of the organization of the rest of this document.
+
+
+
+
+%Furthermore, whether to repair flaws or add features, software patches are released all the time.
+%For instance, Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day~\cite{10DevOps}).
+%As application software grows and gets more complicated, debugging large scale applications has become increasingly important.
+%This problem is further compounded by the recent trend in software engineering industry by large companies towards DevOps \cite{devops}.
+%The recent trend towards DevOps~\cite{devops} by the software engineering industry further compounds this problem.
+%by requiring a fast and rapid resolution towards any software bug.
+%DevOps stresses on close coupling between software developers and operators, in order to have shorter release cycles (Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day~\cite{10DevOps}).
+%This re-emphasizes the need to have a very short time to diagnose and fix a bug.
+%Hence, debugging is hard not only because of difficulty to capture the root-cause, it is also increasingly important to localize and fix bugs in a very short period of time.
+
+
+%To avoid higher overheads instrumentation granularity is generally kept low, thereby making bug diagnosis harder.
+%Debugging is a lengthy process: debuggers try to piece together what could be the possible problem using log information.
+%Often more information is required to understand the context better which leads to several iterations before the problem is debugged, thereby increasing the time-to-debug.
+
+%\parikshan has been deployed on cloud IAAS platform using user-space container virtualization technologies (OpenVZ/LXC~\cite{openvz,lxc}).
+%We tested \parikshan on several real world system, using realistic workloads.
+%For the remainder of this paper, we define \textbf{downstream servers} as servers from which requests are being sent to the production container, and \textbf{upstream servers} as servers to which the production container sends request.
+%In figure~\ref{fig:workflow}, the webserver is downstream, and the backend is upstream of our target container.
+
+%\textbf{Virtual Machines vs Containers:}
+%Frequent synchronization is necessary because the test container can potentially go out of sync with the production because of non-determinism or because a test-case changes the state of the container, and effects future problems.
+%\textit{@Nipun edit -> consider why use user-space containers instead of VMs?}
+%While VM virtualization has existed for several years, recent advances in user-space container technologies, along with support for migration, has created a space for light-weight testing in live environments.
+%Technically our sandbox techniques could also be applied using more traditional Virtual Machines.
+%However, the overhead of using Virtual Machines is considerably higher, and it would technically require double the amount of resources for the target production servers.
+%User-Space containers reduce this overhead considerably by using the resources in the same machine.
+%We believe the availablity of resources in IAAS cloud infrastructures combined
+%\texttt{Zero-Probe Effect} probe points are added to the application which can be activated to insert test cases using ptrace~\cite{ptrace}.
+%The use of dynamic instrumentation capability to add test cases in an application is an extension of our previous work of a dynamic instrumentation tool iProbe \cite{iprobe}
+%Traditional testing approaches break states and are unable to
+%The authors previous work in in-vivo testing~\cite{invite} explored testing in the wild by initiating test cases in the production environment and sharing the load across several instances of deployed application.
+%This approach adds test-cases in predetermined functions before starting the execution of the process, and periodically executes them in the run-time environment based on a probabilistic function.
+\iffalse
+%We avoid recording overhead in the production container, while providing a facility for deeper bug diagnosis, and instrumentation.
+%We have deployed \parikshan in IAAS cloud infrastructure using user-space containers.
+\parikshan is composed of three modules:
+(a). a \textit{clone manager}, which manages cloning of production containers to debug-containers.
+(b). a \textit{network duplicator} module, which duplicates all incoming traffic from downstream servers to both production and debug containers.
+(c). a \textit{network aggregator} module, which manages all communication from upstream servers to the debug-container.
+The cloning operation is ``live'', hence there is no suspension of the services of the production server.
+The debug container acts like a sandbox which restricts it from causing any perturbation to the state of the parent process, or impacting the sanity of the responses to the production client.
+This allows debuggers to use debugging tools without any fear of crashing or modifying the production application.
+
+
+This is done by cloning an application container, and creating two containers: a production container, and a debug container.
+We duplicate incoming traffic from downstream servers to both production and debug containers.
+Similarly, we have another module, which replays responses sent from the production container, to the debug container so that it is completely isolated from the network.
+The debugging on the debug-container is done on-the-fly using dynamic instrumentation tools like DTrace~\cite{dtrace}, or iProbe~\cite{iprobe}.
+%hence any set of test-cases can be turned on whenever required.
+%This is achieved by using dynamic instrumentation mechanisms to clone a VM by forking off from a running executed state and encapsulating the forked execution in a VM.
+%The user can pre-define probe points for dynamically inserting test-cases (by default the entry and exit of each function is considered a probe point).
+The cloned debug container acts like a sandbox which restricts it from causing any perturbation to the state of the parent process, or impacting the sanity of the responses to the production client.
+The cloning operation is ``live'', hence there is no suspension of the services of the production server.
+
+\parikshan primarily focuses on such \emph{non-crashing bugs}, where the application continues to get input from the user.
+Studies have shown~\cite{Zhang:2013:ADS:2486788.2486830, liu2005mining, kremenek2007factor} that several bugs lead to either an inconsistent output, or impact the performance of the application, without crashing the system.
+Examples of these bugs are slow memory leaks, configuration, or performance bugs, which do not crash the application, but need to be fixed quickly to avoid degradation in service quality.
+Although many interesting methods have been developed to trace crashing bugs (memory violation, core dumps etc.), it is still difficult to analyze non-crashing bugs, as they often happen in scaled out systems, or because of edge-case inputs.
+
+We have deployed \parikshan in the context of cloud IAAS platform using user-space container virtualization technologies (OpenVZ/LXC~\cite{openvz,lxc}).
+Our techniques can also be applied to traditional virtual machines.
+However, containers are more light-weight, and utilize less resources.
+%While full VM virtualization has existed for several years, recent advances in user-space container technologies (OpenVZ/LXC~\cite{openvz,lxc}) has changed software engineering methodology.
+Furthermore, container based technologies like docker \texttt{Docker}~\cite{docker} emphasize the use of micro-service architectures, where each service (application, DNS, indexing, storage) is sandboxed in separate containers.
+This allows us to launch debug-containers, which can target one application at a time.
+
+\noindent
+%\parikshan provides a facility for diagnosing bugs in containers cloned from a production system.
+The key contributions of our system are:
+\begin{itemize}[leftmargin=*,topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
+\item \textbf{Short time-to-debug:} A novel mechanism which significantly reduces the time to debug production errors, by allowing debuggers to directly get information rather then wait for operators.
+\item \textbf{Secure \& sandboxed debugging} \parikshan provides a cloned sandbox environment to debug the production application.
+This allows a safe \& secure mechanism to diagnose the application, without impacting the functionality of the production container.
+\item \textbf{No performance impact:} A network duplication and aggregation mechanism, which ensures non-blocking request duplication to the debug-container, thereby ensuring no performance impact on the application.
+\item \textbf{Capture large-scale context:} Allows to capture the context of large scale production systems, with long running applications. Under normal circumstances capturing such states is extremely difficult as they need a long running test input, and large test-clusters.
+%\item \textbf{Track debug container fidelity:} We track the fidelity of the debug-container (debug-container faithfully represents the production container).
+%and creates a flag whenever the containers are out-of-sync.
+%Parikshan debug-containers can tolerate some degree of divergence from the production state.
+%The debug-container may continue to run correctly even if the analysis run on it perturbs it's state slightly (it can tolerate some divergence from the production).
+%The time till which the debug-container can faithfully represent the execution is called it's \emph{debugging -window} (see section \ref{sec:window}).
+%\item We allow for \textbf{dynamic insertion of probes}, and safely capturing the execution trace of the application.
+%Dynamically inserting probes is important to avoid relaunching binaries in the test-container.
+%Restarting binaries would break active network connections, and destroy the in memory state of the test container(note: configuration/file-system state is still preserved).
+%In our case studies we show how dynamic instrumentation mechanisms can be used with \parikshan
+
+%\item One of the key advantages of our approach is that it is \textbf{language agnostic}.
+%Since the underlying mechanism takes advantage of containers as a platform to do the cloning, the language or interface does not matter as far as cloning is concerned.
+%Of-course testing mechanisms may differ depending upon different languages.
+
+\end{itemize}
+\fi
+
+
+%In particular, there have been rapid advances in user-space virtualization technologies such as Docker~\cite{docker}, and , which allow users to easily launch and create light-weight application containers.
+%\textit{Parikshan}
+%We provide a flexible framework which allows user access to a parallel test-container which behaves identically as the production container.
+%While we discuss several case-studies to debug/ test production applications that show how our framework can be used, we wish to stress that \textbf{the main advantage of \parikshan is a harness/ framework for testing/ debugging in a live environment rather than a new testing methodology}.
+
+\section{Definitions}
+\label{sec:introDefinition}
+
+Before we further discuss the problem statement, requirements, and approach,this section first formalizes some of the terms used throughout this thesis.
+
+\begin{itemize}
+	
+	\item \hypertarget{defn:livedebugging}{\textbf{Live Debugging}}
+	For the purpose of this thesis, we define \emph{live debugging} as a mechanism to debug applications on the fly while the production services are running and serving end-users.
+	
+	\item The \hypertarget{defn:development-environment}{\textbf{development environment}} refers to a setting (physical location, group of human developers, development tools, and production and test facilities) in which software is created and tested by software developers and is not made available to end users.
+	The debugging process in the development environment can be interactive, and can have a high overhead.
+	
+	\item A \hypertarget{defn:production-environment}{\textbf{production environment}}, or use environment, refers to a setting in which software is no longer being modified by software developers and is being actively being used by users.
+	Applications in production cannot have a high instrumentation/debugging overhead, as it is detrimental to the users.
+	
+	\item An \hypertarget{defn:error}{\textbf{error}}, also referred to as a defect or bug, is the deviation of system external state from correct service state.
+	
+	\item A \hypertarget{defn:fault}{\textbf{fault}} is the adjudged or hypothesized cause of an error.
+	
+	\item A \hypertarget{defn:failure}{\textbf{failure}} is an event that occurs when the delivered functionality deviates from correct functionality.
+	A service fails either because it does not comply with the functional specification, or because this specification did not adequately describe the system function.
+	
+	\item \hypertarget{defn:devops}{\textbf{DevOps}} is a software development method that stresses communication, collaboration (information sharing and web service usage), integration, automation and measurement of cooperation between software developers and other information-technology (IT) professionals.
+	DevOps acknowledges the interdependence of software development and IT operations.
+	It aims to help an organization rapidly produce software products and services and to improve operations performance quality assurance.
+	
+	
+	\item \hypertarget{defn:development-phase}{\textbf{Development/Operational Phase}} Development phase is the phase where the application is being developed.
+	The process involves testing, and debugging and iterative development such as adding bug fixes etc. Operational phase is where the application is being operated and used by active users
+	
+	\item \hypertarget{defn:downstream-servers}{\textbf{Downstream Servers}} 
+	For a given application or service, the downstream server is the server which sends it a request.
+	
+	\item \hypertarget{defn:upstream-servers}{\textbf{Upstream Servers}}
+	For a given application or service, the upstream servers are servers which process it's requests and send it responses.
+	
+	
+	\item \hypertarget{defn:production container}{\textbf{Production Container}}
+	This is the container in which the original production service is hosted and where all incoming requests are routed.
+	
+	\item \hypertarget{defn:debug container}{\textbf{Debug Container}}
+	This is a replica of the production container, where a copy of the production service is running. The debug container is used for debugging purposes, and provides the \livedebugging service.
+	
+	\item \hypertarget{defn:replica}{\textbf{Replica}}
+	A replica is a clone of a container, with an exact clone of the file system and the processes running in the container. For the purpose of this thesis \debugcontainer and replica refer to the same thing.
+	
+	\item \hypertarget{defn:SOA}{\textbf{Service Oriented Applications}}
+	Service oriented applications are applications which offer transactional services via network input, and provide responses on the network as well.
+	
+\end{itemize}
+
+\section{Problem Statement}
+\label{sec:introProblemStatement}
+
+Despite advances in software engineering bugs in applications are inevitable.
+The complexity of distributed and large scale applications, with an increased emphasis on shorter development cycles has made debugging more difficult.
+The key challenge of debugging modern applications is twofold: firstly, the complexity due to a combination of distributed components interacting together, and secondly fast debugging of applications to assure a short-time-to debug.
+
+We have observed that while several debugging techniques exist, most of them focus on localizing errors in the development phase.
+Production level debugging techniques are ad-hoc in nature, and generally rely on unstructured logs printed as exceptions or transaction events using print outs from within the application.
+While such logs are good, and can often give contextual information to the developer or the operator, they are meant to provide an indication to only expected errors.
+Furthermore, they do not provide a systematic way to localize such bugs.
+
+More systematic approaches such as record-and-replay systems offer a complete picture of the running production systems.
+These tools capture the exact state, and execution of the system, and allow for it to be faithfully replayed offline.
+This saves the debugger hours of effort in re-creating the bug, it's input and application state.
+However, in order to capture such detailed information, there is a high performance penalty on the production systems.
+This is often unacceptable in real-world scenarios, which is why such techniques have only found limited use.
+
+We further observe that debugging is an iterative process.
+While systematic approaches can provide a complete picture, developer insight is paramount.
+The debugging process usually involves several iterations where the debugger uses clues present in error logs, system logs, execution traces etc. to understand and capture the source of the error.
+This process can have an impact on real-world applications, hence traditionally the debugging and the production phase are kept completely separate.
+
+Production level dynamic program instrumentation tools~\cite{dtrace,systemtap,winetw} enable application debugging, and live insights of the application. 
+However, these are executed inline with the program execution, thereby incurring an overhead.
+The perturbations and overhead because of the instrumentation could restrict the tools from being used in production environments. 
+Thus we require a solution which allows operators/developers to observe, instrument, test or fix service oriented applications in parallel with the production. 
+The techniques and mechanisms in this thesis will aim to provide a \livedebugging environment, which allows debuggers a free reign to debug, without impacting the user-facing application.
+
+\section{Requirements}
+\label{sec:introRequirements}
+
+Our solution should meet the following requirements.
+
+\begin{enumerate}
+	\setlength{\itemsep}{0pt}
+	\item \textbf{Real-Time Insights: }
+	Observing application behavior as the bug presents itself will allow for a quick insight and shorter time to debug.
+	Any solution should allow the debugger to capture system status as well as observe, whatever points he wishes in the execution flow.
+	
+	%\item \textbf{Understanding execution flows across distributed system}:
+	%User requests for distributed applications go through several connected components.
+	%This along with the concurrent nature of current applications makes tracking execution flow across machine extremely important.
+	
+	\item \textbf{Sanity and Correctness}:
+	If the debugging is to be done in a running application with real users, it should be done without impacting the outcome of the program.
+	The framework must ensure that any changes to the application's state or to the environment does not impact the user-facing production application.
+	
+	\item \textbf{Language/Application Agnostic}:
+	The mechanisms presented should be applicable to any language, and any service oriented application (our scope is limited to SOA architectures).
+	
+	%\item \textbf{Allow for the easy creation/specification of tests}
+	%The approach should allow software developers to easily create and specify the test cases, using familiar or easy-to-learn techniques.
+	
+	\item \textbf{Have negligible performance impact}
+	The user of a system that is conducting tests on itself during execution should not observe any noticeable performance degradation. The tests must be unobtrusive to the end user, both in terms of functionality and any configuration or setup, in addition to performance.
+	
+	\item \textbf{No service interruption}: Since we are focusing our efforts on service oriented systems, any solution should ensure that there is not impact on the service, and the user facing service should not be interrupted.
+	
+\end{enumerate}
+
+
+\section{Scope}
+\label{sec:introScope}
+
+Although we present a solution that is designed to be general purpose and applicable to a variety of applications, in this thesis we specifically limit our scope to the following:
+
+\subsection{Service Oriented Applications}
+\label{sec:introScopeSOA}
+
+The traditional batch-processing single node applications are fast disappearing.
+Modern day devices like computers, IOT's, mobile's and web-browsers rely on interactive and responsive applications, which provide a rich interface to it's end-users.
+Behind the scenes of these applications are several \emph{SOA} applications working in concert to provide the final service. 
+Such services include storage, compute, queuing, synchronization, application layer services.
+One common aspect of all of these services is the fact that they get input from network sources.
+Multiple services can be hosted on multiple machines(many-to-many deployment), and each of them communicates with the other as well as the user using the network.
+The work presented in this thesis leverages duplication of network based input to generate a parallel debugging environment.
+In this sense, the scope of the applications targeted in this thesis are limited to service oriented applications, which gather input through the network.
+
+\subsection{Non-Crashing Bugs}
+\label{sec:introScopeNonCrash}
+
+In this thesis, we have primarily focused on continuous debugging in parallel with the production application.
+We have looked at a variety of bugs - performance, resource leak, concurrency, semantic, configuration etc.
+However, we also try to debug an active problem in the application. 
+
+Hence, although a bug which immediately crashes, can still be investigated using \parikshan, it would not be an ideal use-case scenario.
+On the other hand non-crashing bugs such as performance slow-downs, resource leaks which stay in the application long enough, fault tolerant bugs, which do not crash the entire system or similar non-crashing concurrency, semantic and configuration bugs, can be investigated in parallel to the original applications thereby reducing the investigation time, and the time to fix the bug.
+
+\subsection{Native Applications}
+\label{sec:introScopeNative}
+
+One of the tools presented in this thesis is \iprobe - an intelligent hybrid instrumentation tool. 
+\iprobe uses place-holders inserted at compile time in the binary, and leverages them to dynamically patch them at the run-time.
+In it's current implementation \iprobe's techniques can be only applied on native applications.
+
+Managed and run-time interpreted languages such as Java, and .NET can also theoretically have a similar approach built in, but that is out of the scope of this thesis.
+
+
+\section{Proposed Approach}
+\label{sec:introApproach}
+
+Analyzing the executions of a buggy software program is essentially a data mining process.
+Although several interesting methods have been developed to trace crashing bugs (such as memory violations and core dumps), it is still difficult to analyze non-crashing bugs.
+Studies have shown that several bugs in large-scale systems lead to either a changed/inconsistent output, or impact the performance of the application.
+Examples of this  are slow memory leaks, configuration, or performance bugs, which do not necessarily stop all services, but need to be fixed quickly so as to avoid degradation in the QoS.
+
+Existing approaches towards debugging production bugs mostly rely on application logs, and transaction logs which are inserted within the application by the developer himself, to give an idea of the progress of the application, and to guide the debugger towards errors.
+While these logs provide valuable contextual information, they can only be used for expected bug scenarios.
+Furthermore, often they provide incomplete information, or are just triggered as exceptions without providing a complete trace.
+Modern applications also contain a level of fault tolerance, which means that applications are likely to continue to spawn worker threads and provide service despite faults which happen at run-time.
+This often means that the debugger loses the context of the application.
+
+Other more systematic debugging techniques have been used in record-and-replay techniques which allow operators to faithfully capture the entire execution as well as the status of the operating system as well as the application.
+This allows the debuggers to carefully debug the application offline and understand the root-cause of the bug.
+However, an obvious disadvantage of such techniques is that the recording overhead can be relatively high, especially in unpredictable worst-case scenarios (for e.g. spikes in user requests etc.).
+This makes the use of such techniques impractical for most real-world production systems.
+
+Researchers have also studied non-systematic inference based techniques, which allow for lightweight tracing or capturing application logs in distributed applications, and then threading them together to form distributed execution flows.
+These inference techniques do not add much overhead to the production system, as they typically use production instrumentation tools, or existing application logs.
+However, owing to the low amount of instrumentation and data captured, it is often not possible to recreate the entire trace.
+This means that the root-cause of the error may be lost.
+
+We propose a \textbf{ paradigm shift in debugging service oriented applications, with a focus on debugging applications running in the production environment}.
+We call this technique \textbf{``live debugging''}: this technique will provide real-time insights into running systems, and allow developers to debug applications without fearing crashes in the production application.
+We believe that this will in turn lead to much shorter time to bug resolution, hence improving application reliability, and reducing financial costs in case of errors.
+In this thesis we present an \textbf{end-to-end work-flow of localizing production bugs, which includes a framework for live debugging, new live debugging techniques, and mechanisms to make applications live debugging friendly}.\\
+
+%\noindent As a part of this thesis we answer the following key questions:
+%\begin{itemize}
+%	\item \textbf{How do we know which part of a distributed system to focus on for live debugging?}
+%	\item \textbf{How can live debugging be safely applied, without impacting the application?}
+%	\item \textbf{In what way can live debugging be used to localize bugs?}
+%	\item \textbf{What are the various parameters we need to be aware of to localize these bugs?}
+%\end{itemize}
+
+\section{Hypothesis}
+\label{sec:introHypothesis}
+
+The hypothesis we test in this thesis is as follows:
+
+For user-facing application where time-to-bug resolution is critical, on-the-fly debugging parallel to the production application can be enabled without impacting the production environment. This can be achieved in a robust manner, with no impact on the production system, the debugging instrumentation can be adaptive and adhere to pre-defined budgets, and the production applications can be made debugging friendly to ensure low-cost instrumentation.\\
+
+In order to test this, we have developed the following technologies:
+\begin{enumerate}
+	\setlength{\itemsep}{0pt}
+	\item Framework for debugging in production environment (Parikshan)
+	\item Packaging applications to allow low-cost instrumentation (iProbe)
+	\item Applications of live on-the-fly debugging
+\end{enumerate}
+
+
+\iffalse
+The main hypotheses investigated are as follows:
+\begin{enumerate}
+	
+	\item \textbf{For user-facing application where time-to-bug resolution is critical, on-the-fly production debugging can be enabled without impacting the user by using live cloning}.
+	That is, live migration and live cloning approaches can be applied to modern cloud based IAAS platforms to enable deeper inspection and debugging techniques with higher instrumentation overheads, without impacting user perceived performance.
+	
+	\item \textbf{Static compilation techniques combined with dynamic instrumentation can help greatly reduce instrumentation overhead, making it more acceptable for production systems}.
+	Dynamic instrumentation can be complemented using compiler based techniques to make tracing production systems easier.
+	We use custom compile time operations which insert \textbf{NOP} operation in the application binary, these can in turn be easily instrumented at run-time. 
+	We further demonstrate the usage of our instrumentation mechanism by combining it with our \livedebugging framework as an effective means to do debugging.
+	
+	\item \textbf{Adaptive instrumentation techniques can be used to keep instrumentation overhead within pre-designed budgets}. 
+	Here we pro-actively use queuing theory to set bounds for instrumentation in \parikshan, secondly we use re-active adaptive techniques using buffer usage as a trigger to adapt instrumentation.
+	Adhering to this overhead allows us to avoid unnecessary buffer overflows in \parikshan, in turn extending the \debugwindow(explained later) for our framework.
+	
+	%\item \textbf{It is possible to use light-weight statistical mechanisms to localize bugs in a production system, while keeping a bounded instrumentation overhead}. Here we plan to use approaches similar to existing statistical debugging mechanisms to create effective \livedebugging techniques while adhering to a bounded overhead. We discuss how instrumentation points(called predicates) can be sampled at varying rates to have the maximum information gain, while not leading to buffer overflows in \parikshan.
+	
+\end{enumerate}
+
+\fi
+
+\section{Assumptions}
+\label{sec:introAssumptions}
+
+The work presented in this thesis is designed so that it can be applied in the most generic cases. 
+However, the implementation and some of the design motivation make some key assumptions which are presented in this section:
+
+\subsection{Resource Availability}
+One of the core insight driving our live debugging technology is the increasing availability of compute resources. 
+With more and more applications being deployed on cloud infrastructure, in order to ease scaling out of resources and sharing of compute power across multiple services - The amount of computing power available is flexible and plentiful.
+Several existing services like Amazon EC2~\cite{ec2} and Google Compute~\cite{gcompute} provide infrastructure-as-a-service and form the backbone of several well known cloud services. 
+
+\parikshan assumes cheap and ample resource availability for most modern day services, and ease of scalability. We leverage this abundance of resources, to utilize unused resources for debugging purposes.
+As mentioned earlier, \parikshan uses unused containers to run a replica of the original production service, solely for the purpose of debugging.
+While it is difficult to quantify, we believe that the advantage of on-the-fly debugging and quick bug isolation outweighs the cost of these extra resources. 
+
+\section{Outline}
+\label{sec:introOutline}
+
+The rest of this thesis is organized as follows:
+
+\begin{itemize}
+	\item Chapter~\ref{ch:parikshan} discusses the design and implementation of the \parikshan framework which enables live debugging.
+	In this chapter we will first give a brief motivation, and discuss the overall design, and how our framework fits into service-oriented applications.
+	We then go into a detailed explanation of the design of each of the components of network request duplication as well as our live cloning algorithm.
+	We follow this up with implementation details, and evaluation scenarios using both simulation results and real-world experiments which show the performance of our framework. 
+	The chapter also includes a case study of 16 real-world bugs, and a survey of 150+ bugs real-world bugs which we use to show that network replay is enough for triggering most bugs in service-oriented applications.
+	
+	
+	\item Chapter~\ref{ch:iprobe} introduces \iprobe a novel hybrid instrumentation technique, which can help in pre-packaging SOA application binaries for instrumentation - thereby helping in live-debugging.
+	We first begin with an explanation of \iprobe's design, which is split in a two phase process - ColdPatching and HotPatching. This is explained in stateful diagrams to show how the code is modified at different states in the binary.
+	We then show safety considerations of \iprobe and this is followed by an extended design which shows how \iprobe can be applied to applications without compile time modifications as well. 
+	Next we compare \iprobe's approach with traditional trampoline executions. We then follow this with the implementation, and a short description of \textit{fperf} which is a application of \iprobe for hardware monitoring. 
+	We follow this up with evaluation of \iprobe which shows \iprobe's overhead in coldpatching and hotpatching phase, and it's comparison with traditional tools.
+	
+	
+	\item While the previous two chapters build the base for \livedebugging, Chapter~\ref{ch:activedebugging} discusses how these tools can be leveraged to do real-world debugging. In the first part of this chapter, we discuss several important advantages and limitations, which must be kept in mind when using \parikshan to debug applications. 
+	Then we discusss existing debugging techniques which can be used in tandem with \livedebugging to provide a more effective means for localizing the bug.
+	In this chapter we introduce two key techniques which can be used for effective debugging with \parikshan. In the first called budget limited adaptive debugging we introduce how statistical debugging can be used in \parikshan to increase or decrease the degree of instrumentation in order to improve the statistical odds of localizing the bug.
+	Next we look at \activedebugging which allows debuggers to apply fixes, modify running binaries and verify the bug fix on a parallel execution of an unmodified application.
+	
+	\item In chapter~\ref{ch:conclusions}, we conclude this thesis, highlighting the contributions of our techniques. 
+	Additionally, this chapter also includes several future work possibilities that can arise from this thesis including some short-term future work and long-term possibilities.  
+	
+	\item Appendix
+	
+\end{itemize}

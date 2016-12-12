@@ -1,0 +1,49 @@
+
+%\begin{figure}[ht]
+%	\begin{centering}
+%		\includegraphics[width=0.5\textwidth]{figs/arch.png}
+%		\caption{\parikshan applied to a mid-tier service: It is comprised of (1) Clone Manager for Live Cloning, (2) Proxy Duplicator to duplicate network traffic, and (3) Proxy Aggregator to replay network traffic to the cloned debug container.}
+%		\label{fig:workflow}
+%	\end{centering}
+%\end{figure}
+
+
+
+
+\section{\parikshan}
+\label{sec:designParikshan}
+
+In Figure~\ref{fig:network_arch}, we show the architecture of \parikshan when applied to a single mid-tier application server.
+\parikshan consists of 3 modules: 
+\textbf{Clone Manager}: manages ``live cloning'' between the production containers and the debug replicas, 
+\textbf{Network Duplicator}: manages network traffic duplication from downstream servers to both the production and debug containers, 
+and \textbf{Network Aggregator}: manages network communication from the production and debug containers to upstream servers.
+The network duplicator also performs the important task of ensuring that the production and debug container executions do not diverge.
+The duplicator and aggregator can be used to target multiple connected tiers of a system by duplicating traffic at the beginning and end of a workflow.
+Furthermore, the aggregator module is not required if the debug-container has no upstream services. 
+%At the end of this section, we also discuss the \textbf{debug window} during which we believe that the debug-container faithfully represents the execution of the production container.
+%Finally, we discuss \textbf{divergence checking} which allows us to observe if the production and debug containers are still in sync.
+
+
+\input{parikshan/clone_new}
+
+\subsection{Network Proxy Design Description}
+
+The network proxy duplicator and aggregator are composed of the following internal components:
+
+\begin{itemize}[leftmargin=*]
+	\item \textbf{Synchronous Passthrough}: The synchronous passthrough is a daemon that takes the input from a source port, and forwards it to a destination port. The passthrough is used for communication from the production container out to other components (which is not duplicated).
+	\item \textbf{Asynchronous Forwarder}: The asynchronous forwarder is a daemon that takes the input from a source port, and forwards it to a destination port, and also to an internal buffer. The forwarding to the buffer is done in a non-blocking manner, so as to not block the network forwarding. 
+	\item \textbf{Buffer Manager}: Manages a FIFO queue for data kept internally in the proxy for the debug-container.
+	It records the incoming data, and forwards it a destination port. 
+	\item \textbf{Dummy Reader}: This is a standalone daemon, which reads and drops packets from a source port
+\end{itemize}
+
+\noindent
+%Next, we explain how these components are used:\\
+
+\input{parikshan/proxyDup_new}
+\input{parikshan/proxyAgg_new}
+\input{parikshan/window_new}
+\input{parikshan/divergence_new}
+

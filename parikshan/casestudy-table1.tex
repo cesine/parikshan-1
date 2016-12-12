@@ -1,0 +1,34 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+% \usepackage{graphicx}
+\begin{table*}[ht]
+	\centering
+	\footnotesize
+
+	\setlength{\tabcolsep}{2pt}
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{@{}c c c p{5.15cm} c c p{4.5cm}@{}}
+			\toprule
+			\textbf{Bug Type} & \textbf{Bug ID} & \textbf{Application} & \textbf{Symptom/Cause} & \textbf{\begin{tabular}[c]{@{}c@{}}Determ-\\ inistic\end{tabular}} & \textbf{Crash} & \multicolumn{1}{c}{\textbf{Trigger}} \\ \midrule
+			\multirow{3}{*}{\textbf{Performance}} & MySQL \#15811 & mysql-5.0.15  & Bug caused due to multiple calls in a loop& Yes & No & Repeated insert into table \\ %\cmidrule(l){2-7} 
+			& MySQL \#26527 & mysql-5.1.14 & Load data is slow in a partitioned table& Yes & No & Create table with partition and load data \\ %\cmidrule(l){2-7} 
+			& MySQL \#49491 & mysql-5.1.38 & calculation of hash values inefficient & Yes & No & MySql client select requests \\ \midrule
+			\multirow{5}{*}{\textbf{Concurrency}} & Apache \#25520 & httpd-2.0.4 & Per-child buffer management not thread safe & No & No & Continuous concurrent requests \\ %\cmidrule(l){2-7} 
+			&Apache \#21287 & \parbox{1.5cm}{\centering httpd-2.0.48, php-4.4.1} & Dangling pointer due to atomicity violation & No & Yes & Continuous  concurrent request \\ %\cmidrule(l){2-7} 
+			& MySQL \#644 & mysql-4.1 & data-race leading to crash & No & Yes & Concurrent select queries \\ %\cmidrule(l){2-7} 
+			& MySQL \#169 & mysql-3.23 & Race condition leading to out-of-order logging & No & No & Delete and insert requests \\ %\cmidrule(l){2-7} 
+			& MySQL \#791 & mysql-4.0 & Race - visible in logging& No & No & Concurrent flush log and insert requests \\ \midrule
+			\multirow{4}{*}{\textbf{Semantic}} & Redis \#487 & redis-2.6.14 & Keys* command duplicate or omits keys & Yes & No & Set keys to expire, execute specific reqs \\ %\cmidrule(l){2-7} 
+			& Cassandra \#5225 & cassandra-1.5.2 & Missing columns from wide row & Yes & No & Fetch columns from cassandra \\ %\cmidrule(l){2-7} 
+			& Cassandra \#1837 & cassandra-0.7.0 & Deleted columns become available after flush & Yes & No & Insert, delete, and flush columns \\ %\cmidrule(l){2-7} 
+			& Redis \#761 & redis-2.6.0 & Crash with large integer input & Yes & Yes & Query for input of large integer \\ \midrule
+			\multirow{2}{*}{\textbf{Resource Leak}} & Redis \#614 & redis-2.6.0 & Master + slave, not replicated correctly & Yes & No & Setup replication, push  and pop some elements \\ %\cmidrule(l){2-7} 
+			& Redis \#417 & redis-2.4.9 & Memory leak in master & Yes & No & Concurrent key set requests \\ \midrule
+			\multirow{2}{*}{\textbf{Configuration}} & Redis \#957 & redis-2.6.11 & Slave cannot sync with master & Yes & No & Load a very large DB \\ %\cmidrule(l){2-7} 
+			& HDFS \#1904 & hdfs-0.23.0 & Create a directory in wrong location & Yes & No & Create new directory \\ \bottomrule
+		\end{tabular}%
+	}
+	\caption{List of real-world production bugs studied with \parikshan}
+	\label{tab:casestudy}
+\end{table*}

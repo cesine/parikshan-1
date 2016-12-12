@@ -1,0 +1,54 @@
+\subsection{Overview}
+\label{sec:guided_overview}
+
+
+In the sections uptil now, we have introduced a framework for \livedebugging, a tool for instrumentation and mechanisms to configure the overhead budget of instrumentation. 
+We now discuss some applications of \livedebugging in the real-world, and in particular introduce a new mechanism called \activedebugging.
+The debug container allows for debuggers to apply any ad-hoc technique used in offline debugging. 
+However, in order for us to have continuous debugging, it is essential to allow for forward progress in the debug container. 
+Furthermore, the divergence due to instrumentation (either due to slowdown, or functional) should not stop forward-progress in the debug-container.
+
+Having a debug-container which is isolated from the production, but still in sync with production services, allows a variety of ad-hoc debugging approaches to be integrated and leverage our framework.
+Traditional offline debugging approaches, such as dynamic instrumentation can be easily directly applied to the debug-container without any ramifications. 
+Others like memory or performance profiling, and execution traces can also be applied in the debug container.
+Similarly the \debugcontainer can be used as a staging mechanism for record-replay on demand to ensure deterministic execution.
+The key to applying these approaches is that none of them functionally modifies the application.
+
+One possible route that we wish to explore further is how to allow for validation of test-cases, or validate functional patches/fixes, which may modify the output.
+For the purposes of our exploration, we have currently assumed that these patches/and test-cases only bring about local changes, and not global changes in the application.
+In this section, we introduce the concept of \activedebugging, whereby developers can apply a patch/fix or apply a test in the \debugcontainer.
+\activedebugging ensures that any modifications in the \debugcontainer does not lead to a state change in the \productioncontainer.
+This will enable the debugger to fix/patch or run test-cases in the debug-container while ensuring forward progress and in sync with production. 
+We are inspired from existing perpetual invivo testing frameworks like INVITE~\cite{invivo}(which also provides partial test-isolation), in the production environment.
+
+\iffalse
+In recent years several monitoring techniques have been developed to monitor the health of production systems.
+For example most modern operating systems have resource monitors~\cite{linuxHealth, windowsHealth, macHealth}, which can be used to track the CPU, memory usage, cache misses, temperature etc. of the physical machine.
+These are useful to discover high workloads, or if the machine is stressed because of heavy resource usage.
+Similarly, application level monitoring tools are used to report transactions or errors in the application.
+Monitoring outputs usually provide the first clue towards resolving an error in the debugging process.
+%While useful, these monitoring mechanisms  have a performance trade-off with the amount of instrumentation that can be done.
+%Furthermore, the information provided by these logs may not be enough to understand the root-cause of the error.
+
+However all monitoring/instrumentation techniques impose a performance overhead on the applications.
+This can adversely impact user-experience, hence real-world production instrumentation is generally kept at very low levels.
+\parikshan provides an alternative mechanism where this debugging/instrumentation can be done in parallel on a sandboxed cloned container.
+Any instrumentation or monitoring in the debug-container has no performance impact on the production container.
+In the context of our system, debuggers can use a variety of ad-hoc approaches to capture the root-cause of an error.
+For example a naive approach could be to use trial-and-error instrumentation to find the execution trace for the error.
+Alternatively, the user could also do aggressive brute force instrumentation for all function execution, which could help locate the problem.
+However, both these approaches can have potentially high overheads, which in turn can lead to a buffer overflow.
+
+In this chapter we introduce a statistical sampling approach which imposes a bounded performance overhead, to ensure maximal live debugging information, without causing a buffer overflow.
+%In our search for more systematic approach towards live debugging, we looked towards two possible techniques.
+%Firstly, we try to implement an automated budget limited instrumentation approach for capturing application logs.
+We are inspired by previous work done in statistical debugging~\cite{cbi}, and delta debugging~\cite{delta} techniques which aim to streamline and automate the process of bug localization.
+This is achieved by having predicate profiles from both successful and failing runs of a program and applying statistical techniques to pinpoint the cause of the failure.
+The core advantage of statistical debugging is that the sampling frequency of the instrumentation can be decreased to reduce the instrumentation overhead.
+
+One of the key criteria for successful statistical debugging is to have higher instrumentation rates, to make the results more statistically significant. 
+There is a clear trade-off between instrumentation vs performance overhead for statistical instrumentation. 
+A key advantage of using this with \parikshan is that we can provide live feedback based buffer size and bounded overheads, hence squeezing the maximum advantage out of statistical debugging without impacting the overhead. 
+We evaluate the slack available in each request for instrumentation without risking a buffer overflow and getting out of sync of the production container.
+Live interactive debugging provided by \parikshan further allows for quick updates to the instrumentation and targeting specific areas of the application code.
+\fi

@@ -4,4 +4,4 @@ all:
 	pdflatex main
 	pdflatex main
 clean:
-	@-rm *.dvi *.aux *.log *.out *.bak *.blg *.bbl *.toc *.lof *.lot *.pdf 2> /dev/null
+	@rm *.dvi *.aux *.log *.out *.bak *.blg *.bbl *.toc *.lof *.lot *.pdf

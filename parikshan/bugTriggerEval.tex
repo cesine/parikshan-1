@@ -1,0 +1,36 @@
+\subsection{A survey of real-world bugs}
+\label{sec:survey}
+\noindent
+
+In Table~\ref{tab:survey}, we present the results of a survey of bug reports of three production SOA applications.
+In order to understand how we did the survey, let us look at MySQL as an example.
+We first searched for bugs which were tagged as ``fixed'' by developers and dumped them.
+We then chose a random time-line (2013-2014) and filtered out all bugs which belonged to non-production components - like documentation, installation failure, compilation failure.
+We then manually went through each of the bug-reports, filtering out the ones which were mislabeled or were reported based on code-analysis, or did not have a triggering test report (essentially we focused only on bugs that happened during production scenarios).
+We then classified these bugs into the categories shown in Table~\ref{tab:survey} based on the bug-report description, and the patch fix, to-do action item for the bug.
+
+One of the core-insights provided by this survey was that most bugs (93\%) triggered in production systems are deterministic in nature (everything but concurrency bugs), among which the most common ones are semantic bugs (80\%).
+This is understandable, as they usually happen because of unexpected scenarios or edge cases, that were not thought of during testing.
+Recreation of these bugs depend only on the state of the machine, the running environment (other components connected when this bug was triggered), and network input requests, which trigger the bug scenario.
+\parikshan is a useful testing tool for testing these deterministic bugs in an exact clone of the production state, with replicated network input. 
+The execution can then be traced at a much higher granularity than what would be allowed in production containers, to find the root cause of the bug. 
+
+On the other hand, concurrency errors, which are non-deterministic in nature make up for less than 7\% of the production bugs.
+Owing to non-determinism, it is possible that the same execution is not triggered. However concurrent points can still be monitored and a post-facto search of different executions can be done to find the bug~\cite{dpor,systematicDPORconcurrency} to capture these non-deterministic errors.\\ \\
+
+
+\begin{table}[]
+\centering
+\begin{tabular}{cccc}
+\toprule
+\textbf{Category} & \textbf{Apache} & \textbf{MySQL} & \textbf{HDFS} \\ \midrule
+\textbf{Performance} & 3 & 10 & 6 \\ 
+\textbf{Semantic} & 36 & 73 & 63 \\ 
+\textbf{Concurrency} & 1 & 7 & 6 \\ 
+\textbf{Resource Leak} & 5 & 6 & 1 \\ \midrule
+\textbf{Total} & 45 & 96 & 76 \\
+\bottomrule
+\end{tabular}
+\caption{Survey and classification of bugs}
+\label{tab:survey}
+\end{table}

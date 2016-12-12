@@ -1,0 +1,15 @@
+\begin{abstract}
+\noindent
+
+Short time-to-bug localization and resolution is extremely important for any 24x7 service-oriented application.
+In this work, we present a novel-mechanism which allows debugging of production systems on-the-fly. 
+We leverage user-space virtualization technology (OpenVZ/LXC), to launch replicas from running instances of a production application, thereby having two containers: \textit{production} (which provides the real output), and \textit{debug} (for debugging). 
+The \textit{debug container} provides a sandbox environment for debugging without any perturbation to the production environment. 
+Customized network-proxy agents asynchronously replicate and replay network inputs from clients to both the production and debug-container, as well as safely discard all network output from the debug-container. 
+We evaluated this low-overhead record and replay technique on five real-world applications, finding that it was effective at reproducing real bugs.
+%We used our system, called \texttt{Parikshan}, on several real-world bugs, and effectively reduced debugging complexity and time.
+In comparison to existing monitoring solutions which can slow-down production applications, \parikshan allows application monitoring at ``zero-overhead''.
+
+
+
+\end{abstract}
