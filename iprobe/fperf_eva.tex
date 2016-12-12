@@ -1,0 +1,112 @@
+\subsection{Case Study: Hardware Event Profiling}
+\label{sec:eva}
+
+\subsubsection{Methodology}
+
+%for showcasing iProbe as a framework for new tool development.
+%They are all about "automated software engineering" -> "automated dynamic application profiling":
+In this section, we present preliminary results on FPerf.
+The purpose of this evaluation is for the illustration of iProbe
+as a framework for lightweight dynamic application profiling. 
+Towards it, we will discuss the results in the context of two FPerf features in hardware event profiling: 
+\begin{itemize}
+\item \textbf{Instrumentation Automation}: \quad FPerf automates hardware event profiling on massive functions in modern software. This gives a wide and clear view of application performance behaviors.
+% This is with the "VTune vs FPerf" results on function coverage, and.  
+\item \textbf{Profiling Automation}: \quad FPerf automates the profiling overhead control. This offers a desired monitoring feature for SLA-sensitive production systems. %knob This is with the "budget" results, and 
+\end{itemize}
+While there are many other important aspects on FPerf to be evaluated such as hardware event information accuracy and different overhead control algorithms, 
+we focus on the above two issues related to iProbe in this paper. 
+
+\begin{table}[h!]
+\caption{Experiment Platform.}
+\label{tab:serverparameter}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\emph{CPU} & Intel Core$^{TM}$ i5-2500 CPU 3.3GHz\\\hline
+\emph{OS} & Ubuntu 11.10 \\ \hline
+\emph{Kernel} & 3.0.0-12 \\ \hline
+\emph{Hardware event} &  \multirow{2}{*}{PAPI 5.1.0} \\ 
+\emph{access utility} &  \\ \hline
+\emph{Applications} & SPEC CPU2006 \\ \hline
+\end{tabular}
+\end{table}
+
+Our testbed setup is described in Table \ref{tab:serverparameter}.
+The server uses an Intel Core$^{TM}$ i5 CPU running at 3.3GHz, and runs Ubuntu 11.10 Linux with 3.0.0-12 kernel.
+FPerf uses PAPI 5.1.0 for hardware performance counter reading, and the traced applications are SPEC CPU2006 benchmarks.
+
+\subsubsection{Instrumentation Automation}
+
+\begin{figure}[h!]
+    \begin{center}       
+        \epsfig{figure=iprobe/Images/motiv.eps,width=9cm} 
+    \end{center}
+    \caption{The number of different functions that have been profiled in one execution.}
+    \label{fig:motiv}
+\end{figure}
+
+
+Existing profilers featuring hardware events periodically 
+(based on time or events) sample the system-wide 
+hardware statistics and stitch the hardware
+information to running applications (e.g. Intel VTune~\cite{vtune}).
+Such sampling based profilers work well to identify and optimize hot code,
+but with the possibility of missing 
+interesting application functions yet not very hot.
+In sharp contrast, \textit{FPerf} is based on iProbe framework, 
+it inserts probe functions when entering and exiting each target function.
+Therefore, \textit{FPerf} can catch all the function calls in application
+execution. In Figure \ref{fig:motiv}, we use VTune and \textit{FPerf} (without budget quota) 
+to trace SPEC workloads with test data set. VTune uses all default settings. We find 
+that VTune misses certain functions. For example, on {\em 453.povray} VTune only captures 
+12 different functions in one execution. In contrast, \textit{FPerf}
+does not misses any function because it records data
+at enter/exit of each function. Actually, there
+are 280 different functions have been used in this execution. 
+having the capability to profile all functions or any subset in the program is desirable.
+For example, \cite{Jovic:2011} reported that in deployment environment, non-hot functions (i.e.,
+functions with low call frequency) might cause performance bugs as well. 
+
+FPerf leverages iProbe's all-function instrumentation and functions-selection utility to achieve instrumentation automation.
+
+\subsubsection{Profiling Automation}
+
+\begin{figure*}[h!]
+    \begin{center}
+     $\begin{array} {cc}        
+        \epsfig{figure=iprobe/Images/slowdownbench.eps,width=7cm} & \epsfig{figure=iprobe/Images/slowdownbase.eps,width=7cm}\\
+        \mbox{(a) Slow-down with Overhead Control.} & \mbox{(b) Slow-down with No Overhead Control.}\\
+        \epsfig{figure=iprobe/Images/coveragebench.eps,width=7cm} & \epsfig{figure=iprobe/Images/coveragebase.eps,width=7cm}\\
+        \mbox{(c) Number of Profiled Functions with Limited Budget.} & \mbox{(d) Number of Profiled Functions with No Budgeting.}\\
+        \end{array}$
+    \end{center}
+    \caption{Overhead Control and Number of Captured Functions Comparison.}
+    \label{fig:budgeting}
+\end{figure*} 
+
+We tested the measured performance overhead and the number of captured functions of FPerf with different overhead budget. %our budgeting algorithm and compare that with no budgeting case.
+As shown in Figure \ref{fig:budgeting}, the Y axis of Figure \ref{fig:budgeting} (a) and (b) is slow-down, which is defined as the execution time with tracing divided by the execution time without tracing. 
+The Y axis of Figure \ref{fig:budgeting} (c) and (d) is the number of profiled functions. The ``budget" legend is the total number of samples we assign \textit{FPerf} to take. 
+With no budgeting, \textit{FPerf} records hardware counter values at every enter/exit points of each function. 
+From Figure \ref{fig:budgeting} (b) and (d), no budgeting can capture all the functions but with large 100x-1000x slow-downs. 
+In contrast, FPerf showed its ability to control the performance overhead under $5\%$ in Figure \ref{fig:budgeting} (a).
+Of course, FPerf had the possibility to miss functions, as when the budget is too tight, we only sample a limited number of function enter/exit points.
+
+FPerf leverages iProbe's scalability property (predictable low overhead) to achieve the automation on realizing a low and controllable profiling overhead.
+
+
+
+
+
+%
+%\begin{figure*}[t]
+%    \begin{center}        
+%        \epsfig{figure=Images/correlation.eps,width=15cm}
+%    \end{center}
+%    \caption{Correlation of collected statistics between budgeting algorithm and no budgeting.}
+%    \label{fig:budgetingcorre}
+%\end{figure*} 
+%
+%In the experiment of Fig \ref{fig:budgetingcorre}, we present the correlation coefficient of statistics (performance counter values) between budgeting algorithm and no budgeting cases. In this test, we get the running-average of collected statistics and calculate the correlation coefficient between budgeting cases with no budgeting case. We can observe that, on average, the budgeting algorithm collected statistics have very high correlation coefficient with no budgeting case. However, for certain workload (e.g., soplex), since \textit{FPerf} skips a lot functions (we can tell that from comparing Fig \ref{fig:budgeting} c and d), there is a large difference between budgeting and no budgeting cases.
+%

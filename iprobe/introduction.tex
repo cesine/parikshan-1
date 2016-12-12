@@ -1,0 +1,162 @@
+\section{Introduction}
+\label{sec:intro}
+
+Ideally, a production system tracing tool should have zero-overhead when it is not activated and should have a low overhead when it is activated. 
+In other words, its performance should not adversely effect the usage of the traced application. 
+At the same time, it should be flexible enough so as to meet versatile instrumentation needs at run-time for management tasks such as trouble-shooting or performance analysis.
+
+Over the years researchers have proposed many tools to assist in application performance analytics \cite{pin,gdb,dtrace,systemtap,lttng,utrace,ptrace,dyninst}.
+While these techniques provide flexibility, and deep granularity in instrumenting applications, they often trade in considerable complexity in system design, implementation and overhead to profile the application. 
+For example, binary instrumentation tools like Intel's PIN Instrumentation tool \cite{pin}, DynInst \cite{dyninst} and GNU debugger \cite{gdb} allow complete blackbox analysis and instrumentation but incur a heavy overhead, which is unacceptable in production systems. 
+Inherently, these tools have been developed for the development environment, hence are not meant for a production system tracer.
+
+Production system tracers such as DTrace\cite{dtrace} and SystemTap\cite{systemtap} allow for low overhead kernel function tracing.
+These tools are optimized for inserting hooks in kernel function/system calls, and can monitor run-time application behavior over long time periods. 
+However, they have limited instrumentation capabilities for user-space instrumentation, and incur a high overhead due to frequent kernel context-switches and complex trampoline mechanisms.
+% compared to user level solutions (we compare overheads of iProbe in later sections).
+
+Software developers often utilize program print statements, write their own loggers, or use tools like log4j~\cite{log4j} or log4c~\cite{log4c} to track the execution of their applications.
+Those manually instrumented probe points can easily be deployed without additional libraries or kernel support, and have a low overhead to run 
+without impacting the application performance noticeably. 
+However, they are inflexible and can only be turned on/off at compile-time or before starting the execution. 
+Besides, usually only a small subset of functions is chosen to avoid larger overheads.
+
+
+In this paper, we introduce a dynamic instrumentation framework called \emph{iProbe}.
+iProbe has instrumentation overheads comparable to print/debug statements, while still giving users the flexibility to choose targets in the execution stage. 
+We evaluated iProbe on micro-benchmark and SPEC CPU 2006 benchmarks.
+iProbe showed an order of magnitude performance improvement in comparison to SystemTap\cite{utrace} and DynInst\cite{dyninst} 
+in terms of tracing overhead and scalability.
+Additionally, the instrumented applications incur 
+negligible overhead when iProbe is not activated.
+We also present a new hardware event profiling tool called \emph{FPerf} 
+developed in the iProbe framework.  
+%profiling resource usage at a function level granularity by sampling hardware performance counters using iProbe.
+FPerf leverages iProbe's flexibility and scalability to realize 
+a fine-grained performance event profiling solution with overhead control.
+In the evaluation, FPerf was able to obtain function-level
+hardware event breakdown on SPEC CPU2006 applications 
+while controlling performance overhead (e.g., under 5\%)
+
+%so that application usage has a minimal effect is not effected while allowing for application monitoring.
+%Another category is tools such as log4j, and log4c \cite{log4j,log4c} that are dependent on user inserted calls to logging functionality.
+%Developers can use these tools to add switches for different verbosity levels in application logs, and also these logs can be turned on/off at the beginning of execution or at compile time. 
+%While such logging tools have low overhead as they insert instrumentation at compile time (thereby avoiding complexities present in dynamic instrumentation mechanisms), they offer low to no flexibility as logging points are predefined and segregated in levels.
+
+%\subsection{Contributions}
+
+%Over the years researchers have proposed several tools to assist in application performance analytics \cite{pin,gdb,dtrace,systemtap,lttng,utrace,ptrace}. 
+%These techniques trade in considerable complexity in system design, implementation and in some cases overhead to gather performance analysis data. 
+%For example, binary instrumentation tools like Intel's PIN Instrumentation tool \cite{pin} and GNU debugger \cite{gdb} allow complete blackbox analysis and instrumentation but incur a heavy overhead, which is unacceptable in production systems.  
+%Kernel monitoring tools such as Solaris's DTrace \cite{dtrace}, and SystemTap \cite{systemtap} offer a lighter user-space probes to capture the execution of program functions, but still have a comparatively heavy overhead and cannot scale well as they involve software interrupts and context-switches to the kernel to capture the target instructions
+
+% Nipun-> Dtrace, Systemtap are commonly used so should this be put in: \footnote{Most of these tools are primarily kernel space debuggers and work well for kernel function tracing}.  
+
+%On the other hand code-level solutions such as log4j \cite{log4j} are extremely light weight, as they are a part of the target program itself. 
+%However, they rely on the programmer modifying the source code ahead of time, and cannot be dynamically changed at run-time to take care of an unseen scenario. 
+
+%challenges with existing dynamic instrumentation tools
+%1. high kernel trapping overhead 
+%2. can't handle commerical software release with stripped metadata
+
+%iProbe is a user-space monitoring tool 
+%that can be packaged with the target application, and 
+%that provides a significantly light-weight, flexible, and scalable run-time instrumentation framework. 
+The main idea in iProbe design is \emph{decoupling the process of run-time instrumentation into offline and and online stages}, which avoids several complexities faced by current state-of-the-art mechanisms \cite{dtrace,systemtap,dyninst,pin} such as instruction overwriting, complex trampoline mechanisms, and code segment memory allocation, kernel context switches etc.
+Most existing dynamic instrumentation mechanisms rely on a trampoline based design, and generally have to make several jumps to get to the instrumentation function as they not only do instrumentation but also simulate the instructions that have been overwritten.
+Additionally, they have frequent context-switches as they use kernel traps to capture instrumentation points, and execute the instrumentation.
+The performance penalty imposed by these designs are unacceptable in a production environment.
+
+
+Our design avoids any transitions to the kernel which generally causes higher overheads, and is completely in user space. 
+iProbe can be imagined as a framework which provides a seamless transition from an instrumented binary to a non-instrumented binary.
+We use a hybrid 2-step mechanism which offloads dynamic instrumentation complexities to an offline development stage, thereby giving us a much better performance.
+The following are the 2 stages of iProbe:
+\begin{itemize}
+
+\item \textbf{ColdPatch: } We first prepare the target executable by introducing dummy instructions as ``place-holders'' for hooks during the development stage of the application. 
+This can be done in 3 different ways: Primarily, we can leverage compiler based instrumentation to introduce our ``place-holders''. 
+Secondly we can allow users to insert macros for calls to instrumentation functions which can be turned on and off at run-time. 
+Lastly we can use static binary rewriter to insert place-holders in the binary without any recompilation.  
+iProbe uses binary parsers to capture all place-holders in the development stage and generates a meta-data file with all possible probe points created in the binary.
+
+\item \textbf{HotPatch: } We then leverage these place-holders during the execution of the process to safely replace them with calls to our instrumentation functions during run-time. 
+iProbe uses existing tools, ptrace \cite{ptrace}, to modify the code segment of a running process, and does safety check to ensure correctness of the executing process. 
+Using this approach in a systematic manner we reduce the overhead of iProbe while at the same time maintaining a relatively simple design. 
+
+
+\end{itemize}
+
+We propose a new paradigm in development and packaging of applications, wherein developers can insert probe points in an application by using compiler flag options, and applying our ColdPatch.
+An iProbe-ready application can then be packaged along with the meta-data information and deployed in the production environment.
+iProbe has negligible effect on the application's performance when instrumentation is not activated, and low overhead when instrumentation is activated. 
+We believe this is an useful feature as it requires minimal developer effort, and allows for low overhead production-stage tracing which can be switched on and off as required. 
+This is desirable in long-running services for both debugging and profiling usages. 
+
+%Our tool is system agnostic and works on native applications. 
+%We have tested it on large scale systems like mysql and apache, and have evaluated it's performance on the SPEC CPU benchmarks.
+
+%Instead of traditional development approaches which require considerable user effort to add logging points in an application
+
+%iProbe utilizes a novel compiler assited hot-patching technique.  
+%Hot Patching has long been studied for security exploits or patching security updates, bug-fixes etc. \cite{katana}. 
+%HotPatching is a run-time instrumentation technique which can modify loaded code segments. Previously hot-patching approaches have been used 
+%approaches such as windows hot-patching \cite{whotpatch}, live-patch
+%and pannus \cite{pannus}, have been used to hot-patch updates, in
+%production systems. However, they cannot be used for monitoring as
+%they replace the target module entirely and need knowledge of the
+%functionality of the target.  
+
+%iProbe revisits old hot-patching mechanisms, to precisely patch instrumentation when required in each functions of the binary. 
+%We do this by using compiler driven techniques to introduces placeholders, which assist us as pointers in run-time to do hot-patching. 
+%iProbe uses binary parsers to capture all placeholders before the instrumentation and use existing technologies such as ptrace \cite{ptrace} to introduce the patches. 
+
+
+%iProbe has an order of magnitude less overhead and scales significantly better compared to existing tracing mechanisms such as SystemTap \cite{systemtap}. Further iProbe does not rely on symbolic information in the binary to introduce instrumentation unlike pure black-box binary tracing techniques. This allows for iProbe to trace production binaries with no debug/symbolic information and allows for a smaller light-weight executable, as well as introduces a measure of security from reverse engineering mechanisms.
+
+
+
+%\noindent \textbf{Key Features}:
+%The following are the key features of iProbe.
+
+%\begin{itemize}
+
+%\item \textbf{Low runtime overhead due to complete user-space design}
+%
+%State-of-the-art tools such as DTrace \cite{dtrace}, SystemTap \cite{systemtap} and dyninst\cite{dyninst} are sub-optimal in terms of performance, and can generally not scale well.
+%fast compared to more fine level monitoring tools such as debuggers \cite{gdb} or dynamic translation tools \cite{pin}.
+%However, they still have substantial overhead and cannot be used for persistent monitoring of application level functions in the user-space.
+%iProbe introduces a low overhead monitoring which is an order of magnitude faster and scales significantly better than existing mechanisms.
+
+
+%\item \textbf{Near zero efforts to support run-time instrumentation of applications (hot-patching)}
+%\item \textbf{Reliable dynamic instrumentation with near zero runtime efforts}
+%
+
+%The dynamic instrumentation requires to patch program status at run-time. 
+%Conventional approaches based on trampolines impose the issues on the complexity and reliability of instrumented code such as creating and managing code memory regions for the new control flow \cite{katana,dtrace,systemtap}.
+%iProbe create hooks' place holders in the static binary patching then performs runtime instrumentation which enables or disables instrumentation in a more elegant and reliable way by using in-place holders.
+%which avoids these complexities. 
+
+%\item \textbf{Support stripped binaries without any debugging information}
+%Current approaches such as SystemTap\cite{systemtap}, DTrace\cite{dtrace} require debugging information in the binary for instrumentation.
+%iProbe can dynamically instrument binaries at runtime without any debug related information in the deployment by converting the required information to the meta data which is securely managed and used only by iProbe. 
+%This design separating the deployment of software and its tracing capability improves the usability of software tracing in the deployment stage, by making the binary light weight and more secure.
+
+%\end{itemize}
+
+The rest of the paper is organized as following. 
+%Section \ref{sec:intro} introduces the motivation and key contributions behind iProbe. 
+Section \ref{sec:design} discusses the design of iProbe framework, explaining our ColdPatching, and HotPatching techniques;
+we also discuss how safety checks are enforced by iProbe to ensure correctness, and some extended options in iProbe for further flexibility.
+Section \ref{sec:trampoline} compares traditional trampoline based approaches with our hybrid approach and discusses why we perform, and scale better.
+Section \ref{sec:Implementation} explains the implementation of iProbe, 
+and describes \emph{FPerf} a tool developed using iProbe framework. 
+In section \ref{sec:eval} we evaluate the iProbe prototype. 
+Section \ref{sec:related} discusses the related work,
+and Section \ref{sec:conclusion} concludes this paper.
+
+%Its implementation details are presented in Section \ref{sec:implementation}. 
+%The evaluation of iProbe is demonstrated in Section \ref{sec:eval}. 
+%Section \ref{sec:related} discusses related work. 
+%Section \ref{sec:conclusion} presents the conclusion of this paper.

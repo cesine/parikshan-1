@@ -1,0 +1,227 @@
+Dear Nipun, Hui, Kai, Junghwan, Kenji, Guofei and Xiaorui,
+
+Thank you for your submission to the ASE 2013 conference. We are sorry to
+inform you that your paper
+
+"IProbe : A Lightweight User-Level Dynamic Instrumentation Framework"
+
+was not accepted for inclusion in the ASE 2013 technical program.
+
+All papers went through a thorough and very selective review process. At the
+meeting on July 19-20, the program committee accepted 74 papers (43 technical
+research papers, 8 experience papers and 23 new ideas papers) out of 317
+submissions, excluding yours. The reviews of your paper are enclosed to give you
+constructive feedback on your submission.
+
+We very much hope that you will attend ASE 2013 which promises to be a very
+exciting event. Note that ASE 2013 offers a number of alternate opportunities to
+present your work. In particular, ASE 2013 will feature six workshops, out of
+which five (Java Path Finder Workshop, MALIR-SE, SoftMine, MOMPES, Transfer
+Learning) still accept submissions:
+
+   http://ase2013.org/workshops.html
+   
+All these events take place as part of ASE 2013 in Palo Alto, California on
+November 11-15, 2013. For details on the conference and the venue, see the ASE
+2013 Web site at:
+
+   http://ase2013.org/
+
+We look forward to seeing you at the conference!
+
+Sincerely,
+
+Tevfik Bultan and Andreas Zeller
+ASE 2013 Program Committee Chairs
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=
+
+First reviewer's review:
+
+Summary of the submission <<<
+
+The paper describes the iProbe user-level instrumentation and monitoring
+framework. The goal of iProbe is to provide an instrumentation scheme
+that is robust, flexible, has low overhead, and is suitable for
+monitoring software in production. 
+
+iProbe consists of two phases. The first phase happens at
+compile-time, where iProbe first adds calls to the instrumentation
+library, compiles the code, and then replaces these calls with NOP
+instructions. The second phase happens at runtime. On demand, iProbe
+attaches to the running binary, pauses its execution, and rewrites the
+loaded binary, replacing selected NOP locations with calls to the
+instrumentation library. Execution resumes and now monitors selected
+sites, until on demand iProbe again pauses execution and replaces these
+inserted call sites again with NOP instructions.
+
+Evaluation <<<
+
+I like the scheme implemented by iProbe. Separating instrumentation
+into an offline and an online phase has benefits, as described in the
+paper. This scheme avoids the complications of previous instrumentation
+techniques that implement hot-patching with trampoline functions.
+The iProbe scheme should also lead to lower runtime overhead while
+monitoring, as it only needs one function call per call to the 
+monitoring library, as opposed to 2+ for the trampoline approach.
+
+However the scheme also has the obvious drawback that it increases
+the size of binaries, as it inserts many NOP instructions, just in case
+they will be needed later during execution. The paper does not do a
+good job in measuring this size increase. The evaluation section focuses
+on execution time.
+
+Besides the missing measurements of binary sizes, the evaluation is a
+bit confusing. What is the relation between the 8 benchmark applications
+of Figure 6 and the SPEC benchmarks discussed in the first line of
+Section 5? Why are larger applications (apache, mysql) only mentioned
+in passing in Section 5A but not included in the Figures? Why do
+Figures 6, 8, and 9 refer to different (but overlapping) sets of 
+subjects? What are the properties of the various subjects (program
+size, etc.)?
+
+Besides the use of subjects, the comparison with competing approaches
+is also a bit confusing. The evaluation uses various tools for various
+parts of the evaluation, including UTrace, DynInst, and VTune. Are these
+the most closely related tools available for evaluation? Why are not
+all subjects compared on all of these tools in terms of both binary
+size and the various kinds of runtime overhead?
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*
+
+Second reviewer's review:
+
+Summary of the submission <<<
+
+This paper describes an instrumentation framework that minimizes runtime
+overhead. Proble locations are marked in the binary but by using NOP operations
+the impact on the runtime is small. Binaries can be instrumented at runtime,
+and then the NOP instructions that represent probes are replaced with
+instrumentation calls.
+
+Evaluation <<<
+
+The paper is largely well written, the implementation looks solid, and the
+results suggest that the overhead is indeed smaller than that caused by past
+approaches. 
+
+At the core of the approach lies the idea of patching at runtime, rather than
+using callbacks that cause overhead even when instrumentation is not activated.
+Much of the paper is devoted to explaining how the current approach is better
+than "trampoline" approaches, and although from the name I could roughly guess
+what a trampoline approach is, I really think that the explanation should come
+right at the beginning, not hidden in section 3. I.e., I suggest to split
+section 3, and move the background material to where it belongs.
+
+The idea itself is quite straight forward, and after the description in the
+introduction section I believe I understood it fully. Section 2 describes
+everything again, and even though it adds some details it largely felt like
+repetition. The whole process is described yet again in Section 4, with some
+implementation specific details. It feels a bit like a small idea was
+artificially inflated to fill a paper. 
+
+The evaluation uses 8 applications from SPEC CPU 2006. The benchmark has 28
+applications, how/why were the 8 selected?
+
+The first part of the evaluation demonstrates how small the overhead of the
+probes is. The overhead is indeed really small. The evaluation also compares to
+a version with a "dummy function" - I am not sure what to make of this. What
+exactly do we learn of this? It would have been much more useful if instead of
+an unknown dummy function the evaluation would have used a "trampoline"
+scenario where instrumentation is deactivated, i.e., there would likely be a
+call and then a condition that checks that instrumentation is turned off and
+then execution returns. This is where the main claimed contribution lies (and I
+am sure the presented approach is significantly faster), but it is quite
+disappointing this is not quantified.
+
+The second part of the evaluation examines an artificial example where an empty
+method is called a number of times in order to measure how the number of calls
+relates to the overhead, and iProbe is compared to the UTrace and DynInst
+tools. The results confirm that iTrace has a lower overhead. 
+
+The third part of the evaluation describes the implementation of a profiler
+using the iTrace framework. Already in the introduction I was confused about
+the reason for FPerf in this paper. The description of this profiler is
+contained in Section 4.B, where it feels a bit alien. The evaluation consists
+of a comparison to VTune which performs sampling based profiling. I am not
+entirely sure what we're supposed to learn from this comparison; obviously in a
+sampling mode it is possible to miss calls, as evidenced in Figure 8. However,
+there's also non-sampling profilers if that is a concern. The evaluation then
+continues to demonstrate the idea of having an overhead budget as implemented
+by the FPerf tool. This is an interesting idea in principle, but I don't think
+it adds anything to the paper.
+
+In the intro and in related work, a drawback mentioned for source code
+techniques is that they are static and cannot be changed at runtime. That is
+not true, modern logging frameworks can be configured at runtime, and they can
+can be configured in great detail (i.e. which messages should be seen etc). Of
+course, this doesn't change the fact that the overhead of such techniques will
+be significantly higher than when having NOP-probes in the binary.
+
+In II.A I don't think one can assume the reader knows what "cdecl calls" are
+(it is explained later in the implementation section)
+
+I suggest to switch the numbering of figure 2 and 3. 
+
+In Figure 8 it is impossible to distinguish the colours on a b/w hardcopy.
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*
+
+Third reviewer's review:
+
+Summary of the submission <<<
+
+This paper presents a framework named iProbe for hybrid instrumentation. The
+basic idea of the proposed framework is as follows. First, the target software
+for instrumentation is compiled with the -finstrument -function flag to insert
+a call of the _cyg_profile_func_enter function at the entrance of each function
+and a call of the _cyg_profile_func_exit function at the exit of each function.
+Second, the calls of _cyg_profile_func_enter and _cyg_profile_func_exit are
+then replaced with the NOP instructions to reduce overhead. Finally, the actual
+code that needs to be instrumented is instrumented on-demand dynamically in the
+places of the NOP instructions. This paper also presents an evaluation of the
+proposed framework under three scenarios.
+
+Evaluation <<<
+
+In general, I like the idea presented in this paper, although the idea is very
+simple. However, I have several concerns with this paper in the current form.
+
+First, I feel the evaluation unsatisfactory. Although there are three studies
+in the evaluation, none of them provide convincing evidence. Overall, I think
+the first study (i.e., in Section V.A) is OK, but the results in the first
+study cannot demonstrate significant advantages of the proposed approach. The
+second study (i.e., in Section V.B) is not based on real code, but on repeated
+invocations of an empty function (i.e., foo). To my understanding the use of an
+empty function would very much magnify the difference in executing the
+instrumented code. The third study (i.e., in Section V.C) is based on comparing
+VTune and FPerf (which is built on iProbe). I don't think this kind of
+comparison provides enough meaningful information, because it is unclear
+whether the differences are due to iProbe. Furthermore, in this study, the
+comparison is not based on direct comparison of the performance. It seems that
+there is a limit of the resource used for executing instrumented code. With the
+resource limit, either VTune or FPerf is used to monitor hotspots in some
+software. I think the design of the third study has some serious problem. The
+results in this study cannot demonstrate the real benefits that FPerf can
+provide for users. They can only provide some side evidence for the low
+overhead of iProbe, but the design of this study makes it difficult to isolate
+the factors in iProbe and those in other parts of FPerf.
+
+Second, the overall organization of this paper is also somewhat unsatisfactory.
+What is presented in Sections II.C and II.D does not seem to be evaluated at
+all. The presentation of FPerf in Section IV.B is also problematic. FPerf is
+not presented in great detail and the evaluation of FPerf is also not
+convincing. In fact, I feel the introduction of FPerf seems to weaken this
+paper rather than strengthen this paper. So, I suggest the authors to remove
+the contents in Sections II.C and II.D and those for FPerf. In the saved space,
+the authors can thoroughly report a well designed experimental study on the
+performance of the iProbe framework.
+
+Finally, the reliance on compiler flags may be a big limitation of the proposed
+approach. It is unclear whether the proposed framework can be as general as
+some existing general framework for instrumentation. Of course, the idea behind
+the proposed approach may be implemented using techniques other than compiler
+flags to remove or at least alleviate this limitation. I think the authors
+should at least discuss this issue. 
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*

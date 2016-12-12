@@ -1,0 +1,39 @@
+\section{Implementation}
+\label{sec:Implementation}
+
+The design of iProbe is generic and platform agnostic, and works on native binary executables. 
+We built a prototype on Linux which is a commonly used platform for service environments. 
+In particular, we used a compiler technique based gcc/g++ compiler to implement the hook place holders on standard Linux 32 bit and 64 bit architectures. 
+In this section we first show the implementation of the iProbe framework, and then discuss the implementation of FPerf a tool built using iProbe.
+
+\subsection{iProbe Framework}
+As we presented in the previous section, the instrumentation procedure consists of two stages.
+
+\indent \textbf{ColdPatch}: In the first phase the place holders for hooks are created in the target binary. 
+We implemented this by compiling binaries using the \texttt{-finstrument-functions} flag. 
+Note that this can be done simply by appending this flag to the list of compiler flags (e.g., \texttt{CFLAG, CCFLAG, CXXFLAGS}) and most of cases it works without interfering with user code. 
+
+In details this compiler option places function calls to instrumentation functions (\texttt{\_cyg\_profile\_func\_enter} and \texttt{\_cyg\_profile\_func\_exit})  after the entry and before the exit of every function. 
+This includes inline functions (see second state in Figure \ref{fig:state_rep}). 
+Subsequently, our ColdPatcher uses a binary parser to read through all the target binaries, and search and replace the instruction offsets containing the instrumentation calls with NOP instructions (instruction 90). 
+Symbolic and debug information is read from the target binary using commonly available \texttt{objdmp} tools; 
+This information combined with target instruction offsets are used to generate the probe list with the following information:
+\begin{verbatim}
+<Instr Offset, Entry\Exit Point, Meta-Data>
+\end{verbatim}
+The first field is the instruction offset from the base address, and the second classifies if the target is an entry or an exit point of the function. 
+The meta-data here specifies the file, function name, line number etc. 
+
+\indent \textbf{HotPatching}: 
+In the run-time phase, we first use the library interposition technique, \texttt{LD\_PRELOAD}, to preload the instrumentation functions in the form of a shared library to the execution environment. 
+The HotPatcher then uses a command line interface which interacts with the user and provides the user an option to input the target process and the probe list.
+Next, iProbe collects the base addresses of each shared library and the binary connected to the target process from \texttt{/proc/pid/maps}.
+The load address and offsets from the probe-list are then used to generate a hash of all possible probing points. 
+iProbe then use the meta-data information to provide users a list of target functions and their respective file information.  
+It takes as input the list of targets and interrupts the target process. 
+We then use \texttt{ptrace} functionality to patch the target instructions with calls to our instrumentation functions, and release the process to execute as normal.
+The instrumentation from each function is registered and logged by a shared memory logger. 
+To avoid any locking overhead, we have a race free mechanism which
+utilizes thread local storage to keep all logs, and a buffered logging mechanism.
+
+\input{iprobe/fperf}

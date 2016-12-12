@@ -1,0 +1,63 @@
+\section{HotPatching}
+\label{sec:hotpatch}
+
+%There is no way to avoid bugs completely, hence most programs need bug-fixes 
+%from time to time. However, applying bug fixes by terminating a program is a 
+%serious problem especially in telecom programs and other mission critical 
+%operations. These problems are often fixed by a hot-patch solution. Previous 
+%solutions such as livepatch \cite{livepatch}, pannus \cite{pannus} have 
+%primarily been used to attain this goal. 
+
+iProbe is based on hot-patching technology, which can be complex as it requires modification of the binary code at run-time in the code segment of the program.
+This problem is compounded with increasing size and complexity of the program.
+The following design principles relate to the implementation of hot-patching in iProbe.
+
+\begin{enumerate}
+  
+  \item Safe
+  
+   Any patch applied to the binary must be safe and should not lead to a crash of the running process.
+  Hence it should be applied in a robust manner without introducing any illegal instructions, or code which can lead to a deadlock/livelock etc.
+  Additionally the patch should be applied in a manner so that the state of the program remains the same before and after the patch is applied.
+  
+  \item Precise
+  
+  Patches or modifications must be done in a precise manner, so as to correctly capture the point of instrumentation. 
+  Precision is extremely important as any imprecise alterations can lead to logical changes in program execution, or alternatively a process crash.
+  
+  \item Minimal Intrusion
+  
+  Hot-Patching solutions should make the minimal possible changes to the the existing code so that it causes less overhead while not being unsafe.
+
+\end{enumerate}
+
+
+While the aim of our paper is not to introduce a new mechanism for Hot-Patching, 
+there are key novelties that we present in this paper compared to other existing 
+mechanisms of Hot-Patching, albeit compared to livepatch, pannus and katana \cite{livepatch, pannus, 
+katana} we use hot-patching for performance monitoring or execution tracing, while they do it for 
+debugging. Windows provides internal support for hot-patching, which is 
+frequently used to apply minor security patches in it's operating systems\cite{windows_sec}. 
+A variation of this is used in Fay\cite{fay} to do tracing. DTrace and SystemTap \cite{dtrace,systemtap} 
+use software interrupts which make a jump to the kernel which has the 
+instrumentation. While each of them uses a different mechanisms the key steps required for any hot-patching/run-time modification solution is :
+
+\begin{enumerate}
+  \item Preparation: 
+  The first step involves getting the addresses of target functions or points of instrumentation.  
+  \item Memory Allocation: 
+ Each program has a defined code segment protected memory. Hence, one of the 
+ challenges faced in run-time instrumentation is to add additional 
+ memory space to the target process's code segment. 
+  \item Load: 
+  Load the patch into allocated memory in the previous step.
+  \item Activate or Deactivate: 
+  Activate patch by introducing jmp's or calls to the instrumentation
+\end{enumerate} 
+
+Both livepatch and pannus are two major open source run-time code modification 
+mechanisms. They both patch patch the binary in the virtual memory space by 
+overwriting a jmp instruction at the top of the function. 
+The patch itself is a replacement of the given function with the fixed function. 
+Memory Allocation is done in livepatch by initiating a sigtrap 
+

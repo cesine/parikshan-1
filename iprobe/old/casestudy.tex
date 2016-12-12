@@ -1,0 +1,52 @@
+\section{Case Study: Debugging a MySql Performance Bug}
+\label{sec:casestudy}
+
+In this section, we demonstrate the effectiveness of iProbe in a case
+study of a debugging scenario for a real-world software, MySql
+database.
+ We used iProbe to debug the bug case 15811 reported to the database
+ of bugs of Mozilla called Bugzilla. 
+ The symptom reported is \emph{``extremely long time for mysql client to execute long INSERT"} : 
+ when inserting rows from an existing database dump in a complex (non-latin script) such as \textit{ujis,big5}, MySql takes a substantially longer time in comparison to the same process done using latin scripts. 
+
+To analyze this case using iProbe, MySql was compiled with the
+\textit{-finstrument-functions} flag \cite{gcc_codegen}.
+The iProbe cold-patcher then replaces these function calls with NOP
+instructions, and generates the list of functions. 
+The binaries are now hot-patch enabled, and can be stripped of symbolic information and ported to the production environment.
+
+In the production environment to reproduce the bug, we generate a dump of a large table in MySql and monitor the loading process using iProbe. 
+While the entire run of MySql may be a long running process, the test case scenario itself initiates a small query. 
+iProbe monitors all functions during the run of this particular test
+case scenario, by attaching itself to the MySql process and replacing all NOP's with the requisite instrumentation call. 
+Here iProbes hot-tracing enables us to pick and choose our monitoring interval thereby avoiding unnecessary monitoring in normal cases. 
+
+iProbe instrumentation uses \texttt{rdtsc} counters to get the execution time of each function in our log. 
+Using both the normal case scenario log (latin scripts), in comparison
+to ``ujis" script we were able to localize the bug to
+\texttt{my\_strcasecmp\_mb()} function in the \texttt{ctype-mb.c} file. 
+
+Overall we observed that there were several more string functions being done in the ujis script, and were successfuly able to localize the problem. 
+%
+As demonstrated in this case, iProbe offers the fine grained analysis
+in the function call level and it enabled us to effectively localize
+the root-cause of this sophisticated bug case with the minimal efforts
+on the program binaries to support the hot-tracing functionality.
+
+
+
+%
+%iProbe can be further enhanced by systematic log analysis tools 
+%however we skip that discussion as it is beyond the scope of that paper.  
+
+%\subsection{Debugging : MySql Example}
+%Debugging using mysql example
+
+%\subsection{Measuring Hardware Performance Parameters}
+%Measuring Hardware Performance parameters by embedding it in iProbe
+
+%\subsection{Probing a Stripped Binary}
+
+%One of the usual steps when deploying a binary is to remove symbolic meta-data from the file. There are two main reasons for deploying binaries without symbolic information: Firstly, to reduce size of the executable thus making it smaller and faster, and having a smaller memory footprint. This is especially important when running several applications as it frees up memory for them.  (2) Also most proprietary software is licensed, and symbols are often removed to reduce chances of reverse-engineering the logic flow, as well as hacking possiblities in prototype applications. While stripping is not a complete anti-hacking solution, it makes reverse engineering binaries significantly harder. 
+
+%iProbe has a significant advantage over existing blacbox tools \cite{systemtap,dtrace,lttng} as require symbolic information(in most cases debuginformation) to be available in the executable at run-time. This debug information is used in the hot-patching mechanism to figure out the relevant target funcitons. iProbe has been designed to work in a two step mechanism and be packaged with the targetted application. In this sense, iProbe mantains the meta-data information at the compiler stage of the target and uses only instruction pointer information at the actual run-time. The meta data file can be kept encrypted in iProbe to keep the target application lightweight and secure.

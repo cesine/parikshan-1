@@ -1,0 +1,26 @@
+\begin{abstract}
+  
+  %Existing tools lack methodology to flexibly add and remove tracing from user-space functions
+This paper presents iProbe, a new facility for dynamic instrumentation of user-level C/C++ software.
+iProbe leverages standard GCC compiler flags to introduce ``place-holders" in the program executable,
+and offers an automated instrumentation tool to eliminate user effort in adding probe points.
+When not explicitly enabled, iProbe has zero probe effect.
+It allows for arbitrary instrumentation points at program function level,
+and provides a simple command-line interface to assit target function selection at run time.
+iProbe features a user-space hot-patching mechanism which directly modifies code segments of a running process in a safe and secure manner,
+and therefore incurs instrumentation overhead much lower than kernel trapping based dynamic instrumentation mechanisms.
+Our evaluation tested the iProbe prototype on software including CPU SPEC 2006 benchmarks, mysql and Apache, 
+and iProbe is an order of magnitude faster than existing state of the art mechanisms.
+
+
+
+
+%iProbe or “Intelligent Probe” provides a flexible monitoring platform with extremely light weight instrumentation to capture unified software execution traces of both kernel and user-space events. We introduce a novel run-time instrumentation technique which uses existing compiler flags and binary instrumentation to introduce ``place-holders" in the executable which allow for dynamic instrumentation. Further, we provide an easy command line interface to users to select the function to instrument, and to add a library of instrumentation functions. Our implementation is based on use of hot-patching mechanisms which allow us to directly modify code segments of a running process in a safe and secure manner. iProbe can be used for an automated instrumentation tool, which can be packaged with the application, thereby reducing developer effort in adding logging targets in the user code, and allowing easy change of logging targets at run-time. Our solution has been tested on the CPU SPEC 2006 benchmarks, and large middleware applications such as mysql and apache httpd server, and is a order of magnitude faster than existing state of the art mechanisms.
+
+%Additionally, we use iProbe with kernel event tracers as a dual-space tracing solutions so that we avoid expensive context switches from user-space to kernel-space currently in most systematic instrumentation tools.
+%\\ \\
+%Our advanced functionality provides
+%\\ \\
+%We have tested our implementation on large scale native applications such as Mysql, Apache
+  
+\end{abstract}

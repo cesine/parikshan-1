@@ -1,0 +1,52 @@
+
+\section{Introduction}
+\label{sec:intro}
+
+
+%Notes:
+% ***Add information about "secure" aspect of iProbe: the fact that we can obfuscate binaries since we wish to be involved in the whole build chain process
+% No need to change the entire kernel
+%\begin{figure*}
+%  \begin{center}
+%    \includegraphics[totalheight=8cm]
+%    {Images/Overall-Architecture.png}
+%    \caption{iProbe Architecture Overview}
+%  \end{center}
+%\end{figure*}
+
+\subsection{Motivation}
+
+As application software grows larger and more complicated, performance analysis has to be performed through its lifecyle by both the developer in development and the system integrator in production.
+
+There are common code-level solutions such as log4j \cite{log4j} which enables different levels of monitoring granularity when running the application. However, these rely on the programmer modifying the source code ahead of time, and cannot be changed at run-time to take care of an unseen scenario. 
+
+Over the years researchers have proposed several techniques to allow for dynamic instrumentation of user-level software \cite{pin,gdb,dtrace,systemtap,lttng,utrace,ptrace}. However, they trade in considerable complexity in system design, implementation and in some cases overhead. For example binary instrumentation tools like Intel's PIN Instrumentation tool\cite{pin} and GNU debugger \cite{gdb} allow for complete blackbox instrumentation but incur a heavy overhead, which is not acceptable for production systems. Kernel monitoring tools such as solaris's dtrace \cite{dtrace}, and systemtap\cite{systemtap}, which are primarily for tracing system events, also allow for limited user-space probes to capture user-space functions, but still have a comparatively heavier overhead as they use kernel trap mechanisms and context-switches to the kernel capture the target instructions. 
+%challenges with existing dynamic instrumentation tools
+%1. high kernel trapping overhead 
+%2. can't handle commerical software release with stripped metadata
+
+
+\subsection{Approach}
+
+
+We use a hybrid approach whereby we divide the process of instrumentation into two parts: we first prepare the target executable by introducing placeholders during the time of compilation which can later be replace to add instrumentation, then we leverage these place-holders during the execution of the process to safetly replace them with calls to instrumentation functions. Using this approach in a systematic manner we reduce the overhead of iProbe while at the same time maintaining a relatively simple design. The key idea was to package our monitoring solution with the target application so that the user does not have to make any modifications to the kernel itself, or depend on tools installed or implemented in the kernel.
+
+
+The key idea behind iProbe is a compiler assited hot-patching technique. Hot Tracing has long been studied for security exploits or patching security updates, bug-fixes etc. \cite{katana}. Previous approaches such as windows hot-patching, live-patch and pannus\cite{pannus}, have been used to hot-patch updates, in production systems. However, they cannot be used for monitoring as they replace the target module entirely and need knowledge of the functionality of the target. iProbe revisits old hot-patching mechanisms and uses a novel algorithm, to precisely patch instrumentation as and when required in each functions of the binary. We do this by using compiler driven placeholders, which assist us as pointers in run-time to do hot-patching. iProbe then uses binary parsers to capture all placeholders before the instrumentation and use existing technologies such as ptrace \cite{ptrace} to introduce the patches.
+
+
+iProbe has an order of magnitude less overhead and scales significantly better compared to existing tracing mechanisms such as systemtap\cite{systemtap}. Further iProbe does not rely on symbolic information in the binary to introduce instrumentation unlike pure black-box binary tracing techniques. This allows for iProbe to trace production binaries with no debug/symbolic information and allows for a smaller light-weight executable, as well as introduces a measure of security from reverse engineering mechanisms.
+
+% Unlike existing tools such as dtrace \cite{dtrace} and systemtap\cite{systemtap} which provide a single mechanism for monitoring both user-space and kernel-space events, we use a \textbf{\emph{dual-space}} monitoring solution whereby, we have split our monitoring of user-space events in user-space, and kernel-space events by a proprietary kernel-space monitoring solution. This design has reduced considerable time spent in context-switches and led to an improved performance.
+
+
+%iProbe introduces a novel, flexible, and extremely light weight approach towards monitoring large-scale applications. We bring together existing methodologies, debugging mechanisms and tools commonly used by developers to design a systematic mechanism to instrument applications with a very light overhead. We believe that iProbe provides a safe, secure and lightweight user-space monitoring, which is used in tandem with existing kernel-space solutions, to provide a unified trace view of the target application. Our tool provides a comprehensive platform with a user interface which allows users to pick and choose functions at run-time to instrument. iProbe has currently been tested on several native C/C++ applications, however the same approach can be extended to other architectures with support for hot-patching/run-time code modification.
+ 
+
+
+
+
+% In order to avoid complexity, iProbe has tried to ensure an easier and simple implementation with only slight modification at compile time. 
+%Instead of providing a single monitoring solution for both user and kernel events, iProbe can be used in \textbf{\emph{dual-space}} monitoring solution, 
+%one for user-level events(iProbe), and another for kernel level events.
+%he remainder of this paper describes iProbe in detail. In Section.\ref{sec:design}, we discuss some guiding principles we used when designing iProbe. Section.\ref{sec:hotpatch} describes hotpatching, and mechanisms used till date to implement hotpatching(users familiar with hot-patching may skip this section), Section.\ref{sec:implementation} provides a detailed description of the iProbe implementation. Section.\ref{sec:abstractions} describes some abstractions available to users of iProbe. Section.\ref{sec:related} and Section.\ref{sec:eval} describe some related work and limitations respectively.

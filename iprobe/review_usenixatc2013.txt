@@ -1,0 +1,121 @@
+Dear Nipun Arora,
+
+The 2013 USENIX Annual Technical Conference (USENIX ATC '13) program
+committee is sorry to inform you that your paper #116 was rejected, and
+will not appear in the conference.
+
+      Title: User-Level Dynamic Instrumentation with Compiler Assistance
+    Authors: Nipun Arora (NEC Labs America)
+             Hui Zhang (NEC Labs America)
+             Junghwan Rhee (NEC Labs America)
+             Kenji Yoshihara (NEC Labs America)
+             Guofei Jiang (NEC Labs America)
+ Paper site: https://papers.usenix.org/hotcrp/atc13/paper/116?cap=0116aBfk7y_XUeVc
+
+33 papers were accepted out of 233 submissions.
+
+Reviews and comments on your paper are appended to this email. The
+submissions site also has the paper's reviews and comments, as well as more
+information about review scores.
+
+Contact the program chairs, <atc13chairs@usenix.org>, with any questions or
+concerns.
+
+Andrew Birrell & Emin Gun Sirer
+
+===========================================================================
+                       USENIX ATC '13 Review #116A
+               Updated Thursday 14 Feb 2013 5:14:18pm PST
+---------------------------------------------------------------------------
+ Paper #116: User-Level Dynamic Instrumentation with Compiler Assistance
+---------------------------------------------------------------------------
+
+                     Overall merit: 3. Weak accept
+                Reviewer expertise: 2. Some familiarity
+                      Practicality: 2. Some potential impact to practice
+
+                        ===== Paper summary =====
+
+This short paper discusses a system for instrumenting user-level software. It runs entirely at user level and operates in two phases. In its first phase, which is static, it patches application binaries to insert instrumentation calls at the beginning and end of each function. Then it replaces all these instrumentation instructions with no-ops, and gathers a probe-list of points at which instrumentation code can be added later without having to allocate memory. 
+
+At the end of the first phase we have an application that has place-holders for instrumentation code that can be added dynamically later, as necessary. The second phase is its dynamic phase. In this phase it loads the required instrumentation functions in a shared library and uses the probe list to identify the places where the previously placed no-ops can be replaced with calls to the instrumentation functions. The result is a system that is efficient both with and without instrumentation active.
+
+The system is implemented using gcc/g++ on Linux and tested against the SPEC CPU benchmarks and with MySql.
+
+                       ===== Paper strengths =====
+
+It presents a neat idea, which if it could be made to work widely, could support fine-grain instrumentation with low run-time overhead.
+
+                      ===== Paper weaknesses =====
+
+It didn't discuss the assumptions that are necessary in order to apply this approach safely. Is it always safe to modify an existing binary in the manner proposed? Is the approach compatible with all known compiler optimizations? How safe is it to apply this approach to binaries that have inter-procedural optimizations?
+
+                     ===== Comments for author =====
+
+I like this paper. It presents an interesting and potentially useful idea that is quite compelling.  I think the presentation could have been a bit clearer though. The first part of the paper did a lot of "selling" without really explaining what the new idea was, nor what limitations it had. Only after reading the design and implementation sections did I really understand what was being proposed. It would help to summarize the design and implementation in the introduction so the reader can see what you did. 
+
+The approach seems to rest on the ability to freely make certain modifications to existing binaries so that the instrumentation code (or at least the hooks for it) can be added. I'm curious how safe this is. What assumptions are you making about the binaries you are modifying? How do you know that your modifications will not interfere with optimizations the compiler has applied?
+
+          Suitable for short paper: 3. Suitable
+
+===========================================================================
+                       USENIX ATC '13 Review #116B
+               Updated Saturday 2 Mar 2013 12:48:32pm PST
+---------------------------------------------------------------------------
+ Paper #116: User-Level Dynamic Instrumentation with Compiler Assistance
+---------------------------------------------------------------------------
+
+                     Overall merit: 2. Weak reject
+                Reviewer expertise: 2. Some familiarity
+                      Practicality: 2. Some potential impact to practice
+
+                        ===== Paper summary =====
+
+This is a user-level profiling system that exploits the compiler's monitoring infrastructure to place no-ops at function entry/exit, and then uses those regions to dynamically insert hooks into the program.
+
+                       ===== Paper strengths =====
+
+The particular method for using the compiler's monitoring support to place pads for generating the eventual hooks is an interesting tradeoff between dynamic rewrite and full support compiled into the code.
+
+                      ===== Paper weaknesses =====
+
+The idea is not very deep, and sits somewhere in the middle of the range of options. It involves a small penalty even without invocation, so it's not quite free.
+
+                     ===== Comments for author =====
+
+The idea that forms the heart of this paper is an interesting twist to get a quick means of instrumenting a program without doing a lot of work. I have seen variants of it that changed the monitoring support code, but I have not seen one where the monitoring support code was converted to no-ops to selectively overwrite later. So, it's a nice contribution, but a very small one. That covers the first four pages of the paper. The most interesting part of the paper would be to see something really unique and useful happen from the work, and the case study that is described on page 5 looks like the start of that. However, it's so lacking details that it was impossible to figure out whether this work really enabled finding that performance bug in some unique way, or even what exactly was involved.
+
+In summary, the part of the paper that takes the most space is really easy to understand and not particularly deep, and it would have been nice to see more evidence that this approach had some particularly interesting contribution in the performance debugging space. Right now, the paper lacks that, so it's hard to give a high score to it.
+
+          Suitable for short paper: 1. Not suitable
+
+===========================================================================
+                       USENIX ATC '13 Review #116C
+               Updated Wednesday 27 Mar 2013 4:53:20pm PDT
+---------------------------------------------------------------------------
+ Paper #116: User-Level Dynamic Instrumentation with Compiler Assistance
+---------------------------------------------------------------------------
+
+                     Overall merit: 2. Weak reject
+                Reviewer expertise: 3. Knowledgeable
+                      Practicality: 2. Some potential impact to practice
+
+                        ===== Paper summary =====
+
+This short paper describes the iProbe code instrumentation system. The approach uses source code to insert placeholders for instrumentation, then binaries are manipulated before they are run to replace placeholders with actual instrumentation calls, which is akin to hotpatching. The approach is implemented for gcc on linux. Overheads of dummy instrumentation and then of tracing using actual instrumentation are measured and reported as modest.
+
+                       ===== Paper strengths =====
+
+A useful tool is described and exercised on an example.
+
+                      ===== Paper weaknesses =====
+
+It is not clear what progress in state of the art is in iprobe vs. dyninst, for instance. the paper states that trampolines are complex, but dyninst has been around for many years now...
+Source code recompilation is required to use the tool.
+
+                     ===== Comments for author =====
+
+There are a good number of small writing issues in the paper that need to be corrected.
+
+          Suitable for short paper: 1. Not suitable
+
