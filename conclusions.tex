@@ -29,7 +29,29 @@ In the future, we will explore:
 \label{sec:immediate}
 
 \begin{itemize}
-	\item Improve live cloning performance
+	\item \textbf{Improve live cloning performance:}
+	The current protoype of livecloning is based on container virtualization and previous efforts in live migration in OpenVZ~\cite{openvz}.
+	However, our implementation is limited by the performance of the current level of performance of current live migration efforts.
+	Live migration is a nascent research topic in user-space container level virtualization, however there has been significant progress in live-migration in virtual machine virtualization.
+	
+	One key limitation in the current approach is that it has been built using \emph{rsync}~\cite{rsync} functionality. This is much slower than current state-of-the-art techniques in full VM virtualization, which rely on network file systems to synchronization images asynchronously~\cite{nfs}. Other optimizations include post-copy migration~\cite{postcopy} which does lazy migration - the idea is to do on-demand transfer of pages by triggering a network page fault. 
+	This reduces the time that the target container is suspended, and ensures real-time performance.
+	The current implementation in \parikshan uses the traditional \emph{pre-copy migration}~\cite{clark2005live}, which iteratively syncs the two images to reduce the suspend time.
+	
+	Live cloning can be used in two scenarios, either with a fresh start where the target physical machines do not have a copy of the initial image. 
+	However, more commonly once the first live clone has been finished, the target is to reduce the suspend time of subsequent live cloning requests. 
+	This is different from live migration scenario's.
+	For instance, future research can focus on specifically on reducing this downtime by keeping track of the "delta" from the point of the detection of divergence.
+	This will reduce the amount of page faults in a post-copy algorithm, and can potentially improve live cloning performance compared to migration.
+	
+	
+	\item \textbf{Scaled Mode for live-debugging:}
+	One key limitation of live-debugging is the potential for memory overflow. The period till a buffer overflow happens in the proxy, is called the \debugwindow. It is critical for continuous debugging that the \debugwindow be as long as possible.
+	The size of this window, depends on the instrumentation overhead, the amount of workload, and the buffer size itself. 
+	
+	Hence, it may be possible that at times for very heavy instrumentation or workload, the \debugwindow becomes too short to be of practical use. To counter this in our design section we briefly mentioned a scaled mode for live debugging. 
+	
+	\item Feedback synchronization
 \end{itemize}
 
 \subsection{Possibilities for Long Term}

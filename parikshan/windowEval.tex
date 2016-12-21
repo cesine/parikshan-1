@@ -197,7 +197,7 @@ This meant that our system was able to tolerate a much higher overhead (3.2x) wi
 \noindent
 \textbf{Simulation Results:} 
 In our next set of experiments, we simulate packet arrival and service processing for a buffered queue in SOA applications. 
-We use a discrete event simulation based on an M\/M\/1 queue, which is a  classic queuing model based on Kendall's notation~\cite{kendall1953}, and is often used to model SOA applications with a single buffer based queue.
+We use a discrete event simulation based on an M\/M\/1 queue, which is a  classic queuing model based on Kendall's notation~\cite{kendall}, and is often used to model SOA applications with a single buffer based queue.
 Essentially, we are sending and processing requests based on a Poisson distribution with a finite buffer capacity.
 In our simulations (see Figure~\ref{fig:debugSim}), we kept a constant buffer size of 64GB, and iteratively increased the overhead of instrumentation, thereby decreasing the service processing time.
 Each series (set of experiments), starts with an arrival rate approximately 5 times less than the service processing time. 

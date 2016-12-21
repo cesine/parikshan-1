@@ -2,15 +2,6 @@
 \section{Motivating Scenario}
 \label{sec:motivation}
 
-
-\begin{figure*}[t]
-	\begin{centering}
-		\includegraphics[width=0.9\textwidth]{parikshan/figs/arch_full.pdf}
-		\caption{\textbf{High level architecture of \parikshan}, showing the main components: Network Duplicator, Network Aggregator, and Cloning Manager. The replica (debug container) is kept in sync with the master (production container) through network-level record and replay. In our evaluation, we found that this light-weight procedure was sufficient to reproduce many real bugs.}
-		\label{fig:network_arch}
-	\end{centering}
-\end{figure*}
-
 Consider the complex multi-tier service-oriented system shown in Figure \ref{fig:motivation} that contains several interacting services (web servers, application servers, search and indexing, database, etc.). 
 The system is maintained by operators who can observe the health of the system using lightweight monitoring that is attached to the deployed system.
 \xxx{Still need some statement here that it's reasonable to assume that they are already running each tier in its own container... This is an important one...}
@@ -31,3 +22,12 @@ This process will greatly reduce the time to bug resolution, and allow real-time
 The replica can be created at any time: either from the start of execution, or at any point during execution that an operator deems necessary, allowing for post-facto analysis of the error, by observing execution traces of incoming requests (in the case of performance bugs and memory leaks, these will be persistent in the running system).
 Within the debug replica, the developer is free to employ any dynamic analysis tools to study the buggy execution, as long as the only side-effect those tools is on execution speed.
 %\xxx{need to describe assumptions: debug is identical except for external timing/slowdowns (need to clarify what kind of debugging activities are permitted). assume that it's OK to use a VM as the container, and that it is 'free' to dos so}
+
+\begin{figure*}[ht!]
+	\begin{center}
+		%    \includegraphics[width=0.7\textwidth]{figs/motivation.eps}
+		\includegraphics[width=0.99\textwidth]{parikshan/figs/workflow3.pdf}
+		\caption{Workflow of \parikshan in a live multi-tier production system with several interacting services. When the administrator of the system observes errors in two of it's tiers, he can create a sandboxed clone of these tiers and observe/debug them in a sandbox environment without impacting the production system.}
+		\label{fig:motivation}
+	\end{center}
+\end{figure*}

@@ -178,6 +178,7 @@ This allows a safe \& secure mechanism to diagnose the application, without impa
 %We provide a flexible framework which allows user access to a parallel test-container which behaves identically as the production container.
 %While we discuss several case-studies to debug/ test production applications that show how our framework can be used, we wish to stress that \textbf{the main advantage of \parikshan is a harness/ framework for testing/ debugging in a live environment rather than a new testing methodology}.
 
+
 \section{Definitions}
 \label{sec:introDefinition}
 
@@ -369,9 +370,10 @@ In this thesis we present an \textbf{end-to-end work-flow of localizing producti
 \section{Hypothesis}
 \label{sec:introHypothesis}
 
-The hypothesis we test in this thesis is as follows:
+\noindent The principal hypothesis we test in this thesis is as follows:\\
 
-For user-facing application where time-to-bug resolution is critical, on-the-fly debugging parallel to the production application can be enabled without impacting the production environment. This can be achieved in a robust manner, with no impact on the production system, the debugging instrumentation can be adaptive and adhere to pre-defined budgets, and the production applications can be made debugging friendly to ensure low-cost instrumentation.\\
+\emph{For user-facing application where time-to-bug resolution is critical, network replay alone is enough to trigger most bugs in service-oriented applications, and on-the-fly debugging parallel to the production application can be enabled without impacting the production environment. This can be achieved in a robust manner, with no impact on the production system, the debugging instrumentation can be adaptive and adhere to pre-defined budgets, and the production applications can be made debugging friendly to ensure low-cost instrumentation.}\\
+
 
 In order to test this, we have developed the following technologies:
 \begin{enumerate}

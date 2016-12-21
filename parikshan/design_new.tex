@@ -7,6 +7,13 @@
 %	\end{centering}
 %\end{figure}
 
+\begin{figure*}[t]
+	\begin{centering}
+		\includegraphics[width=0.9\textwidth]{parikshan/figs/arch_full.pdf}
+		\caption{\textbf{High level architecture of \parikshan}, showing the main components: Network Duplicator, Network Aggregator, and Cloning Manager. The replica (debug container) is kept in sync with the master (production container) through network-level record and replay. In our evaluation, we found that this light-weight procedure was sufficient to reproduce many real bugs.}
+		\label{fig:network_arch}
+	\end{centering}
+\end{figure*}
 
 
 
