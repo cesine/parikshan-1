@@ -409,14 +409,32 @@ The packets to both the production and the debug cloned containers are routed th
 Here instead of the TCP buffer, we focus on the request arrival and departure rate to and from the proxy duplicators buffer.
 The incoming rate remains the same as $\lambda$, as the requests are asynchronously forwarded to both containers without any slowdown. 
 %The request processing rate of the debug container is $\mathrm{\mu_{2}}$, where $\mathrm{\mu_{2}}$ $>$ $\mathrm{\mu_{1r}}$ (the processing time for the production container) depending on the overhead due to instrumentation in the debug-container.
-To simplify the problem, we assume the outgoing requests from the proxy buffer to be $\mathrm{\mu_{3}}$ where:\\
+
+To simplify the problem, we identify the following variables:
 
 \begin{equation}\label{eq:1}
-\mu_{3} = \mu_{2} - \mu
+\mu_{1} = \emph{processing time for requests of original containter}
+\end{equation}
+
+
+\begin{equation}\label{eq:2}
+\mu_{2} = \emph{processing time for requests of debug containter}
+\end{equation}
+
+\begin{equation}\label{eq:3}
+\emph{x} = \mu_{1} - \mu_{2}
 \end{equation}
 
 The remaining processing time for both the production container and the debug container is going to be the same. 
-Since the TCP buffer in the production container is a blocking queue, we can assume that any buffer overflows in the proxy buffer are only caused because of the instrumentation overhead in the debug-container, which is accounted for by $\mathrm{\mu_{3}}$. 
+Since the TCP buffer in the production container is a blocking queue, we can assume that any buffer overflows in the proxy buffer are only caused because of the instrumentation overhead in the debug-container, which is accounted for by \emph{x}.
+
+The goal for bounded overhead instrumentation is to \emph{optimize slowdown such that}:
+
+\begin{equation}\label{eq:4}
+ \lambda < \mu_{3}
+\end{equation}
+
+\xxx{explain brownian motion once it's reached the bounds}
 
 \begin{figure}[ht!]
 	\begin{center}
@@ -530,8 +548,6 @@ There are three key components of our adaptive instrumentation mechanism.
 	
 \end{itemize}
 
-We have looked into assigning a score to each predicate. This is based on the statistical importance of the predicate (similar to statistical debugging), and instrumentation overhead score (dependent on total budget etc.). We are still finalizing the scoring methodology.
-
 \subsection{Automated Reactive Scores}
 
 A statistical record is maintained for each predicate, and the overall success of execution is captured by the error log.
@@ -549,6 +565,8 @@ Each predicate is given a total score based on the following parameters:
 	\item \textbf{Instrumentation Overhead Score:} Adaptive score keeping track of counters of each predicate. Can be used as a weighing mechanism for figuring out the total cost.
 \end{itemize}
 
+
+\iffalse
 \subsection{Feasibility}
 \label{sec:queue_feasability}
 \xxx{Re-label and figure out what to write here}
@@ -567,6 +585,7 @@ While the simulation gives us fine grained control in our observations, our micr
 We are currently in the process of making an adaptive sampling instrumentation mechanism. 
 For this we plan to use tools like \iprobe, systemtap~\cite{systemtap} and dyninst~\cite{dyninst}. These have been previously used in several large-scale instrumentation projects and demonstrated to be effective with low overheads. We will also derive inspiration for our model from previous statistical debugging approaches~\cite{statisticalPerformance}. These have been demonstrated to be effective in resolving several real-world bugs. This will be explored as part of the thesis.
 
+\fi
 
 \begin{figure}[ht]
 	\centering
@@ -585,7 +604,7 @@ This is an interactive process, which allows one to verify the result and correc
 Several cycles of this process is required, which may be followed by staged testing to ensure correctness before applying the update to the production.
 
 
-\activedebugging (see figure~\ref{fig:active-debugging}) allows debuggers to apply fixes, modify binaries and apply hotpatches to applications. 
+\emph{Active Debugging} (see figure~\ref{fig:active-debugging}) allows debuggers to apply fixes, modify binaries and apply hotpatches to applications. 
 The main idea is to do a fork/exec, or parallel execution of an unmodified application.
 The unmodified binary continues execution without any change in the input.
 The debug-container should ideally mimic the behavior of the production, so as to allow for forward progress in the application as the debug-container will receive the same input as production.
@@ -611,14 +630,17 @@ Note that the application and the unit test run in parallel in two processes; th
 
 The fork-exec design of test-isolation ensures that the ``in-process'' memory of the process execution is effectively isolated. 
 The production/debug containers are completely isolated hence the test does not impact the production in any way. 
-To ensure further isolation, we propose to allow the test fork to only call wrapper libraries which allow write operations in a cloned cow filesystem.
+To ensure further isolation, we can allow the test fork to only call wrapper libraries which allow write operations in a cloned cow filesystem.
 This can be done using a COW supported filesystem with cloning functionality which are supported in ZFS and BTRFS.
 For instance BTRFS provides a clone operation that atomically creates a copy-on-write snapshot of a file. By cloning the file system does not create a new link pointing to an existing inode; instead it creates a new inode that initially shares the same disk blocks with the original file. As a result cloning works only within the boundaries of the same BTRFS file system, and modifications to any of the cloned files are not visible to the original file and vice versa. 
 This will ofcourse mean that we will constrain the debug/production environment to the File System of our choice.
-We further propose that all test-cases in the debug-container share the test file system.
+All test-cases in the debug-container share the test file system.
 
-
+\iffalse
 \section{Summary}
 \label{sec:activeSummary}
 
+\xxx{Finish Summary Section}
 In this chapter we presented se
+
+\fi

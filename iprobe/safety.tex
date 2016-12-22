@@ -13,7 +13,7 @@ To ensure correctness in our ColdPatching phase, we convert call instructions to
 This does not in any way effect the correctness of the binary, except that instrumentation calls are not made. 
 To ensure run-time correctness, iProbe uses a safety check when it interrupts the application while HotPatching. 
 Our safety check pass ensures that the program counters of all threads belonging to the target applications do not point to the region of code that is being overwritten (i.e. \texttt{NOP} instructions are not overwritten while they are being executed.
-This check is similar to those from traditional Ptrace\cite{ptrace} driven debuggers etc \cite{kaho,livepatch,pannus}. 
+This check is similar to those from traditional Ptrace\cite{ptrace} driven debuggers etc \cite{kaho,livepatch}. 
 Here we use the Ptrace \texttt{GETREGS()} call to inspect the program counter, and if it is currently pointing to the target \texttt{NOP} instructions, we allow the execution to move forward before applying the HotPatch. 
 Unlike existing trampoline oriented mechanisms iProbe has a small \texttt{NOP} code segments equal to the length of a single call instruction that it overwrites with instrumentation calls, this means that the check can be performed in a fast and efficient manner. 
 It is also important to have this check for all threads which share the code-segment, hence the checking must be able to access the process memory map information, and interrupt all the relevant threads.

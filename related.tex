@@ -32,7 +32,7 @@ Unlike lower-level replay based systems, \parikshan tolerates a greater amount o
 \label{sec:relatedRealTime}
 
 This is a category of approaches which attempt to do real-time diagnosis.
-Chaos Monkey~\cite{chaosmonkey} uses fault injection in real production systems to do fault tolerance testing.
+Chaos Monkey~\cite{chaosmonkey,chaosengineering} uses fault injection in real production systems to do fault tolerance testing.
 It randomly injects time-outs, resource hogs etc. in production systems. 
 This allows Netflix to test the robustness of their system at scale, and avoid large-scale system crashes.  
 Another approach called AB Testing~\cite{abtesting} probabilistically tests updates or beta releases on some percentage of users, 
@@ -106,7 +106,7 @@ each function using a
 Another well known tool is DynInst\cite{dyninst}. This tool provides a rich dynamic instrumentation capability and has pure back box solution towards instrumentation of any application.
 However, as shown in Figure.\ref{fig:related} it is also based on traditional trampoline mechanisms, and induces a high overhead because of unnecessary jump instructions.
 Additionally it can have higher overhead because of complex security checks. 
-Other similar trampoline based tools like kaho and pannus\cite{pannus,kaho} have also been proposed, but they focus more towards patching binaries to add \emph{fixes} to correct a bug.
+Other similar trampoline based tools like kaho and katana\cite{katana,kaho} have also been proposed, but they focus more towards patching binaries to add \emph{fixes} to correct a bug.
 
 % platform independent 
 %compiler technique.

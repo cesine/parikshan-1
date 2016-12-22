@@ -426,14 +426,24 @@ title={Ptrace:Linux Process Trace: http://linux.die.net/man/2/ptrace},
 url={http://linux.die.net/man/2/ptrace}
 }
 
-@misc{cdecl,
+ @misc{cdecl,
+	author = "Wikipedia",
+	title = "X86 calling conventions --- Wikipedia{,} The Free Encyclopedia",
+	year = "2016",
+	url = "\url{https://en.wikipedia.org/w/index.php?title=X86_calling_conventions&oldid=756101281}",
+	note = "[Online; accessed 22-December-2016]"
+}
+
+@misc{cdeclOld,
 title = {Calling conventions for different operating systems},
 url = {http://agner.org/optimize/calling\_conventions.pdf}
 }
 
 @misc{log4c,
-title = {log4c: Logging for C library},
-url = {http://log4c.sourceforge.net}
+	title={Log4c: Logging for C Library},
+	author={Goater, CL},
+	year={2015},
+	publisher={Feb}
 }
 
 
@@ -442,13 +452,9 @@ title = {Options for Code Generation Convention in GCC: http://gcc.gnu.org/onlin
 url = {http://gcc.gnu.org/onlinedocs/gcc-4.3.1/gcc/Code-Gen-Options.html}
 }
 
-@misc{pannus,
-title = {Pannus: A hot patching tool, http://pannus.sourceforge.net/},
-url = {http://pannus.sourceforge.net/}
-}
-
 @misc{livepatch,
 title = {LivePatch:  http://ukai.jp/Software/livepatch/},
+author = {Fumitoshi UKAI},
 url = {http://ukai.jp/Software/livepatch/}
 }  
 
@@ -681,7 +687,7 @@ url = {http://ukai.jp/Software/livepatch/}
 
 @article{ec2,
 	title={Amazon elastic compute cloud (Amazon EC2)},
-	author={Amazon, EC},
+	author={Amazon, EC2},
 	journal={Amazon Elastic Compute Cloud (Amazon EC2)},
 	year={2010}
 }
@@ -720,9 +726,11 @@ url = {http://ukai.jp/Software/livepatch/}
 	publisher={ACM}
 }
 
-@misc{linuxpipes,
-	title={Linux IPC pipes},
-	howpublished={http://man7.org/linux/man-pages/man7/pipe.7.html}
+@book{linuxpipes,
+	title={Understanding the Linux kernel},
+	author={Bovet, Daniel P and Cesati, Marco},
+	year={2005},
+	publisher={" O'Reilly Media, Inc."}
 }
 
 @inproceedings{problemsolvingSysTap,
@@ -737,6 +745,7 @@ url = {http://ukai.jp/Software/livepatch/}
 
 @misc{netns,
 	title={Network Namespaces},
+	author={LWN.net},
 	howpublished={https://lwn.net/Articles/580893/}
 }
 
@@ -766,11 +775,36 @@ url = {http://ukai.jp/Software/livepatch/}
 	howpublished={http://visualvm.java.net}
 }
 
-@misc{chaosmonkey,
-	title={Netflix: {C}haos {M}onkey released into the wild. Netflix Tech Blog},
-	author={Bennett, C and Tseitlin, A},
-	year={2012}
+@article{chaosmonkey,
+	author = {Tseitlin, Ariel},
+	title = {The Antifragile Organization},
+	journal = {Commun. ACM},
+	issue_date = {August 2013},
+	volume = {56},
+	number = {8},
+	month = aug,
+	year = {2013},
+	issn = {0001-0782},
+	pages = {40--44},
+	numpages = {5},
+	url = {http://doi.acm.org/10.1145/2492007.2492022},
+	doi = {10.1145/2492007.2492022},
+	acmid = {2492022},
+	publisher = {ACM},
+	address = {New York, NY, USA},
 }
+
+@article{chaosengineering,
+	title={Chaos Engineering},
+	author={Basiri, Ali and Behnam, Niosha and de Rooij, Ruud and Hochstein, Lorin and Kosewski, Luke and Reynolds, Justin and Rosenthal, Casey},
+	journal={IEEE Software},
+	volume={33},
+	number={3},
+	pages={35--41},
+	year={2016},
+	publisher={IEEE}
+}
+
 
 @inproceedings{performanceComparisonlxcVM,
 	title={An updated performance comparison of virtual machines and linux containers},
@@ -1094,16 +1128,20 @@ url = {http://ukai.jp/Software/livepatch/}
 	howpublished={https://www.openstack.org}
 }
 
+
 @misc{ploop,
 	key={OpenVZ Ploop},
+	author={OpenVZ},
 	title={Ploop: Containers in a file},
 	howpublished={http://openvz.org/Ploop}
 }
 
-@misc{nat,
-	title={{NAT}: Network Address Translation},
-	howpublished={http://en.wikipedia.org/wiki/Network\_address\_translation}
+@techreport{nat,
+	title={The IP network address translator (NAT)},
+	author={Egevang, Kjeld and Francis, Paul},
+	year={1994}
 }
+
 
 @book{abtesting,
 	title={Always be testing: The complete guide to {G}oogle website optimizer},
@@ -1212,8 +1250,8 @@ url = {http://ukai.jp/Software/livepatch/}
 }
 
 @misc{petstore,
-	title={PetStore a sample Java Platform, Enterprise Edition reference application},
-	howpublished={http://www.oracle.com/technetwork/java/petstore1-1-2-136742.html}
+	title={2.0 Reference Application. PetStore 2.0},
+	author={PetStore, Java}
 }
 
 @inproceedings{shanluPerf,
@@ -1279,9 +1317,13 @@ url = {http://ukai.jp/Software/livepatch/}
 	note={US Patent App. 12/044,888}
 }
 
-@misc{gcompute,
-	title={Google {C}ompute},
-	howpublished={https://cloud.google.com/compute/}
+@incollection{gcompute,
+	title={Google compute engine},
+	author={Krishnan, SPT and Gonzalez, Jose L Ugia},
+	booktitle={Building Your Next Big Thing with Google Cloud Platform},
+	pages={53--81},
+	year={2015},
+	publisher={Springer}
 }
 
 
