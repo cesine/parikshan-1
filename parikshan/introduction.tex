@@ -1,5 +1,5 @@
 \section{Introduction}
-\label{sec:parikshan-intro}
+\label{sec:parikshanIntro}
 
 Rapid resolution of incident (error/alert) management~\cite{sasase2013} in online service-oriented systems~\cite{microservice-book,hdfs,cassandra,redis} is extremely important.
 The large scale of such systems means that any downtime has significant financial penalties for all parties involved.
@@ -21,8 +21,9 @@ Despite much work towards minimizing the amount of such trace data captured, ove
 We seek to allow developers to diagnose and resolve crashing and non-crashing failures of production service-oriented systems \emph{without suffering any performance overhead}.
 Our key insight is that for most service-oriented systems, a failure can be reproduced simply by replaying the network inputs passed to the application.
 For these failures, capturing very low-level sources of non-determinism (e.g. thread scheduling or general system calls, often with very high overhead) is unnecessary to successfully and automatically reproduce the buggy execution in a development environment.
-We evaluated this insight by studying 16 real-world bugs (see Section~\ref{sec:casestudy}), which we were able to trigger by only duplicating and replaying network packets.
-Furthermore, we categorized 217 bugs from three real world applications, finding that most were similar in nature to the 16 that we reproduced, suggesting that our approach would be applicable to them as well (see Section~\ref{sec:survey}).
+We evaluated this insight by studying 16 real-world bugs (see Section~\ref{sec:parikshanCasestudy}), which we were able to trigger by only duplicating and replaying network packets.
+Furthermore, we categorized 217 bugs from three real world applications, finding that most of these were similar in nature to the 16 that we reproduced. 
+This suggests that our approach would be applicable to the bugs in our survey as well (see Section~\ref{sec:parikshanSurvey}).
 %TODO - look into PRES to see if we can prove that capturing all sources of non-determinism is not important
 
 
@@ -40,7 +41,7 @@ Meanwhile, the production system can continue to service other requests.
 We expect \parikshan to be used in cases of tricky bugs that are highly sensitive to their environment, such as semantic bugs, performance bugs, resource-leak errors, configuration bugs, and concurrency bugs.
 Although in principle, \parikshan can be used to diagnose crashing bugs, we target primarily non-crashing bugs, where it is important for the production system to remain running even after a bug is triggered, for instance, to continue to process other requests. 
 %For instance, semantic bugs are caused because of logical errors, which lead to an unexpected output, performance bugs result in a slow-down of the application. 
-We present a more detailed explanation of these categories in Section~\ref{sec:casestudy}.
+We present a more detailed explanation of these categories in Section~\ref{sec:parikshanCasestudy}.
 
 %We assume our target system has been deployed based on micro-service architecture~\cite{microservice-book,microservices}, which advocates running each service in isolation.
 We leverage container virtualization technology (e.g., Docker~\cite{docker}, OpenVZ~\cite{openvz}), which can be used to pre-package services so as to make deployment of complex multi-tier systems easier (i.e. DockerHub~\cite{dockerhub,dockerhub_article} provides pre-packaged containers for storage, webserver, database services etc.).
@@ -69,11 +70,10 @@ This allows a safe mechanism to diagnose the error, without impacting the functi
 
 \noindent
 The rest of the paper is organized as follows.
-In Section~\ref{sec:motivation}, we describe a motivating scenario.
-Section~\ref{sec:design} and \ref{sec:implementation} describe the design and implementation of \parikshan and each of it's internal components.
-We then present a case study of 16 real-world bugs successfully reproduced by \parikshan in Section~\ref{sec:casestudy}.
+Section~\ref{sec:parikshanDesign} and \ref{sec:parikshanImplementation} describe the design and implementation of \parikshan and each of it's internal components.
+We then present a case study of 16 real-world bugs successfully reproduced by \parikshan in Section~\ref{sec:parikshanCasestudy}.
 %We have tested \parikshan live network duplication process to re-create 16 production bugs in 5 well-known software systems (MySQL, Apache HTTPD, Redis, Hadoop/HDFS) see section~\ref{sec:casestudy}. 
 %Furthermore, we performed a survey of Bugzilla reports of apache and MySQL to show that a majority of bugs in production systems can be classified in 5 categories that can in principle be handled by \parikshan (see section~\ref{sec:survey}).
-This is followed by the evaluation in Section~\ref{sec:evaluation}.
-In Section~\ref{sec:application}, we discuss potential applications of \parikshan. 
-Finally, we discuss some challenges in Section~\ref{sec:threats}, give some related work in Section~\ref{sec:related} and conclude.
+This is followed by the evaluation in Section~\ref{sec:parikshanEvaluation}.
+In Section~\ref{sec:parikshanApplication}, we discuss potential applications of \parikshan. 
+Finally, we discuss some challenges in Section~\ref{sec:parikshanThreats} and conclude.

@@ -122,7 +122,7 @@ At the same time there are some things that the administrator must be aware of
 	\item \textbf{Debug Window}:
 	As explained earlier, most debugging mechanisms generally requires instrumentation and tracking execution flow. This means that the application will spend some compute cycles in logging instrumentation points thereby having a slow-down. While \parikshan avoids any slow-down in the production environment, there will be some slow-down in the debug-container. 
 	
-	The amount of time till which the production container remains in synch with the \debugcontainer is called the debug-window(see section~\ref{sec:window}). The window time depends on the overhead, the size of the buffer and the incoming request rate. If a buffer overflow happens because the debug-window has finished, the \debugcontainer needs to be re-synced with the production container.
+	The amount of time till which the production container remains in synch with the \debugcontainer is called the debug-window(see section~\ref{sec:parikshanWindow}). The window time depends on the overhead, the size of the buffer and the incoming request rate. If a buffer overflow happens because the debug-window has finished, the \debugcontainer needs to be re-synced with the production container.
 	
 	In our experiments, we have observed, that \parikshan is able to accomodate significant overhead without incurring a buffer overflow.	
 	Administrators or debuggers using \parikshan should keep the overhead of their instrumentation in mind when debugging in \parikshan. Ofcourse they can always re-clone the \productioncontainer to start a new debugging session.
@@ -302,7 +302,7 @@ Once, finished future transactions can also be debugged after doing a re-sync by
 \section{Budget Limited, Adaptive Instrumentation}
 \label{sec:activeBudgetLimited}
 
-As explained in section~\ref{sec:design}, the asynchronous packet forwarding in our network duplication results in a \debugwindow.
+As explained in section~\ref{sec:parikshanDesign}, the asynchronous packet forwarding in our network duplication results in a \debugwindow.
 The \debugwindow is the time before the buffer of the debug-container overflows because of the input from the user.
 The TCP connection from end-users to production-containers are synchronized by default.
 This means that the rate of incoming packets is limited by the amount of packets that can be processed by the production container.
@@ -408,17 +408,43 @@ In \parikshan, this model can be extended to a cloned model as shown in figure \
 The packets to both the production and the debug cloned containers are routed through a proxy which has internal buffer to account for slowdowns in request processing in the debug container. 
 Here instead of the TCP buffer, we focus on the request arrival and departure rate to and from the proxy duplicators buffer.
 The incoming rate remains the same as $\lambda$, as the requests are asynchronously forwarded to both containers without any slowdown. 
-The request processing rate of the debug container is $\mathrm{\mu_{3}}$, where $\mathrm{\mu_{2}}$ $>$ $\mu$ (the processing time for the production container) depending on the overhead due to instrumentation in the debug-container.
+%The request processing rate of the debug container is $\mathrm{\mu_{2}}$, where $\mathrm{\mu_{2}}$ $>$ $\mathrm{\mu_{1r}}$ (the processing time for the production container) depending on the overhead due to instrumentation in the debug-container.
 To simplify the problem, we assume the outgoing requests from the proxy buffer to be $\mathrm{\mu_{3}}$ where:\\
 
-\begin{equation}
+\begin{equation}\label{eq:1}
 \mu_{3} = \mu_{2} - \mu
 \end{equation}
 
 The remaining processing time for both the production container and the debug container is going to be the same. 
 Since the TCP buffer in the production container is a blocking queue, we can assume that any buffer overflows in the proxy buffer are only caused because of the instrumentation overhead in the debug-container, which is accounted for by $\mathrm{\mu_{3}}$. 
-We borrow from existing theoretical foundation for hitting time, and simulation experiments to find approximate overhead bounds for instrumentation. 
-Our model can be further expanded to a load balanced model. Please look at Appendix D for further understanding of these results.
+
+\begin{figure}[ht!]
+	\begin{center}
+		\includegraphics[width=0.8\textwidth]{queue/figs/queueBalanced.pdf}
+		\caption{This figure shows how queueing theory can be extended to a load balanced debugging scenario. Here each of the debug container receive the requests at rate $\lambda$, and the total instrumentation is balanced across multiple debug containers.}
+		\label{fig:queueBalanced}
+	\end{center}
+\end{figure}
+
+\subsection{Extended Load-balanced duplicate clones}
+
+Our model can be further extended into a load-balanced instrumentation model as shown in figure~\ref{fig:queueBalanced}. 
+This is useful when the debugging needs to be higher, but we have a lower overhead bound through only one clone.
+Here we can balance the instrumentation across more than one clones, each of which receive the same input.
+They can together contribute towards debugging the error
+
+\subsection{Simulation}
+\label{sec:queueEval}
+
+In this section we present our evaluation strategy for simulating various workloads to model the hitting time and find how much resources to be alloted/instrumentation can be done for a given workload. 
+Our goal of these experiments is to provide the user with an upper-bound for instrumentation in terms of percentage of the average transaction time, based on a given buffer size, and expected time-window needed for debugging.
+
+In our experiments, we plot the time-window observed based on the hitting time explained in the equation ~\ref{eq:hitting}. 
+For a given buffer size, we run multiple iterations of instrumentation until we hit the pre-defined time limit. 
+In this case we assume that the time-taken to capture a trace good enough for debugging the problem, is 10 mins. 
+Please note, this is not the total debugging time, but rather just a trace instance large enough to capture the systems and root-cause.
+The time window will depend on the use-case, and is a user-specified argument.
+
 
 \iffalse
 The utilization factor for an M/M/1/K queue can be formulated as follows:
@@ -464,6 +490,7 @@ Next we extend this to our asynchronous load-balanced model, the requests can be
 This can reduce the waiting time further, for the asynchronous model the equations can be extended as follows\\ \\
 \fi
 
+
 \subsection{Reactive: Adaptive Instrumentation}
 \label{sec:activeAdaptiveInstrumentation}
 
@@ -505,11 +532,28 @@ There are three key components of our adaptive instrumentation mechanism.
 
 We have looked into assigning a score to each predicate. This is based on the statistical importance of the predicate (similar to statistical debugging), and instrumentation overhead score (dependent on total budget etc.). We are still finalizing the scoring methodology.
 
+\subsection{Automated Reactive Scores}
+
+A statistical record is maintained for each predicate, and the overall success of execution is captured by the error log.
+We assume worker-thread model, where we are able to associate the success/failure of the transaction by associating process-id’s and error log transaction id’s.
+The instrumentation cost for each instrumentation profile can be as follows.
+
+\begin{equation}
+\sum\limits_{i=1}^{i=n} x_i  = InstrumentationScore(x)*StatisticalScore(x)
+\end{equation}
+
+Each predicate is given a total score based on the following parameters:
+
+\begin{itemize}
+	\item \textbf{Statistical Importance Score:} The statistical importance score defines the importance of each predicate as an indicator for isolating the bug.The main idea is derived from statistical debugging work done by Liblit et Al
+	\item \textbf{Instrumentation Overhead Score:} Adaptive score keeping track of counters of each predicate. Can be used as a weighing mechanism for figuring out the total cost.
+\end{itemize}
+
 \subsection{Feasibility}
 \label{sec:queue_feasability}
 \xxx{Re-label and figure out what to write here}
 
-In ~\cite{parikshanTR,parikshanQueue} we looked into the model generation and some early theoretical experiments.
+%In ~\cite{parikshanTR,parikshanQueue} we looked into the model generation and some early theoretical experiments.
 We also created a simulator in C/C++ which can buffer size, service times, overhead and incoming request rate to emulate the queuing model.
 The tool shows buffer overflow, and time taken to reach the overflows.
 

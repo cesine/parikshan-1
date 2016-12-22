@@ -14,7 +14,7 @@
 
 
 \subsubsection{Proxy Network Duplicator:} 
-\label{sec:proxyDuplicator}
+\label{sec:parikshanProxyDuplicator}
 To successfully perform online debugging in the replica to work, both production and debug containers must receive the same input.
 A major challenge in this process is that the production and debug container may execute at different speeds (debug will be slower than production): this will result in them being out of sync.
 Additionally, we need to accept responses from both servers and drop all the traffic coming from the debug-container, while still maintaining an active connection with the client.
@@ -49,4 +49,4 @@ The above strategy allows for non-blocking packet forwarding and enables a key f
 We take the advantage of an in-memory buffer, which can hold requests for the debug-container, while the production container continues processing as normal.
 A side-effect of this strategy is that if the speed of the debug-container is too slow compared to the packet arrival rate in the buffer, it may eventually lead to an overflow. 
 We call the time taken by a connection before which the buffer overflows its \emph{debug-window}.
-We discuss the implications of the \emph{debug window} in Section \ref{sec:window}.  
+We discuss the implications of the \emph{debug window} in Section \ref{sec:parikshanWindow}.  

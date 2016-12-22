@@ -72,9 +72,9 @@ We will use the buffer size and usage as a trigger and present novel sampling te
 \fi
 
 Lastly, while \parikshan is a platform to quickly attack bugs, in itself it's a debugging platform. 
-For the last section of this dissertation we look at how various existing debugging techniques can be adapted to \livedebugging, making it more effective. 
-We compare a variety of techniques and compare how they traditionally work and how they can be more effective with \parikshan. 
-As a part of this we will discuss two new approaches: Firstly, we will discuss \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container. Secondly, we will discuss a budget limited instrumentation approach to increase the time for continuous live debugging.
+For the last section of this dissertation we look at how various existing debugging techniques can be adapted to \livedebugging, making them more effective. 
+We first enumerate scenarios in which debugging can take place: \emph{post-facto} - turning livedebugging on after a bug has occured, \emph{proactive} - having debugging on before a bug has happened.
+We then introduce two new approaches: \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container, and \emph{budget-limited instrumentation} which will allow longer continuous debugging with a controlled overhead.
 
 %Third, we will describe a set of \emph{guidelines} that can be followed by developers to assist in the formulation and development of \livedebugging friendly applications.
 %These will add flags and triggers which can be used with the approaches above for a clean and assisted separation of the debugging container when cloned from the \productioncontainer.

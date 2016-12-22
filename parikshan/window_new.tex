@@ -1,6 +1,6 @@
 
 \subsection{Debug Window}
-\label{sec:window}
+\label{sec:parikshanWindow}
 
 \parikshan's asynchronous forwarder uses an internal buffer to ensure that incoming requests proceed directly to the production container without any latency, regardless of the speed at which the debug replica processes requests.
 The incoming request rate to the buffer is dependent on the user, and is limited by how fast the production container manages the requests (i.e. the production container is the rate-limiter).
@@ -25,5 +25,5 @@ In such cases, for a server receiving a heavy workload, the number of calls in a
 To further increase the \emph{debug window}, we propose load balancing debugging instrumentation overhead across multiple debug-containers, which can each get a duplicate copy of the incoming data. 
 For instance, debug-container 1 could have 50\% of the instrumentation, and the rest on debug-container 2.
 We believe such a strategy would significantly reduce the chance of a buffer overflow in cases where heavy instrumentation is needed.
-Section~\ref{sec:timewindowPerformance} explains in detail the behavior of the debug window, and how it is impacted by instrumentation.
+Section~\ref{sec:parikshanTimewindowPerformance} explains in detail the behavior of the debug window, and how it is impacted by instrumentation.
 \xxx{What happens when we exceed the debug window?}

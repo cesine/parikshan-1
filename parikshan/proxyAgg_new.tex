@@ -11,8 +11,8 @@
 
 
 \subsubsection{Proxy Network Aggregator:}
-\label{sec:proxyAggregator}
-The proxy described in Section~\ref{sec:proxyDuplicator} is used to forward requests from downstream tiers to production and debug containers.
+\label{sec:parikshanProxyAggregator}
+The proxy described in Section~\ref{sec:parikshanProxyDuplicator} is used to forward requests from downstream tiers to production and debug containers.
 While the network duplicator duplicates incoming requests, the network aggregator manages incoming ``responses'' for requests sent from the debug container. 
 Imagine if you are trying to debug a mid-tier application container, the proxy network duplicator will replicate all incoming traffic from the client to both debug and the production container. 
 Both the debug container and the production, will then try to communicate further to the backend containers.

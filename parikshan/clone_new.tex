@@ -9,7 +9,7 @@
 
 
 \subsection{Clone Manager} 
-\label{sec:CloneManager}
+\label{sec:parikshanCloneManager}
 
 Live migration~\cite{mirkin2008containers,clark2005live,gebhart2009dynamic} refers to the process of moving a running virtual machine or container from one server to another, without disconnecting any client or process running within the machine (this usually incurs a short or negligible suspend time). 
 In contrast to live migration where the original container is destroyed, the ``Live Cloning'' process used in \parikshan requires both containers to be actively running, and be still attached to the original network.
@@ -60,4 +60,4 @@ A second sync is run when the container is suspended to ensure P1 and D1 have th
 
 The suspend time of cloning depends on the operations happening within the container between step 2 and step 4 (the first and the second rsync), as this will increase the number of dirty pages in the memory, which in turn will impact the amount of memory that needs to be copied during the suspend phase.
 This suspend time can be viewed as an amortized cost in lieu of instrumentation overhead.
-We evaluate the performance of live cloning in Section~\ref{sec:performance}.
+We evaluate the performance of live cloning in Section~\ref{sec:parikshanPerformance}.
