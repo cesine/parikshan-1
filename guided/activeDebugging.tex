@@ -210,7 +210,7 @@ In section~\ref{sec:activeStagedRecordReplay}, we have discussed staged record-a
 
 
 
-\section{Existing Debugging Mechanisms}
+\section{Existing Debugging Mechanisms and Applications}
 \label{sec:activeExistingTechniques}
 
 \subsection{Execution Tracing}
@@ -297,6 +297,21 @@ However this can be easily applied towards the \debugcontainer, where the execut
 While this does mean that the replica will not be able to servce any more requests (except for those that have been buffered), the request which is inside the breakpoint will be processed.
 Generally breakpoint and step-by-step execution monitoring is used for a limited scope of execution within a single transaction.
 Once, finished future transactions can also be debugged after doing a re-sync by applying live cloning again.
+
+\subsection{Fault Tolerance Testing}
+
+One of the places that \parikshan can be applied is for fault tolerance testing.
+To motivate this let us look at netflix's current testing model.
+Netflix has a suite of real-time techniques~\cite{chaosengineering} for testing fault-tolerance of it's systems.
+Amongst them, chief is chaos monkey~\cite{chaosmonkey}, which uses fault injection in real production systems to do fault tolerance testing.
+It randomly injects time-outs, resource hogs etc. in production systems. 
+This allows Netflix to test the robustness of their system at scale, and avoid large-scale system crashes. 
+The motivation behind this approach is that it's nearly impossible to create a large-size test-bed to have a realistic fault tolerance testing for the scale of machines that netflix has. 
+Chaos Monkey allows netflix to do it's fault tolerance testing at a small cost to the customer experience, while avoiding fatal crashes which could lead to longer downtimes.
+The obvious downside of this approach is that the service becomes temporarily unavailable and re-sets, or forces a slow-down on the end-user experience (this may or may not be visible to the user). 
+
+Since \parikshan can be run in a live system, it can capture the scale of a large-system, and can allow users to test for faults in an isolated environment.
+The only limitation being that the fault-injections should be such that the impact of these faults can be isolated to targeted systems, or a subdomain of a network which has been cloned, and the tolerance built into the system can be tested (it would be too expensive to clone the entire deployment).
 
 
 \section{Budget Limited, Adaptive Instrumentation}
