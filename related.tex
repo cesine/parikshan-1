@@ -47,7 +47,7 @@ For example, taint analysis, which is a representative online program analysis t
 If tainted data is used in sensitive ways (e.g., changing the control flow), the taint analyzer will raise an error. 
 Online program analysis is widely regarded as an effective technique to debug programs and defend security attacks. 
 However, online program analysis is not efficient, especially when the analysis is performed at instruction granularity. 
-Many online program analysis techniques may even bring over a 10 times slowdown on commodity computer systems~\cite{Newsome05dynamictaint}
+Many online program analysis techniques may even bring over a 10 times slowdown on commodity computer systems~\cite{Newsome05dynamictaint}.
 
 \iffalse
 \subsection{Real-Time techniques:}
@@ -116,12 +116,12 @@ In essence, users can insert debug statements with runtime flags to dump and ins
 The log4j~\cite{log4j} and log4c~\cite{log4c} frameworks are commonly used libraries to perform program tracing in many open source projects in the source code level. 
 Additionally compilers have several inbuilt profilers which can be used along with tools such as gprof and jprof to gather statistics about program execution.
 While source code techniques allow very light weight instrumentation, by design they are static and can only be changed at the start of application execution. 
-iProbe on the other hand offers run-time instrumentation that allows dynamic decisions on tracing with comparable overhead.
+\iprobe on the other hand offers run-time instrumentation that allows dynamic decisions on tracing with comparable overhead.
 
 
 \subsection{Run-time Instrumentation Mechanisms}
 There are several kernel level tracing tools such as DTrace, LTTng, SystemTap \cite{dtrace,lttng,systemtap} developed by researchers over the years.
-iProbe differs from these approaches mainly in two ways: Firstly, all of these approaches use a technique similar to software interrupt to switch to kernel space and generate a log event by overwriting the target instructions. 
+\iprobe differs from these approaches mainly in two ways: Firstly, all of these approaches use a technique similar to software interrupt to switch to kernel space and generate a log event by overwriting the target instructions. 
 They then execute the instrumentation code, and either generate a trampoline mechanism or re-execute the overwritten target instructions and then jump back to the subsequent instructions. 
 As shown in Figure.\ref{fig:related} this introduces context-switches between user-space and the kernel, causing needless overhead. 
 iProbe avoids this overhead by having a completely user-space based design.
@@ -132,13 +132,13 @@ Fay \cite{fay} is a platform-dependent approach which uses the empty spaces at t
 To ensure the capture of the entry and exit of functions, Fay calls the target function within its instrumentation thereby introducing an extra stack frame for each target instrumentation. 
 This operation is similar to a mini-trampoline and hence incurs an overhead. 
 Fay logs function execution in the kernel space and hence also has a context-switch overhead.
-iProbe avoids such overhead by introducing markers at the beginning and end of
+\iprobe avoids such overhead by introducing markers at the beginning and end of
 each function using a 
 
 Another well known tool is DynInst\cite{dyninst}. This tool provides a rich dynamic instrumentation capability and has pure back box solution towards instrumentation of any application.
 However, as shown in Figure.\ref{fig:related} it is also based on traditional trampoline mechanisms, and induces a high overhead because of unnecessary jump instructions.
 Additionally it can have higher overhead because of complex security checks. 
-Other similar trampoline based tools like kaho and katana\cite{katana,kaho} have also been proposed, but they focus more towards patching binaries to add \emph{fixes} to correct a bug.
+Other similar trampoline based tools like \emph{kaho} and \emph{katana}\cite{katana,kaho} have also been proposed, but they focus more towards patching binaries to add \emph{fixes} to correct a bug.
 
 % platform independent 
 %compiler technique.
