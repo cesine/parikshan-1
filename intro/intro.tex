@@ -28,7 +28,7 @@ Frameworks like docker~\cite{docker} allow for scaled out application deployment
 For instance, an application server, and a database server making up a web-service, can be hosted on their own containers, thereby sandboxing each service, and making it easier to scale out.
 
 Secondly, we observe a trend towards DevOps~\cite{devops} by the software engineering industry.
-DevOps stresses on close coupling between software developers and operators, in order to have shorter release cycles (Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day~\cite{10DevOps}).
+DevOps stresses on close coupling between software developers and operators, in order to have shorter release cycles (Facebook web has 2 releases a day, and one mobile release every 4 weeks and Flickr has 10 deployment cycles per day~\cite{releaseFacebookKeynote,10DevOps}).
 This re-emphasizes the need to have a very short time to diagnose and fix a bug especially in service oriented application.
 We believe by providing a means to observe the application when the bug is active, we will significantly reduce the time to bug localization.
 
@@ -431,7 +431,7 @@ The rest of this thesis is organized as follows:
 	In this chapter we will first give a brief motivation, and discuss the overall design, and how our framework fits into service-oriented applications.
 	We then go into a detailed explanation of the design of each of the components of network request duplication as well as our live cloning algorithm.
 	We follow this up with implementation details, and evaluation scenarios using both simulation results and real-world experiments which show the performance of our framework. 
-	The chapter also includes a case study of 16 real-world bugs, and a survey of 150+ bugs real-world bugs which we use to show that network replay is enough for triggering most bugs in service-oriented applications.
+	The chapter also includes a case study of 16 real-world bugs, and a survey of 217 bugs real-world bugs which we use to show that network replay is enough for triggering most bugs in service-oriented applications.
 	
 	
 	\item Chapter~\ref{ch:iprobe} introduces \iprobe a novel hybrid instrumentation technique, which can help in pre-packaging SOA application binaries for instrumentation - thereby helping in live-debugging.

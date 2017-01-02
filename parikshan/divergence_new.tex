@@ -2,7 +2,7 @@
 \subsection{Divergence Checking}
 \label{sec:parikshanDivergenceChecking}
 
-In \parikshan it is possible that non-deterministic behavior (discussed in Section~\ref{sec:threats}) in the two containers or user instrumentation, causes the production and debug container to diverge with time.
+In \parikshan it is possible that non-deterministic behavior (discussed in Section~\ref{sec:parikshanThreatsNonDeterminism}) in the two containers or user instrumentation, causes the production and debug container to diverge with time.
 To understand and capture this divergence, we compare the corresponding network output received in the proxy.
 This is an optional component, which gives us a black-box mechanism to check the fidelity of the replica based on its communication with external components.
 In our current prototype, we use a hash on each data packet, which is collected and stored in memory for the duration that each packet's connection is active.

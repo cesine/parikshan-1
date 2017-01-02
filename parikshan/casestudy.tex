@@ -18,6 +18,37 @@ In the rest of this section we discuss the bug-reproduction technique in each of
 
 \input{parikshan/casestudy-table1}
 
+\section{Applications Targeted}
+
+In our case-studies we have targeted the following applications: MySQL, Apache, Redis, Cassandra, HDFS. Apart from this we have also tried \parikshan on PetStore~\cite{petstore} a J2EE JBOSS~\cite{jboss} multi-tier application. We also did a survey of 217 real-world bugs, and found them similar to the bugs presented in this case study( more details regarding the survey can be found at section~\ref{sec:parikshanSurvey}).
+In this section we explain the applications that have been used in the bug case-studies.
+
+\subsection{MySQL}
+
+MySQL~\cite{mysql} is a well known open-source database application for structured SQL queries. 
+MySQL is most commonly deployed as a standalone centralized server, and can also be deployed as a cluster service with several servers sharing the data. 
+It allows for atomic updates with strict consistency models, so there is a single point of query, and is usually queried using customized \texttt{MYSQL protocol}, which is avialable in several mysql libraries or clients in different languages.
+Several modern websites and transaction systems are built on MySQL.
+Other softwares which are very similar in deployment to MySQL are Oracle DB~\cite{oracle}, and PostgrepSQL~\cite{postgresql}.
+
+In our examples we have used the native mysql client application provided with the mysql community server distribution.
+When using mysql, you can either use an anonymous user, a registered user or an admin.
+We have used the default mysql/mysql user or anonymous user to run our queries.
+
+\subsection{Apache}
+
+Apache httpd server~\cite{apache} is the most well known webservers with millions of active websites being hosted on it.
+It responds to \texttt{HTTTP} requests from user-facing browsers, and sends responses from downstream applications to be rendered back in the browser.
+Webservers can run standalone, multi-tier in a load-balanced fashion or can act as proxies for security purposes.
+
+\xxx{proxy can be made for HTTP? just add as it's possible}
+
+\subsection{Redis}
+
+\subsection{Cassandra}
+
+\subsection{HDFS}
+
 \section{Case Studies}
 \label{sec:parikshanCasestudy}
 
@@ -32,6 +63,7 @@ These bugs often happen because an edge condition was not checked during the dev
 Many such errors result in an unexpected output or possibly can crash the system.
 We recreated 4 real-world production bugs from Redis~\cite{redis} queuing system, and Cassandra~\cite{cassandra} a NoSQL database.
 
+\xxx{TODO:Nipun - Add some explanation for Redis, and Cassandra}
 
 \subsubsection{Redis \#761}
 
@@ -181,6 +213,15 @@ In this subsection we describe the MySQL\#15811 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
+It was reported that the calculation of MD5 and SHA1 hash values using the built-in MySQL functions does not seem to be as efficient, and takes too long.There seem to be two factors that determine the performance of the hash generation:
+\begin{itemize}
+	\item computation of the actual hash value (binary value)
+	\item conversion of the binary value into a string field
+\end{itemize}
+
+The run time of the hash computation depends on the length of the input string whereas the overhead of the binary-to-string conversion can be considered as a fixed constant as it will always operate on hash values of 16 (MD5) or 20 (SHA1) bytes length.
+The impact of the binary-to-string conversion will become more visible with shorter input strings than with long input strings. For short input strings it seems that more time is spent in the binary-to-string conversion than in the actual hash computation part.\footnote{A patch provided by a developer improved the performance by an order of magnitude. However for the purposes of our discussion, we have limited ourselves to bug-recreation}
+
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
@@ -189,6 +230,13 @@ In this subsection we describe the MySQL\#15811 performance bug \\
 		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
 		\item Start network duplicator to duplicate network traffic to both the production and debug containers
 		\item connect to the production container using \texttt{mysqlclient}
+		\item Run a select query from the client on the users database:
+		
+		\texttt{select count(\*) from (select md5(firstname) from users) sub limit 1G}
+
+		
+		\item The time observed for this query is reported as a performance bug by the reporter. This can be viewed both in the production container and the debug container
+		
 	\end{enumerate}
 \end{adjustwidth}	
 

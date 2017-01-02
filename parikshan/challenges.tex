@@ -9,12 +9,13 @@ Perhaps, \parikshan's low-overhead network record and replay approach is less su
 To alleviate this concern, we selected bugs that represented a wide range of categories of bugs, and further, selected bugs that had already been studied in other literature, to alleviate a risk of selection bias.
 We further strengthened this studied with a follow-up categorization of 217 bugs in three real-world applications, finding that most of those bugs were semantic in nature, and very few were non-deterministic, and hence, having similar characteristics to those 16 that we reproduced. 
 
-There are also several underlying limitations and assumptions regarding \parikshan's applicability:
+There are also some underlying limitations and assumptions regarding \parikshan's applicability:
 
 \xxx{Clarify what exactly we can and cannot do WRT non-determinism and distirbuted services.}
 
 
-\subsection{Non-determinism:} 
+\subsection{Non-determinism} 
+\label{sec:parikshanThreatsNonDeterminism}
 Non-determinism can be attributed to three main sources (1) system configuration, (2) application input, and (3) ordering in concurrent threads.
 Live cloning of the application state ensures that both applications are in the same ``system-state'' and have the same configuration parameters for itself and all dependencies.
 %Furthermore, in offline debugging it is often difficult to capture all possible inputs, and hence deal with input non-determinism.
@@ -26,10 +27,13 @@ However, as can be seen in our case-studies above, unless there is significant n
 Approaches like statistical debugging~\cite{Liblit:2004:CBI}, can be applied to localize bug.
 %Furthermore, techniques like deterministic scheduling~\cite{smt:cacm}, can also be used to counter concurrency based bugs.
 \parikshan allows debugger to do significant tracing of synchronization points, which is often required as an input for constraint solvers~\cite{dpor,best}, which can go through all synchronization orderings to find concurrency errors.
-We have also tried to alleviate this problem using our divergence checker (Section~\ref{sec:divergenceChecking})
+We have also tried to alleviate this problem using our divergence checker (Section~\ref{sec:parikshanDivergenceChecking})
 
 
-\subsection{Distributed Services:} Large-scale distributed systems are often comprised of several interacting services such as storage, NTP, backup services, controllers and resource managers.
+\subsection{Distributed Services} 
+\label{sec:parikshanThreatsDirstributed}
+
+Large-scale distributed systems are often comprised of several interacting services such as storage, NTP, backup services, controllers and resource managers.
 \parikshan can be used on one or more containers and can be used to clone more than one communicating .
 Based on the nature of the service, it may be (a). Cloned, (b). Turned off or (c). Allowed without any modification.
 For example, storage services supporting a replica need to be cloned or turned off (depending on debugging environment) as they would propagate changes from the debug container to the production containers.

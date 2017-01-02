@@ -237,6 +237,13 @@ The core mechanism of statistical debugging is to have probabilistic profiling, 
 It then uses statistical models to identify path profiles that are strongly predictive of failure. 
 This can be used to iteratively localize the bug causing execution, and can then be manually analyzed by \parikshan.
 
+The core advantage of statistical testing is that the sampling frequency of the instrumentation can be decreased to reduce the instrumentation overhead.
+However, the instrumentation frequency for such testing to be successful needs to be statistically significant. 
+Unfortunately, overhead concerns in the production environment limit the frequency of instrumentation.
+In \parikshan, the buffer utilization can be used to control the frequency of such statistical instrumentation in the debug-container. 
+This would allow the user to utilize the slack available in the debug-container for instrumentation to it's maximum, without leading to an overflow. 
+Thereby improving the efficiency of statistical testing.
+
 Statistical debugging is one of the systematic bug localization approaches that can be directly applied in the \debugcontainer, with the added advantage that the amount of instrumentation that can be applied in the debug-container is much higher than production containers. 
 Apart from regular semantic bugs, previous body of works have shown that statistical debugging is useful in detecting a variety of other bugs like concurrency bugs~\cite{statisticalConcurrency}, and performance~\cite{statisticalPerformance}.
 
