@@ -36,17 +36,36 @@ In our examples we have used the native mysql client application provided with t
 When using mysql, you can either use an anonymous user, a registered user or an admin.
 We have used the default mysql/mysql user or anonymous user to run our queries.
 
-\subsection{Apache}
+\subsection{Apache HTTPD Server}
 
 Apache httpd server~\cite{apache} is the most well known webservers with millions of active websites being hosted on it.
 It responds to \texttt{HTTTP} requests from user-facing browsers, and sends responses from downstream applications to be rendered back in the browser.
 Webservers can run standalone, multi-tier in a load-balanced fashion or can act as proxies for security purposes.
+Other softwares which are similar to apache are nginx~\cite{nginx}, and thttpd~\cite{thttpd} amongst many others.
+
+Connections to Apache HTTPD servers are made through browsers. For our testing, we have typically used wget~\cite{wget} or httpref~\cite{httpref} command line utilities to run single or multiple workloads of http queries.
 
 \xxx{proxy can be made for HTTP? just add as it's possible}
 
 \subsection{Redis}
 
+Redis~\cite{redis} is an open-source, in-memory, networked key-value storage service. 
+The name Redis means Remote Dictionary Server. 
+Redis is often ranked the most popular key-value database, and has also been ranked the \#4 NoSQL database in user satisfaction and market presense based on it's reviews. 
+It is very light-weight and is commonly used in containers.
+Redis maps keys to types of values, and can support many abstract data types apart from strings (e.g. lists, sets, hash tables etc.).
+It is also often used as a queuing system.
+Other similar softwares include BerkleyDB~\cite{berkleyDB}, and memcached~\cite{memcached}
+
+Redis provides bindings for several languages, and has several client libraries available. 
+For our experiments we have used the \emph{redis-cli} client given with the default distribution.
+
 \subsection{Cassandra}
+
+Cassandra is a well known wide column store NoSQL database, designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure.
+Cassandra offers robust support for clusters
+
+To facilitate re-creating of cassandra bug, we have provided dockerized containers, which install the correct version of cassandra which has this bug as well as it's dependencies. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We also provide a python script for the cassandra client to trigger the bug conditions.
 
 \subsection{HDFS}
 
@@ -89,7 +108,9 @@ We classify this as a semantic bug, which could have been fixed with an error ch
 	\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
 	\item Send the following request through the redis client: 
 	
-		\texttt{zinterstore out 9223372036854775807 zset zset2}
+		\begin{lstlisting}[language=sh]
+		zinterstore out 9223372036854775807 zset zset2
+		\end{lstlisting}
 		
 		This tries to set the variable to the integer in the request, and leads to an integer overflow error. The integer overflow error is simultaneously triggered both in the production and the debug containers.
 	
@@ -144,14 +165,33 @@ In fact, it was written in reverse.\\
 		\item Start a cassandra service in the production container
 		\item Use \parikshan's live cloning facility to create a clone of cassandra in the debug-container.
 		\item Connect to cassandra using a python client
-		\item Insert a large number of columns into cassandra (so that it is a wide row). For our testing we used \texttt{pycassa} python cassandra client. 
-		\item Fetch the columns in a portion of ranges
+		\item Insert a large number of columns into cassandra (so that it is a wide row). For our testing we used \texttt{pycassa} python cassandra client. The following code shows column insertion.
+		
+		\begin{lstlisting}[language=python]
+		if need_to_populate:
+			print "inserting ..."
+			for i in range(100000):
+				cols = dict((str(i * 100 + j), 'value%d' % (i * 100 + j)) for j in range(100))
+				CF1.insert('key', cols)
+				if i % 1000 == 0:
+					print "%d%%" % int(100 * float(i) / 100000)
+		\end{lstlisting}
+		
+		\item Fetch the columns in a portion of ranges.The following is an example code
+		
+		\begin{lstlisting}[language=python]
+		for i in range(1000):
+			cols = [str(randint(0, 99999)) for i in range(3)]
+			expected = len ( set( cols ) )
+			results = CF1.get('key', cols)
+			if len(results) != expected:
+				print "Requested %s, only got %s" % (cols, results.keys())
+		\end{lstlisting}
+		
 		\item At the end of this test case you can observe that some columns were dropped in the response to the client.
 	\end{enumerate}
 
 \end{adjustwidth}
-
-To facilitate re-creating this bug, we have provided dockerized containers, which install the correct version of Cassandra which has this bug as well as it's dependencies. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We also provide a python script for the cassandra client to trigger the bug conditions.
 
 \subsubsection{Cassandra \#1837}
 
@@ -191,9 +231,12 @@ Hence, it is difficult to capture these bugs with traditional offline white-box 
 
 \subsubsection{MySQL \#26257}
 
-In this subsection we describe the MySQL\#15811 performance bug \\
+In this subsection we describe the MySQL\#26257 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
+
+This has to do with a caching problem for large inserts where large amount of data in a partitioned table.
+It was reported that inserting data with \texttt{LOAD DATA INFILE} is very slow with partitioned table and sometimes crawls to a stop.
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -203,6 +246,24 @@ In this subsection we describe the MySQL\#15811 performance bug \\
 		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
 		\item Start network duplicator to duplicate network traffic to both the production and debug containers
 		\item connect to the production container using \texttt{mysqlclient}
+		\item using \emph{mysql-client} run the following query
+		
+		\begin{lstlisting}
+		CREATE TABLE t1 (
+		f1 int(10) unsigned NOT NULL DEFAULT '0',
+		f2 int(10) unsigned DEFAULT NULL,
+		f3 char(33) CHARACTER SET latin1 NOT NULL DEFAULT '',
+		f4 char(15) DEFAULT NULL,
+		f5 datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+		f6 char(40) CHARACTER SET latin1 DEFAULT NULL,
+		f7 text CHARACTER SET latin1,
+		KEY f1_idx (f1),
+		KEY f5_idx (f5)
+		) ENGINE=MyISAM DEFAULT CHARSET=utf8 /*!50100 PARTITION BY RANGE (month(visited)) (PARTITION m1 VALUES LESS THAN (2) ENGINE = MyISAM, PARTITION m2 VALUES LESS THAN (3) ENGINE = MyISAM, PARTITION m3 VALUES LESS THAN (4) ENGINE = MyISAM, PARTITION m4 VALUES LESS THAN (5) ENGINE = MyISAM, PARTITION m5 VALUES LESS THAN (6) ENGINE = MyISAM, PARTITION m6 VALUES LESS THAN (7) ENGINE = MyISAM, PARTITION m7 VALUES LESS THAN (8) ENGINE = MyISAM, PARTITION m8 VALUES LESS THAN (9) ENGINE = MyISAM, PARTITION m9 VALUES LESS THAN (10) ENGINE = MyISAM, PARTITION m10 VALUES LESS THAN (11) ENGINE = MyISAM, PARTITION m11 VALUES LESS THAN (12) ENGINE = MyISAM, PARTITION m12 VALUES LESS THAN (13) ENGINE = MyISAM) */
+		
+		\end{lstlisting}
+		
+		\item Inserting 64 GB of data takes more than 1 day with this setup. This can be observed with both production and debug containers running in sync, hence the slow performance can be also monitored in the debug container.
 		
 	\end{enumerate}
 \end{adjustwidth}	
@@ -210,7 +271,7 @@ In this subsection we describe the MySQL\#15811 performance bug \\
 
 \subsubsection{MySQL \#49491}
 
-In this subsection we describe the MySQL\#15811 performance bug \\
+In this subsection we describe the MySQL\#49491 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -233,8 +294,9 @@ The impact of the binary-to-string conversion will become more visible with shor
 		\item connect to the production container using \texttt{mysqlclient}
 		\item Run a select query from the client on the users database:
 		
-		\texttt{select count(\*) from (select md5(firstname) from users) sub limit 1G}
-
+		\begin{lstlisting}
+		select count(\*) from (select md5(firstname) from users) sub limit 1G
+		\end{lstlisting}
 		
 		\item The time observed for this query is reported as a performance bug by the reporter. This can be viewed both in the production container and the debug container
 		
@@ -263,9 +325,17 @@ This gives us the added advantage, of being able to profile and identify the fun
 		\item Start network duplicator to duplicate network traffic to both the production and debug containers
 		\item connect to the production container using \texttt{mysqlclient}
 		\item Create a table with default charset as latin1:
-			\texttt{create table t1(c1 char(10)) engine=myisam default charset=latin1;}
+			
+			\begin{lstlisting}
+			create table t1(c1 char(10)) engine=myisam default charset=latin1;
+			\end{lstlisting}
+			
 		\item Repeat the following line several times to generate a large dataset
-			\texttt{insert into t1 select * from t1;}
+		
+			\begin{lstlisting}
+			insert into t1 select * from t1;
+			\end{lstlisting}
+	
 		\item Now create a mysqldump of the table
 		\item Load this table back again, and observe a significant slow response for large table insert requests. This is magnified several times when using complex scripts
 	\end{enumerate}
@@ -281,9 +351,6 @@ Debugging leaks can be done either using systematic debugging tools like Valgrin
 Although Valgrind is more complete, it has a very high overhead and needs to capture the execution from the beginning to the end (i.e., needs application restart).
 On the other hand, profiling tools are much lighter and can be dynamically patched to a running process.
 
-Let us take Redis\#417 for instance, here we had a redis master and slave set up for both production and debug container.
-We then triggered the bug by running concurrent requests through the client which can trigger the memory leak.
-The memory leak was easily visible in the debug container by turning on debug tracing, which showed a growing memory usage. 
 
 
 \subsubsection{Redis \#417}
@@ -292,13 +359,28 @@ In this subsection we describe the Redis\#417 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
+It was reported that when two or more databases are replicated, and atleast one of them is >=db10. This is because the replication feed for the slaves creates static connection objects which are allocated and freed when replication is being done from db0-9. However, for database ID values greater than 10, the objects are dynamically created an never freed.
+This was leaving stale memory and leading to a memory leak in redis.
+Although the bug is visible in the verbose logs, it is difficult to pick out the root-cause of the bug.
+
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
 	\begin{enumerate}
 		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Also start a slave along with the master for a two node redis deployment
 		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
 		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+		
+		\item Execute the following commands concurrently from the redis-client
+		
+		\begin{lstlisting}[language=sh]
+			redis-cli -r 1000000 set foo bar
+			redis-cli -n 15 -r 1000000 set foo bar
+		\end{lstlisting}
+		
+		\item After the two sets, check the master \debugcontainer, you can observe the tremendous increase of memory usage - this shows the memory leak.
+		
 	\end{enumerate}
 \end{adjustwidth}	
 
@@ -309,13 +391,55 @@ In this subsection we describe the Redis\#614 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
+The debugger reported replication bug while attempting to use Redis as a reliable queue with a Lua script pushing multiple elements onto the queue. 
+It appears the wrong number of RPOP operations are sent to the slave instance, resulting in the queue on the slave growing unbounded, out of sync with master.
+
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
 	\begin{enumerate}
 		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Also start a slave along with the master for a two node redis deployment
 		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
 		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+		
+		\item Send data via the producer, the following ruby code is an example
+		
+		\begin{lstlisting}[language=ruby]
+		def run
+		   puts "Starting producer"
+		   loop do
+		        puts "Inserting 4 elements..."
+		        @redis.eval(@script, :keys => ['queue'])
+	           sleep 1
+		   end
+		 end
+		\end{lstlisting}
+		
+		\item Data is consumed via a consumer, the following ruby code is an example
+		
+		\begin{lstlisting}[language=ruby]
+		def run
+			puts "Starting consumer #{@worker_id}"
+			@redis.del(@worker_id)
+			loop do
+				element = @redis.brpoplpush('queue', @worker_id)
+				puts "Got element: #{element}"
+				@redis.lrem(@worker_id, 0, element)
+			end
+		end		
+		\end{lstlisting}
+		
+		\item The verbose log in both the \productioncontainer and the \debugcontainer shows an increasing memory footprint
+		
+		\begin{lstlisting}
+		[3672] 01 Sep 21:39:59.596 - 1 clients connected (0 slaves), 557152 bytes in use
+		[3672] 01 Sep 21:40:04.642 - DB 8: 1 keys (0 volatile) in 4 slots HT.
+		[3672] 01 Sep 21:40:04.642 - 1 clients connected (0 slaves), 557312 bytes in use
+		[3672] 01 Sep 21:40:09.687 - DB 8: 1 keys (0 volatile) in 4 slots HT.
+		[3672] 01 Sep 21:40:09.687 - 1 clients connected (0 slaves), 557472 bytes in use
+		\end{lstlisting}
+		
 	\end{enumerate}
 \end{adjustwidth}
 
@@ -327,46 +451,88 @@ These bugs are hard to reproduce, as they are non-deterministic, and may or may 
 Unfortunately, \parikshan cannot guarantee that if a buggy execution is triggered in the production container, an identical execution will trigger the same error in the debug container.
 However, given that the debug container is a live-clone of the production container, and that it replicates the state of the production container entirely, we believe that the chances of the bug also being triggered in the debug container are quite high.
 Additionally, the debug container is a useful tracing utility to track thread lock and unlock sequences, to get an idea of the concurrency bug.
+The bugs here are taken from the bugbench database~\cite{bugbench}
 
 \subsubsection{Apache \#25520}
 
-In this subsection we describe the Apache\#25520 performance bug \\
+In this subsection we describe the Apache\#25520 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
+
+It was reported that when logs are configured to have buffering turned on, the log lines show up as corrupted, when serving at a very high volume using the worker mpm.
+The problem appears to be that the per-child buffer management is not thread-safe.
+There is nothing to prevent memcopy operations in buffered log writers by different threads from overlapping.
+ 
 
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
 	\begin{enumerate}
-		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Install an httpd service in the production container( install it with configuration \emph{--with-mpm=worker} - this will set apache in multi-thread instead of multi-process mode).
+		\item Configure httpd with conf/httpd.conf having:
+		
+		\begin{lstlisting}
+		BufferdLogs on
+		\end{lstlisting}
+		
+		and subsequently start the httpd service in the \productioncontainer
+		
 		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
 		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+		
+		\item Send concurrent requests from the client as follows:
+		
+		\begin{lstlisting}[language=sh]
+		./httperf  --server=<your-httpd-server-name>  --uri=/index.html.cz.iso8859-2 --num-conns=100 --num-calls=100
+		./httperf  --server=<your-httpd-server-name>  --uri=/index.html.en --num-conns=100 --num-calls=100
+		\end{lstlisting}
+		
+		\item The bug might manifest in \emph{accesslog}, showing some of the logs to be corrupted. In our experiments, we were able to see the anomaly in both \productioncontainer and \debugcontainer simultaneously most of the time.
+		
 	\end{enumerate}
 \end{adjustwidth}
 
+It should be noted that in this bug, it is not important that the same order should trigger this datarace condition. Simply the presence of a datarace(visible through log corruption) is enough to indicate the error, and can be a starting point for the debugger in the \debugcontainer. This is a bug that is persistent in the system and does not cause a crash.
 
 \subsubsection{Apache \#21287}
 
-In this subsection we describe the Apache\#21287 performance bug \\
+In this subsection we describe the Apache\#21287 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
+
+It was reported that there are no mutex lock protection in a reference pointer cleanup operation. 
+This leads to an atomicity violation which can cause a dangling pointer and lead to an apache crash.
 
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
 	\begin{enumerate}
-		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Install an httpd service in the production container with the following options - (mpm-worker, enabled caching, enabled mem caching)
+		\item Configure and install \emph{php} service with your httpd server in the \productioncontainer
 		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
 		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+		
+		\item Run multiple httperf commands concurrently in the client
+		
+		\begin{lstlisting}[language=sh]
+		   ./httperf --server=<your-httpd-server-name> --uri=/pippo.php?variable=1111 --num-conns=1000 --num-calls=1000
+		\end{lstlisting}
+		
+		\item If the bug manifests, you will observe a crash within 10 seconds of sending the message. In our experiments we were able to observe this bug in multiple execution in both \productioncontainer and \debugcontainer simultaneously.
+		
 	\end{enumerate}
 \end{adjustwidth}
 
 
 \subsubsection{MySQL \#644}
 
-In this subsection we describe the MySQL\#644 performance bug \\
+In this subsection we describe the MySQL\#644 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
+
+This bug is caused by one thread's write-read access pair interleaved by another thread's write access. 
+As a result, the read access mistakenly gets an wrong value and leads to program misbehavior.
+We used a sqlreplay utility provided in bugbench to recreate this bug. It eventually leads to a system crash
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -375,16 +541,25 @@ In this subsection we describe the MySQL\#644 performance bug \\
 		\item Start an instance of the MySQL server in the production container
 		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
 		\item Start network duplicator to duplicate network traffic to both the production and debug containers
-		\item connect to the production container using \texttt{mysqlclient}
+		\item connect to the production container using \emph{runtran} provided in the bugbench database
+		
+		\begin{lstlisting}
+		./runtran --repeat --seed 65323445 --database test --trace populate_db.txt --monitor pinot --thread 9 --host localhost 30 360 1 results
+		\end{lstlisting}
+		
+		\item If the error happens it leads to a system crash
+		
 	\end{enumerate}
 \end{adjustwidth}	
 
 
 \subsubsection{MySQL \#169}
 
-In this subsection we describe the MySQL\#169 performance bug \\
+In this subsection we describe the MySQL\#169 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
+It was reported that the Writing to binlog was not a transactional operation and there was a data-race. 
+This leads to binlog showing that operations happen in a different order than how they were actually executed
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -394,6 +569,17 @@ In this subsection we describe the MySQL\#169 performance bug \\
 		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
 		\item Start network duplicator to duplicate network traffic to both the production and debug containers
 		\item connect to the production container using \texttt{mysqlclient}
+		
+		suppose we have a table named 'b' with schema: (id int) in database 'test'.
+		Run the following requests:
+		
+		\begin{lstlisting}[language=sh]
+		./mysql -u root -D test -e 'delete from b' &
+		./mysql -u root -D test -e 'insert into b values (1)' &
+		\end{lstlisting}
+		
+		\item Wait and press enter. You will see detection log entry and the insert log entry has disordered binlog index.
+		
 	\end{enumerate}
 \end{adjustwidth}	
 
@@ -404,6 +590,8 @@ In this subsection we describe the MySQL\#791 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
+This bug is caused by one thread's write-write access pair interleaved by another thread's read access. As a result, the read access mistakenly gets an intermediate value and leads to program misbehavior.
+
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
@@ -412,6 +600,14 @@ In this subsection we describe the MySQL\#791 performance bug \\
 		\item Using \parikshan's live cloning capability create a clone of the \productioncontainer. This is our \debugcontainer
 		\item Start network duplicator to duplicate network traffic to both the production and debug containers
 		\item connect to the production container using \texttt{mysqlclient}
+		
+		\begin{lstlisting}[language=sh]
+		./mysql -u root -e 'flush logs';
+		./mysql -u root -D test -e 'insert into atab values(11)';
+		\end{lstlisting}
+		
+		If the bug is triggered you will observe that the insert is NOT recorded in mysql bin log.
+		
 	\end{enumerate}
 \end{adjustwidth}	
 
@@ -428,35 +624,68 @@ Once again, it can be easily observed in our debug-containers that the slave is 
 
 \subsubsection{Redis \#957}
 
-In this subsection we describe the Redis\#957 performance bug \\
+In this subsection we describe the Redis\#957 configuration bug \\
 
 \noindent \textbf{Cause of the error:} \\
+
+A user reported an error, which eventually turned out to be misconfiguration error on his part.
+The client in Redis is scheduled to be closed ASAP for overcoming of output buffer limits in the masters log file.
+Essentially, it happens the DB is configured to be larger than the client-output-buffer-limit.
 
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
 	\begin{enumerate}
 		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item configure redis using :
+		
+		\begin{lstlisting}
+		client-output-buffer-limit slave 256mb 64mb 60
+		\end{lstlisting}
+		
 		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
 		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+		
+		\item Load a very large DB into master
+		
+		You will observe that the connection to the slave is lost on syncing
+		
 	\end{enumerate}
 \end{adjustwidth}
 
 
 \subsubsection{HDFS \#1904}
 
-In this subsection we describe the HDFS\#1904 performance bug \\
+In this subsection we describe the HDFS\#1904 configuration bug \\
 
 \noindent \textbf{Cause of the error:} \\
+
+This is sort of a semantic and configuration bug both. It was reported that HDFS crashes if a mkdir command is given through the client in a non-existent folder.
 
 \noindent \textbf{Steps for reproduction:} \\
 
 \begin{adjustwidth}{0.5cm}{}
 	\begin{enumerate}
-		\item Start a redis service with log level set to verbose. Setting loglevel to verbose ensures that we can view whatever is going on inside the service. This is our \productioncontainer.
+		\item Install hadoop and configure secondary namenode with fs.checkpoint.period set to a small value (eg 3 seconds)
+		\item Format filesystem and start HDFS
 		\item Create a live clone of the service mapped to a parallel \debugcontainer which will be used to visualize debugging
 		\item Start cloning the incoming traffic to both the \productioncontainer and the \debugcontainer asynchronously using \parikshan's network duplicator
+		\item Run the following command through the client
+		
+		\begin{lstlisting}[language=sh]
+		hadoop fs -mkdir /foo/bar; 
+		sleep 5 ; 
+		echo | hadoop fs -put - /foo/bar/baz
+		\end{lstlisting}		
 	\end{enumerate}
+
+Secondary Name Node will crash with the following trace on the next checkpoint. The primary NN also crashes on next restart
+
+\begin{lstlisting}
+ERROR namenode.SecondaryNameNode: Throwable Exception in doCheckpoint:
+ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent does not exist
+\end{lstlisting}
+
 \end{adjustwidth}
 
 \section{Summary}

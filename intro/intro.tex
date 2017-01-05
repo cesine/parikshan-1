@@ -50,7 +50,7 @@ In chapter~\ref{ch:NetworkReplaySurvey} we will present details of our case-stud
 Each case study presents a different variety of bugs from the following classes: performance, semantic, non-deterministic, configuration and resource leak. 
 We believe that these bugs form the most common classification of bugs in service oriented applications.
 
-Second, in Chapter~\ref{ch:iprobe} we will present a dynamic instrumentation mechanism called \iprobe, which can assist developers in making applications \parikshan ready.
+In chapter~\ref{ch:iprobe} we will present a dynamic instrumentation mechanism called \iprobe, which can assist developers in making applications \parikshan ready.
 iProbe uses a novel two-stage design, and offloads much of the dynamic instrumentation complexity to an offline compilation stage.
 It leverages standard compiler flags to introduce ``place-holders" for hooks in the program executable.
 Then it utilizes an efficient user-space ``HotPatching'' mechanism which modifies the functions to be traced and enables execution of instrumented code in a safe and secure manner.
@@ -59,7 +59,7 @@ In the final chapter~\ref{ch:activedebugging} of this thesis we focus on applica
 In particular we discuss several existing techniques and how they can be coupled with live debugging. 
 We discuss step-by-step scenarios where debugging on the fly can be helpful, and how it can be applied.
 
-We also briefly introduce two new techniques: Firstly, a \textbf{budget limited instrumentation} technique for live debugging.
+We also briefly introduce two new techniques: Firstly, a budget limited instrumentation technique for live debugging.
 This technique leverages existing work on statistical debugging, and queuing theory to lay a statistical foundation for allocating buffer sizes and various configuration parameters.
 It proposes a reactive mechanism to adapt to the overhead of instrumentation bounds using sampling techniques.
 Secondly, we introduce the concept of active debugging.
@@ -443,12 +443,11 @@ The rest of this thesis is organized as follows:
 	
 	\item While the previous two chapters build the base for \livedebugging, Chapter~\ref{ch:activedebugging} discusses how these tools can be leveraged to do real-world debugging. In the first part of this chapter, we discuss several important advantages and limitations, which must be kept in mind when using \parikshan to debug applications. 
 	Then we discusss existing debugging techniques which can be used in tandem with \livedebugging to provide a more effective means for localizing the bug.
-	In this chapter we introduce two key techniques which can be used for effective debugging with \parikshan. In the first called budget limited adaptive debugging we introduce how statistical debugging can be used in \parikshan to increase or decrease the degree of instrumentation in order to improve the statistical odds of localizing the bug.
+	In this chapter we introduce two key techniques which can be used for effective debugging with \parikshan. In the first called  adaptive debugging we introduce how statistical debugging can be used in \parikshan to increase or decrease the degree of instrumentation in order to improve the statistical odds of localizing the bug.
 	Next we look at \activedebugging which allows debuggers to apply fixes, modify running binaries and verify the bug fix on a parallel execution of an unmodified application.
 	
 	\item In chapter~\ref{ch:conclusions}, we conclude this thesis, highlighting the contributions of our techniques. 
 	Additionally, this chapter also includes several future work possibilities that can arise from this thesis including some short-term future work and long-term possibilities.  
 	
-	\item Appendix
 	
 \end{itemize}
