@@ -62,12 +62,18 @@ For our experiments we have used the \emph{redis-cli} client given with the defa
 
 \subsection{Cassandra}
 
-Cassandra is a well known wide column store NoSQL database, designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure.
-Cassandra offers robust support for clusters
+Cassandra~\cite{cassandra,cassandraWiki} is a well known wide column store NoSQL database, designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure.
+Cassandra offers robust support for clusters spanning multiple datacenters, with asynchronous masterless replication allowing low latency operations for all clients.
 
 To facilitate re-creating of cassandra bug, we have provided dockerized containers, which install the correct version of cassandra which has this bug as well as it's dependencies. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We also provide a python script for the cassandra client to trigger the bug conditions.
 
 \subsection{HDFS}
+
+The Hadoop distributed file system (HDFS)~\cite{hdfs,hdfsWiki} is a distributed, scalable, and portable file system written in Java for the Hadoop framework.
+A Hadoop cluster has nominally a single namenode plus a cluster of datanodes, although redundancy options are available for the namenode due to its criticality. 
+Each datanode serves up blocks of data over the network using a block protocol specific to HDFS. The file system uses TCP/IP sockets for communication. Clients use remote procedure call (RPC) to communicate between each other.
+HDFS stores large files (typically in the range of gigabytes to terabytes[64]) across multiple machines. It achieves reliability by replicating the data across multiple hosts
+
 
 \section{Case Studies}
 \label{sec:parikshanCasestudy}
@@ -616,11 +622,6 @@ This bug is caused by one thread's write-write access pair interleaved by anothe
 Configuration errors are usually caused by wrongly configured parameters, i.e., they are not bugs in the application, but bugs in the input (configuration).
 These bugs usually get triggered at scale or for certain edge cases, making them extremely difficult to catch.
 
-A simple example of such a bug is Redis\#957, here the slave is unable to sync with the master.
-The connection with the slave times out and it's unable to sync because of the large data.
-While the bug is partially a semantic bug, as it could potentially have checks and balances in the code. 
-The root cause itself is a lower output buffer limit.
-Once again, it can be easily observed in our debug-containers that the slave is not synced, and can be investigated further by the debugger.
 
 \subsubsection{Redis \#957}
 
@@ -631,6 +632,10 @@ In this subsection we describe the Redis\#957 configuration bug \\
 A user reported an error, which eventually turned out to be misconfiguration error on his part.
 The client in Redis is scheduled to be closed ASAP for overcoming of output buffer limits in the masters log file.
 Essentially, it happens the DB is configured to be larger than the client-output-buffer-limit.
+The connection with the slave times out and it's unable to sync because of the large data.
+While the bug is partially a semantic bug, as it could potentially have checks and balances in the code. 
+The root cause itself is a lower output buffer limit.
+Once again, it can be easily observed in our debug-containers that the slave is not synced, and can be investigated further by the debugger.
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -690,3 +695,8 @@ ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent 
 
 \section{Summary}
 \label{sec:parikshanCaseStudySummary}
+
+In this section we presented 16 real-life bug cases from 5 different categories of bugs: Semantic, Performance, Resource Leaks, Concurrency, and Configuration Bugs.
+These bugs spanned 5 well known open-source softwares.
+For each of these bugs, we presented it's symptoms and how they were re-created using parikshan's network duplication.
+Based on our results, we believe that network duplication is enough to capture most bugs, and trigger them in \parikshan's \debugcontainer.
