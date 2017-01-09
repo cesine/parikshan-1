@@ -22,12 +22,12 @@ We leverage existing work in live migration and light-weight user-space containe
 
 Our work is inspired by three key observations in modern service oriented applications.
 Firstly, we observe that most service oriented applications(SOA) are launched on cloud based infrastructures.
-These applications use virtualization to share physical resources, maintained by third-party vendors like Amazon EC2~\cite{ec2}, or google compute~\cite{gcompute} platforms.
+These applications use virtualization to share physical resources, maintained by third-party vendors like Amazon EC2~\cite{ec2}, or Google compute~\cite{gcompute} platforms.
 Furthermore, there is an increasing trend towards light-weight user-space container virtualization, which is less resource hungry, and makes sharing physical resources easier.
 Frameworks like docker~\cite{docker} allow for scaled out application deployment, by allowing each application service instance to be launched in it's own container.
 For instance, an application server, and a database server making up a web-service, can be hosted on their own containers, thereby sandboxing each service, and making it easier to scale out.
 
-Secondly, we observe a trend towards DevOps~\cite{devops} by the software engineering industry.
+Secondly, we observe a trend towards Dev-ops~\cite{devops} by the software engineering industry.
 DevOps stresses on close coupling between software developers and operators, in order to have shorter release cycles (Facebook web has 2 releases a day, and one mobile release every 4 weeks and Flickr has 10 deployment cycles per day~\cite{releaseFacebookKeynote,10DevOps}).
 This re-emphasizes the need to have a very short time to diagnose and fix a bug especially in service oriented application.
 We believe by providing a means to observe the application when the bug is active, we will significantly reduce the time to bug localization.
@@ -106,7 +106,7 @@ Section~\ref{sec:introAssumptions} lists some of the assumptions made in this th
 %Technically our sandbox techniques could also be applied using more traditional Virtual Machines.
 %However, the overhead of using Virtual Machines is considerably higher, and it would technically require double the amount of resources for the target production servers.
 %User-Space containers reduce this overhead considerably by using the resources in the same machine.
-%We believe the availablity of resources in IAAS cloud infrastructures combined
+%We believe the availability of resources in IAAS cloud infrastructures combined
 %\texttt{Zero-Probe Effect} probe points are added to the application which can be activated to insert test cases using ptrace~\cite{ptrace}.
 %The use of dynamic instrumentation capability to add test cases in an application is an extension of our previous work of a dynamic instrumentation tool iProbe \cite{iprobe}
 %Traditional testing approaches break states and are unable to
@@ -161,7 +161,7 @@ This allows a safe \& secure mechanism to diagnose the application, without impa
 %The debug-container may continue to run correctly even if the analysis run on it perturbs it's state slightly (it can tolerate some divergence from the production).
 %The time till which the debug-container can faithfully represent the execution is called it's \emph{debugging -window} (see section \ref{sec:window}).
 %\item We allow for \textbf{dynamic insertion of probes}, and safely capturing the execution trace of the application.
-%Dynamically inserting probes is important to avoid relaunching binaries in the test-container.
+%Dynamically inserting probes is important to avoid re-launching binaries in the test-container.
 %Restarting binaries would break active network connections, and destroy the in memory state of the test container(note: configuration/file-system state is still preserved).
 %In our case studies we show how dynamic instrumentation mechanisms can be used with \parikshan
 
@@ -438,7 +438,7 @@ The rest of this thesis is organized as follows:
 	We first begin with an explanation of \iprobe's design, which is split in a two phase process - ColdPatching and HotPatching. This is explained in stateful diagrams to show how the code is modified at different states in the binary.
 	We then show safety considerations of \iprobe and this is followed by an extended design which shows how \iprobe can be applied to applications without compile time modifications as well. 
 	Next we compare \iprobe's approach with traditional trampoline executions. We then follow this with the implementation, and a short description of \textit{fperf} which is a application of \iprobe for hardware monitoring. 
-	We follow this up with evaluation of \iprobe which shows \iprobe's overhead in coldpatching and hotpatching phase, and it's comparison with traditional tools.
+	We follow this up with evaluation of \iprobe which shows \iprobe's overhead in cold-patching and hot-patching phase, and it's comparison with traditional tools.
 	
 	
 	\item While the previous two chapters build the base for \livedebugging, Chapter~\ref{ch:activedebugging} discusses how these tools can be leveraged to do real-world debugging. In the first part of this chapter, we discuss several important advantages and limitations, which must be kept in mind when using \parikshan to debug applications. 

@@ -4,7 +4,7 @@
 \section{Overview}
 \label{sec:guided_overview}
 
-In the sections uptil now, we have introduced a framework for \livedebugging, a tool for pre-packaging binaries to make them \livedebugging friendly. 
+In the sections until now, we have introduced a framework for \livedebugging, a tool for pre-packaging binaries to make them \livedebugging friendly. 
 We now discuss some applications of \livedebugging in the real-world, and in particular introduce a new mechanism called \activedebugging.
 
 
@@ -35,7 +35,7 @@ There is a clear trade-off between instrumentation vs performance overhead for s
 A key advantage of using this with \parikshan is that we can provide live feedback based buffer size and bounded overheads, hence squeezing the maximum advantage out of statistical debugging without impacting the overhead. 
 We evaluate the slack available in each request for instrumentation without risking a buffer overflow and getting out of sync of the production container.
 Live interactive debugging provided by \parikshan further allows for quick updates to the instrumentation and targeting specific areas of the application code.
-Budget limited instrumentation is inspired from statistical debugging~\cite{statisticalDebugging}, and focuses on a two-pronged goal of bounding the instrumentation overhead to avoid buffer overflows in \parikshan, and simulatneously have maximum feedback regarding information gained from real-time instrumentation.
+Budget limited instrumentation is inspired from statistical debugging~\cite{statisticalDebugging}, and focuses on a two-pronged goal of bounding the instrumentation overhead to avoid buffer overflows in \parikshan, and simultaneously have maximum feedback regarding information gained from real-time instrumentation.
 
 \xxx{This section is divided in the 3 parts: First in section, next in section, next in section, }
 
@@ -124,8 +124,8 @@ At the same time there are some things that the administrator must be aware of
 	
 	The amount of time till which the production container remains in synch with the \debugcontainer is called the debug-window(see section~\ref{sec:parikshanWindow}). The window time depends on the overhead, the size of the buffer and the incoming request rate. If a buffer overflow happens because the debug-window has finished, the \debugcontainer needs to be re-synced with the production container.
 	
-	In our experiments, we have observed, that \parikshan is able to accomodate significant overhead without incurring a buffer overflow.	
-	Administrators or debuggers using \parikshan should keep the overhead of their instrumentation in mind when debugging in \parikshan. Ofcourse they can always re-clone the \productioncontainer to start a new debugging session.
+	In our experiments, we have observed, that \parikshan is able to accommodate significant overhead without incurring a buffer overflow.	
+	Administrators or debuggers using \parikshan should keep the overhead of their instrumentation in mind when debugging in \parikshan. Of-course they can always re-clone the \productioncontainer to start a new debugging session.
 	
 	\item \textbf{Non-determinism}:
 	
@@ -141,7 +141,7 @@ At the same time there are some things that the administrator must be aware of
 \section{Debugging Scenarios}
 \label{sec:activeDebuggingScenarios}
 
-Based on our casestudies, and survey of commonly seen SOA bugs we classify the following scenarios for live debugging. 
+Based on our case-studies, and survey of commonly seen SOA bugs we classify the following scenarios for live debugging. 
 In each of the scenarios we explain how different categories of bugs can be caught or analyzed.
 
 \subsection{Scenario 1: Post-Facto Analysis}
@@ -151,7 +151,7 @@ In this scenario, the error/fault happens without \livedebugging having been tur
 Typically light-weight instrumentation or monitoring is always turned on in all service/transaction systems. 
 Such monitoring systems are very limited in their capabilities to localize the bug, but they can indicate if the system is in a faulty state.
 
-For our post-facto analysis, we use such monitoring systems as a trigger to start \livedebugging once faulty behvaior is detected. 
+For our post-facto analysis, we use such monitoring systems as a trigger to start \livedebugging once faulty behavior is detected. 
 The advantage of such an approach is that debugging resources are only used on-demand, and in an otherwise normal system only the \productioncontainer is utilizing the resources.
 
 
@@ -220,7 +220,7 @@ One of the most common techniques to debug any application is execution tracing.
 Execution tracing gives a trace log of all the functions/modules executed when an input is received. 
 This helps the debugger in looking at only those execution points and makes it easier to reason out what is going wrong.
 
-Execution tracing can happen at different granularities: for instance an application can be monitored at function level granularity (only entry and exit of function is monitored), or for deeper understanding at read/write, synchronization point or even instruction level granularity.
+Execution tracing can happen at different granularity: for instance an application can be monitored at function level granularity (only entry and exit of function is monitored), or for deeper understanding at read/write, synchronization point or even instruction level granularity.
 Depending on how much granularity the tracing is done at the overhead may be unacceptable for production systems.
 
 Execution tracing can be de-coupled from original execution and put in \debugcontainer for higher granularity instrumentation. 
@@ -295,30 +295,30 @@ Similar A/B Testing, for performance patches or other functional patches, can be
 
 The most common debugging tools used in the development environment are interactive debuggers. 
 Debugging tools like gdb~\cite{gdb}, pdb, or eclipse~\cite{eclipse}, provide intelligent debugging options for doing interactive debugging. 
-This includes adding breakpoints, watchpoints, stack-unrolling etc.
+This includes adding breakpoints, watch-points, stack-unrolling etc.
 The downside to all of these techniques is that they essentially stop the service or execution.
 Once a process has been attached to a debugger, a shadow process in also attached to it and the rest of the execution follows with just-in-time execution, allowing the debugger to monitor the progress step-by-step therefore making it substantially easier to catch the error.
 Unfortunately, this cannot be applied to the \productioncontainer.
 
 However this can be easily applied towards the \debugcontainer, where the execution trace can be observed once a breakpoint has been reached.
-While this does mean that the replica will not be able to servce any more requests (except for those that have been buffered), the request which is inside the breakpoint will be processed.
+While this does mean that the replica will not be able to service any more requests (except for those that have been buffered), the request which is inside the breakpoint will be processed.
 Generally breakpoint and step-by-step execution monitoring is used for a limited scope of execution within a single transaction.
 Once, finished future transactions can also be debugged after doing a re-sync by applying live cloning again.
 
 \subsection{Fault Tolerance Testing}
 
 One of the places that \parikshan can be applied is for fault tolerance testing.
-To motivate this let us look at netflix's current testing model.
+To motivate this let us look at Netflix's current testing model.
 Netflix has a suite of real-time techniques~\cite{chaosengineering} for testing fault-tolerance of it's systems.
 Amongst them, chief is chaos monkey~\cite{chaosmonkey}, which uses fault injection in real production systems to do fault tolerance testing.
 It randomly injects time-outs, resource hogs etc. in production systems. 
 This allows Netflix to test the robustness of their system at scale, and avoid large-scale system crashes. 
-The motivation behind this approach is that it's nearly impossible to create a large-size test-bed to have a realistic fault tolerance testing for the scale of machines that netflix has. 
-Chaos Monkey allows netflix to do it's fault tolerance testing at a small cost to the customer experience, while avoiding fatal crashes which could lead to longer downtimes.
+The motivation behind this approach is that it's nearly impossible to create a large-size test-bed to have a realistic fault tolerance testing for the scale of machines that Netflix has. 
+Chaos Monkey allows Netflix to do it's fault tolerance testing at a small cost to the customer experience, while avoiding fatal crashes which could lead to longer downtimes.
 The obvious downside of this approach is that the service becomes temporarily unavailable and re-sets, or forces a slow-down on the end-user experience (this may or may not be visible to the user). 
 
 Since \parikshan can be run in a live system, it can capture the scale of a large-system, and can allow users to test for faults in an isolated environment.
-The only limitation being that the fault-injections should be such that the impact of these faults can be isolated to targeted systems, or a subdomain of a network which has been cloned, and the tolerance built into the system can be tested (it would be too expensive to clone the entire deployment).
+The only limitation being that the fault-injections should be such that the impact of these faults can be isolated to targeted systems, or a sub-domain of a network which has been cloned, and the tolerance built into the system can be tested (it would be too expensive to clone the entire deployment).
 
 
 \section{Budget Limited, Adaptive Instrumentation}
@@ -435,12 +435,12 @@ The incoming rate remains the same as $\lambda$, as the requests are asynchronou
 To simplify the problem, we identify the following variables:
 
 \begin{equation}\label{eq:1}
-\mu_{1} = \emph{processing time for requests of original containter}
+\mu_{1} = \emph{processing time for requests of original container}
 \end{equation}
 
 
 \begin{equation}\label{eq:2}
-\mu_{2} = \emph{processing time for requests of debug containter}
+\mu_{2} = \emph{processing time for requests of debug container}
 \end{equation}
 
 \begin{equation}\label{eq:3}
@@ -456,12 +456,12 @@ The goal for bounded overhead instrumentation is to \emph{optimize slowdown such
  \lambda < \mu_{3}
 \end{equation}
 
-\xxx{explain brownian motion once it's reached the bounds}
+\xxx{explain Brownian motion once it's reached the bounds}
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{queue/figs/queueBalanced.pdf}
-		\caption{This figure shows how queueing theory can be extended to a load balanced debugging scenario. Here each of the debug container receive the requests at rate $\lambda$, and the total instrumentation is balanced across multiple debug containers.}
+		\caption{This figure shows how queuing theory can be extended to a load balanced debugging scenario. Here each of the debug container receive the requests at rate $\lambda$, and the total instrumentation is balanced across multiple debug containers.}
 		\label{fig:queueBalanced}
 	\end{center}
 \end{figure}
@@ -476,7 +476,7 @@ They can together contribute towards debugging the error
 \subsection{Simulation}
 \label{sec:queueEval}
 
-In this section we present our evaluation strategy for simulating various workloads to model the hitting time and find how much resources to be alloted/instrumentation can be done for a given workload. 
+In this section we present our evaluation strategy for simulating various workloads to model the hitting time and find how much resources to be allotted/instrumentation can be done for a given workload. 
 Our goal of these experiments is to provide the user with an upper-bound for instrumentation in terms of percentage of the average transaction time, based on a given buffer size, and expected time-window needed for debugging.
 
 In our experiments, we plot the time-window observed based on the hitting time explained in the equation ~\ref{eq:hitting}. 
@@ -653,9 +653,9 @@ Note that the application and the unit test run in parallel in two processes; th
 The fork-exec design of test-isolation ensures that the ``in-process'' memory of the process execution is effectively isolated. 
 The production/debug containers are completely isolated hence the test does not impact the production in any way. 
 To ensure further isolation, we can allow the test fork to only call wrapper libraries which allow write operations in a cloned cow filesystem.
-This can be done using a COW supported filesystem with cloning functionality which are supported in ZFS and BTRFS.
+This can be done using a COW supported file-system with cloning functionality which are supported in ZFS and BTRFS.
 For instance BTRFS provides a clone operation that atomically creates a copy-on-write snapshot of a file. By cloning the file system does not create a new link pointing to an existing inode; instead it creates a new inode that initially shares the same disk blocks with the original file. As a result cloning works only within the boundaries of the same BTRFS file system, and modifications to any of the cloned files are not visible to the original file and vice versa. 
-This will ofcourse mean that we will constrain the debug/production environment to the File System of our choice.
+This will of-course mean that we will constrain the debug/production environment to the File System of our choice.
 All test-cases in the debug-container share the test file system.
 
 \iffalse

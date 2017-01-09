@@ -4,12 +4,34 @@
 \section{Contributions}
 \label{sec:contributions}
 
-In this thesis, we have presented 
+The core of the material presented in this thesis is based on techniques for debugging applications on the fly in parallel to production services (we call this \livedebugging). In contrast to existing techniques which have instrumentation overhead, our technique does not incur any overhead, and keeps the debugging and production environment isolated.
 
-The main contributions of this thesis are as follows:
+The following are the contributions made in this thesis:
 
 \begin{itemize}
-	\item We are the first to present a new technique 
+	\item We presented a \textbf{general framework called  \parikshan} (see chapter~\ref{ch:parikshan}), which allows debuggers faster time to \textbf{bug resolution at zero-overhead in parallel to a production application}. 
+	The system first creates a live replica (clone) of a running system, and uses this replica specifically for debugging purposes.
+	Next we duplicate and send network inputs to both the production application and the replica using a customized network proxy.
+	As stated previously our main emphasis is to isolate any changes or slow-down in the replica from the user-facing production service, hence never impacting user-experience.
+	In our experiments, we have shown that the \debugcontainer can manage significant slow-down, while still faithfully representing the execution of the production container.
+	We believe that the increased granularity of instrumentation and the ability to instrument in an isolated environment, will be valuable to administrators and significantly reduce time to bug localization.
+	
+	\item We have presented case-studies (see chapter~\ref{ch:NetworkReplaySurvey}) which demonstrate that \textbf{network input is enough to capture most bugs in service oriented applications}. We used a network duplication proxy, and re-created 16 real-world bugs from several well known service applications (Apache, MySQL, Redis, HDFS, and Cassandra). The purpose of this study was to show that if the network input was duplicated and sent to both the production service and it's replica(\debugcontainer), the bug will be triggered in both for most common bugs.
+	We chose bugs from the following categories: semantic, resource leak, concurrency, performance and mis-configuration. 
+	To show that these categories represent most of the bugs found in service systems, we did a survey of 217 bugs reported in three well known applications (MySQL, Apache, and Hadoop), and manually categorized the bugs we found. 
+	
+	\item We have presented a ~\textbf{novel hybrid instrumentation tool called \iprobe} (see chapter~\ref{ch:iprobe}), as part of our tool-set to enable debugging applications. 
+	Similar to existing techniques \iprobe allows run-time binary instrumentation of execution points (functions entry, exit etc.), with significantly less overhead.
+	\iprobe de-couples the process of run-time instrumentation into offline (static) and online (dynamic) stages (hence called hybrid instrumentation). 
+	This avoids several complexities faced by current state-of-the-art mechanisms such as instruction overwriting, complex trampolines, code segment memory allocation and kernel context switches.
+	We used a custom micro-benchmark to compare the overhead of \iprobe in comparison to well known instrumentation tools systemtap~\cite{systemtap} and dyninst~\cite{dyninst}, and found an order of magnitude better performance at heavier profiling.
+	
+	\item In chapter~\ref{ch:activedebugging}, we have presented ~\textbf{applications for \livedebugging}, where we discuss several existing approaches which can be applied in the \parikshan framework to make them more effective. 
+	Apart from existing tools, we have also introduced the design of two new applications. 
+	Firstly, we have discussed a ~\textbf{budget-limited instrumentation approach for debugging applications in parallel to production services}. 
+	This approach provides the debugger guidelines for maximum instrumentation overhead allowed so as to avoid buffer overflows in \parikshan, and subsequently longer un-interrupted debugging opportunities for the user.
+	Secondly, we have introduced ~\textbf{active-debugging, which allows debuggers to evaluate fixes, and performance patches in parallel to a production service}. This leverages \parikshan's isolated \debugcontainer to not just debug but actually test application in a ``live" environment. 
+	 
 \end{itemize}
 
 \section{Future Work}
@@ -17,16 +39,10 @@ The main contributions of this thesis are as follows:
 
 There are a number of interesting future work possibilities, both in the short term and further into the future.
 
-In the future, we will explore: 
-\begin{itemize}
-	\item \textbf{Applications}: we aim to apply our system to real-time intrusion detection and statistical debugging.
-	\item \textbf{Analysis}: we wish to define ``real-time'' data analysis techniques for traces and instrumentation done in \parikshan.
-	\item \textbf{Optimize Live Cloning}: We plan to reduce the suspend time of live cloning, by utilizing several recent works in live migration.
-\end{itemize}
-
+%	\item \textbf{Analysis}: we wish to define ``real-time'' data analysis techniques for traces and instrumentation done in \parikshan.
 
 \subsection{Immediate Future Work}
-\label{sec:immediate}
+\label{sec:immediateFutureWork}
 
 \begin{itemize}
 	\item \textbf{Improve live cloning performance:}
@@ -41,7 +57,7 @@ In the future, we will explore:
 	Live cloning can be used in two scenarios, either with a fresh start where the target physical machines do not have a copy of the initial image. 
 	However, more commonly once the first live clone has been finished, the target is to reduce the suspend time of subsequent live cloning requests. 
 	This is different from live migration scenario's.
-	For instance, future research can focus on specifically on reducing this downtime by keeping track of the "delta" from the point of the detection of divergence.
+	For instance, future research can focus on specifically on reducing this downtime by keeping track of the ``delta" from the point of the detection of divergence.
 	This will reduce the amount of page faults in a post-copy algorithm, and can potentially improve live cloning performance compared to migration.
 	
 	
@@ -49,19 +65,37 @@ In the future, we will explore:
 	One key limitation of live-debugging is the potential for memory overflow. The period till a buffer overflow happens in the proxy, is called the \debugwindow. It is critical for continuous debugging that the \debugwindow be as long as possible.
 	The size of this window, depends on the instrumentation overhead, the amount of workload, and the buffer size itself. 
 	
-	Hence, it may be possible that at times for very heavy instrumentation or workload, the \debugwindow becomes too short to be of practical use. To counter this in our design section we briefly mentioned a scaled mode for live debugging. 
+	Hence, it may be possible that at times for very heavy instrumentation or workload, the \debugwindow becomes too short to be of practical use. To counter this it is \parikshan can be extend to create multiple replica's instead of just one. The framework can then be extended to load-balance the instrumentation in different containers, and generate a merged profile to be viewed by the debugger.
+	Scaling can be dynamic such that it is dependent on spikes in workload. 
+	Workload of most systems are generally periodic in the sense a website might have more hits during 9am-5pm, but almost none at midnight.
+
+	\item \textbf{Live Cloning in Virtual Machines}
+	There are two different kinds of virtualization technologies: user-space or container based virtualization, or full stack VM virtualization.
+	In our implementation in \parikshan, we have used user-space containers as they are more light weight, and a full VM would have a higher overhead and take more resources. 
+	However overall the full VM virtualization is more mature, and has much better migration technology.
+	This leads us to believe that live cloning if applied using virtual machines would be much faster, and would make \parikshan available in most traditional cloud service providers which still allocate resources using VM's.
 	
-	\item Feedback synchronization
 \end{itemize}
 
 \subsection{Possibilities for Long Term}
 \label{sec:longterm}
 
 \begin{itemize}
-	\item Explore implementation in Virtual Machines
+	
+	\item \textbf{Collaborative Debugging}: \parikshan provides debug container, which are isolated from the production container. The network input for the production service is duplicated in the \debugcontainer, which can be viewed by the user. Our framework can be extended to create multiple replica's instead of just one for the purpose of debugging. Each replica is isolated from the other and can be assigned to a developer.
+	For critical bugs, with faster resolution required it may be possible for two developers to work on their own \debugcontainer and collabarate on a bug being triggered by the same input.
+
+	\item \textbf{New \livedebugging primitives and interactive debugging features}
+	Live debugging or debugging on the fly introduced in this thesis, allows developers to peek into the execution of an application while it's also running in the production.
+	Since we are applying live debugging in a production environment, it may be possible to think of newer primitives for debugging.	
+	For instance watchpoints for variables, with each having their own bounded overhead: hence they would be observed with given probability.
+	Another could potentially be triggers for auto-creating a debug-container, if a condition is reached in the production code or production service monitoring software	
+
+	
+	\item \textbf{Evaluate impact on the software development process}: 
+	As described earlier, we expect \livedebugging to change the software development cycle and aid faster bug resolution.
+	In particular in Chapter~\ref{ch:activedebugging}, we have discussed several applications of \parikshan. 
+	These include using existing debugging methodologies, which can be applied either before a bug happens or after it occurs (pre and post-facto).
+	An evaluation or survey of real-life users, about what features were useful, and a quantitative evaluation of \parikshan's speedup towards bug resolution would further help understand our framework's usefulness.
+	
 \end{itemize}
-
-\section{Conclusion}
-\label{sec:conclusion}
-
-In this thesis we have explored approaches and frameworks for 
