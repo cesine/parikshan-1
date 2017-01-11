@@ -1,9 +1,9 @@
 Software debugging is the process of localizing, and finding defects that were observed in a system.
-In a world of increasingly complex and large scale distributed systems, errors can be very subtle, and can have a compounded impact on the application.
+In a world of increasingly complex and large scale distributed systems, errors can be very subtle and can have a compounded impact on the application.
 %Owing to high instrumentation overheads, and potential crashes in the debugging environment during the debugging process, debugging is usually done in the development environment.
 %Existing Testing and Verification technologies, are impractical for testing large scale softwares.
 Unfortunately, replicating production bugs of complex large scale systems in an offline environment continues to be a substantial challenge.
-In particular, production systems bugs can be a result of complex interactions between multiple system components, and can cause faults either in the kernel, middleware or the application itself.
+In particular, production systems bugs can be a result of complex interactions between multiple system components and can cause faults either in the kernel, middleware or the application itself.
 Hence it is important, to be able to gain insight in the entire workflow of the system, both breadth-wise (across application tiers and network boundaries), and depth wise (across the execution stack from application to kernel).
 
 In addition to the inherent complexity in software debugging, it is also essential to have a short time to bug diagnosis to reduce the financial impact of any error.
@@ -28,7 +28,7 @@ Secondly, \livedebugging should not impact user-facing performance for non bug t
 In large distributed applications, non-crashing bugs which impact only a small percentage of users are common. 
 In such scenarios, debugging a small part of the application should not impact the entire system.
 
-With the above stated goals in mind, we have designed a platform called \parikshan, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of \livedebugging. 
+With the above stated goals in mind, we have designed a platform called \parikshan\footnote{\parikshan is the \toolNameLang word for  testing}, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of \livedebugging. 
 \parikshan is driven by a  live-cloning process, which generates a replica (\debugcontainer) of production services for debugging or testing, cloned from a \productioncontainer which provides the real output to the user.
 The \debugcontainer provides a sandbox environment, for safe execution of test-cases/debugging done by the users without any perturbation to the execution environment.
 %Our sandboxes have independent network name-spaces, and resource management for the processes executing the test/debug cases.

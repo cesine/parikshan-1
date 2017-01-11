@@ -62,17 +62,20 @@ For our experiments we have used the \emph{redis-cli} client given with the defa
 
 \subsection{Cassandra}
 
-Cassandra~\cite{cassandra,cassandraWiki} is a well known wide column store NoSQL database, designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure.
+Cassandra~\cite{cassandra} is a well known wide column store NoSQL database, designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure.
 Cassandra offers robust support for clusters spanning multiple datacenters, with asynchronous masterless replication allowing low latency operations for all clients.
 
-To facilitate re-creating of cassandra bug, we have provided dockerized containers, which install the correct version of cassandra which has this bug as well as it's dependencies. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We also provide a python script for the cassandra client to trigger the bug conditions.
+%To facilitate re-creating of cassandra bug, we have provided dockerized containers, which 
+Installing the correct version of cassandra which has this bug as well as it's dependencies is a little tricky. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We provide these libraries as a part of our package in github project. We also provide a python script for the cassandra client to trigger the bug conditions.
 
 \subsection{HDFS}
 
-The Hadoop distributed file system (HDFS)~\cite{hdfs,hdfsWiki} is a distributed, scalable, and portable file system written in Java for the Hadoop framework.
+The Hadoop distributed file system (HDFS)~\cite{hdfs} is a distributed, scalable, and portable file system written in Java for the Hadoop framework.
 A Hadoop cluster has nominally a single namenode plus a cluster of datanodes, although redundancy options are available for the namenode due to its criticality. 
 Each datanode serves up blocks of data over the network using a block protocol specific to HDFS. The file system uses TCP/IP sockets for communication. Clients use remote procedure call (RPC) to communicate between each other.
 HDFS stores large files (typically in the range of gigabytes to terabytes[64]) across multiple machines. It achieves reliability by replicating the data across multiple hosts
+
+
 
 
 \section{Case Studies}
@@ -207,8 +210,9 @@ In this subsection we describe the Cassandra\#1837 semantic bug \\
 
 The main symptom of this error was that deleted columns become available again after doing a flush.
 With some domain knowledge, a developer found the error. 
-This happens because of a bug in a the way deleted rows are not interpreted once they leave the memtable in the CFS.getRangeSlice code i.e. the flush does not recognize the delete and the purged data does not contain the delete operation. 
-Thus querying for the data shows  content as well.
+This happens because of a bug in the way deleted rows are interpreted once they leave the memtable. 
+In the CFS.getRangeSlice code, flush operation does not delete the data. 
+Thus querying for the data shows content as even after deletion.
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -235,14 +239,16 @@ Another key insight provided in~\cite{shanluPerf} was that two-thirds of the bug
 Hence, it is difficult to capture these bugs with traditional offline white-box testing mechanisms.
 
 
-\subsubsection{MySQL \#26257}
+\subsubsection{MySQL \#26527}
 
-In this subsection we describe the MySQL\#26257 performance bug \\
+In this subsection we describe the MySQL\#26527 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
 This has to do with a caching problem for large inserts where large amount of data in a partitioned table.
 It was reported that inserting data with \texttt{LOAD DATA INFILE} is very slow with partitioned table and sometimes crawls to a stop.
+The reason behind the error was found to be that MySQL uses a handler function to prepare caches for large inserts.
+As high availability partitioner didn't allow these caches for underlaying tables, the inserts were much slower.
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -452,7 +458,7 @@ It appears the wrong number of RPOP operations are sent to the slave instance, r
 
 
 \subsection{Concurrency Bugs}
-One of the most subtle bugs in production systems is caused due to concurrency errors.
+One of the most subtle bugs in production systems are caused due to concurrency errors.
 These bugs are hard to reproduce, as they are non-deterministic, and may or may not happen in a given execution.
 Unfortunately, \parikshan cannot guarantee that if a buggy execution is triggered in the production container, an identical execution will trigger the same error in the debug container.
 However, given that the debug container is a live-clone of the production container, and that it replicates the state of the production container entirely, we believe that the chances of the bug also being triggered in the debug container are quite high.
@@ -692,6 +698,13 @@ ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent 
 \end{lstlisting}
 
 \end{adjustwidth}
+
+%\section{Discussion}
+%\label{sec:parikshanNetworkSumDiscussion}
+
+\xxx{Network input }
+
+\input{parikshan/bugTriggerEval}
 
 \section{Summary}
 \label{sec:parikshanCaseStudySummary}

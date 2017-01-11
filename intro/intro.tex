@@ -431,8 +431,10 @@ The rest of this thesis is organized as follows:
 	In this chapter we will first give a brief motivation, and discuss the overall design, and how our framework fits into service-oriented applications.
 	We then go into a detailed explanation of the design of each of the components of network request duplication as well as our live cloning algorithm.
 	We follow this up with implementation details, and evaluation scenarios using both simulation results and real-world experiments which show the performance of our framework. 
-	The chapter also includes a case study of 16 real-world bugs, and a survey of 217 bugs real-world bugs which we use to show that network replay is enough for triggering most bugs in service-oriented applications.
 	
+	\item Chapter~\ref{ch:NetworkReplaySurvey} we discuss case-studies involving 16 real-world bugs, from 5 well known service oriented application.
+	We show how network input replay is enough to capture most real-world bugs (concurrency, performance, semantic, resource leak, and mis-configuration).
+	In addition, to further help our claim, we did a survey of 217 real-world bugs which we manually classified and found were similar to the 16 bugs stated above.
 	
 	\item Chapter~\ref{ch:iprobe} introduces \iprobe a novel hybrid instrumentation technique, which can help in pre-packaging SOA application binaries for instrumentation - thereby helping in live-debugging.
 	We first begin with an explanation of \iprobe's design, which is split in a two phase process - ColdPatching and HotPatching. This is explained in stateful diagrams to show how the code is modified at different states in the binary.

@@ -14,7 +14,7 @@ level information, for instance, collecting existing log information and
 building a model of the system and its irregularities from it~\cite{magpie,fay,failuresketching,problemsolvingSysTap}. \xxx{get more cites here too}
 While these systems impose almost no overhead on the production system being
 debugged (since they simply collect log information already being collected, or
-have light-weight monitoring), they are limited in their fault finding and redproduction power, hence limited in their utility to developers.
+have light-weight monitoring), they are limited in their fault finding and reproduction power, hence limited in their utility to developers.
 On the other extreme, some monitoring systems capture complete execution traces, allowing the entire application execution to be exactly reproduced in a debugging environment \cite{odr,revirt,laadan2010transparent,geels2007friday}.
 Despite much work towards minimizing the amount of such trace data captured, overheads imposed by such tracing can still be unacceptable for production use: in most cases, the overhead of tracing is at least 10\%, and it can balloon up to 2-10x overhead. \cite{pinplay,drdebug}.
 
@@ -27,13 +27,13 @@ This suggests that our approach would be applicable to the bugs in our survey as
 %TODO - look into PRES to see if we can prove that capturing all sources of non-determinism is not important
 
 
-Guided by this insight, we have created \parikshan\footnote{\parikshan is the \toolNameLang word for  testing}, which allows for real-time, online debugging of production services \textbf{\emph{without imposing any performance penalty}}.
+Guided by this insight, we have created \parikshan, which allows for real-time, online debugging of production services \textbf{\emph{without imposing any performance penalty}}.
 At a high level, \parikshan leverages live cloning technology to create a sandboxed replica environment.
 This replica is kept isolated from the real world so that developers can modify the running system in the sandbox to support their debugging efforts without fear of impacting the production system.
 Once the replica is executing, \parikshan replicates all network inputs flowing to the production system, buffering and feeding them (without blocking the production system) to the debug system.
 Within that debug system, developers are free to use heavy-weight instrumentation that would not be suitable in a production environment to diagnose the fault.
 Meanwhile, the production system can continue to service other requests.
-\parikshan can be seen as very similar to tools such as Aftersight \cite{aftersight} that offload dynamic analysis tasks to replicas and VARAN \cite{Hosek:2015:VUE:2694344.2694390} that support multi-version execution, but differs in that its high-level recording level (network inputs, rather than system calls) allows it to have significantly lower overhead.
+\parikshan can be seen as very similar to tools such as Aftersight \cite{aftersight} that offload dynamic analysis tasks to replicas and VARAN \cite{Hosek:2015:VUE:2694344.2694390} that support multi-version execution, but differs in that its high-level recording level (network inputs, rather than system calls) allows it to have significantly lower overhead. A more detailed description of Aftersight and VARAN can be found in section~\ref{sec:relatedDecoupled}.
 
 
 %\parikshan primarily focuses on bugs~\cite{Zhang:2013:ADS:2486788.2486830, liu2005mining, kremenek2007factor}.
@@ -68,12 +68,3 @@ This allows a safe mechanism to diagnose the error, without impacting the functi
 %\item \textbf{Short time-to-debug:} These techniques contribute to a shortened debug time, by allowing debuggers to directly gather trace data, without needing to bring down the system. 
 \end{itemize}
 
-\noindent
-The rest of the paper is organized as follows.
-Section~\ref{sec:parikshanDesign} and \ref{sec:parikshanImplementation} describe the design and implementation of \parikshan and each of it's internal components.
-We then present a case study of 16 real-world bugs successfully reproduced by \parikshan in Section~\ref{sec:parikshanCasestudy}.
-%We have tested \parikshan live network duplication process to re-create 16 production bugs in 5 well-known software systems (MySQL, Apache HTTPD, Redis, Hadoop/HDFS) see section~\ref{sec:casestudy}. 
-%Furthermore, we performed a survey of Bugzilla reports of apache and MySQL to show that a majority of bugs in production systems can be classified in 5 categories that can in principle be handled by \parikshan (see section~\ref{sec:survey}).
-This is followed by the evaluation in Section~\ref{sec:parikshanEvaluation}.
-In Section~\ref{sec:parikshanApplication}, we discuss potential applications of \parikshan. 
-Finally, we discuss some challenges in Section~\ref{sec:parikshanThreats} and conclude.

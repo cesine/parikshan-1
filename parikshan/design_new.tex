@@ -1,15 +1,7 @@
 
-%\begin{figure}[ht]
-%	\begin{centering}
-%		\includegraphics[width=0.5\textwidth]{figs/arch.png}
-%		\caption{\parikshan applied to a mid-tier service: It is comprised of (1) Clone Manager for Live Cloning, (2) Proxy Duplicator to duplicate network traffic, and (3) Proxy Aggregator to replay network traffic to the cloned debug container.}
-%		\label{fig:workflow}
-%	\end{centering}
-%\end{figure}
-
 \begin{figure*}[t]
 	\begin{centering}
-		\includegraphics[width=0.9\textwidth]{parikshan/figs/arch_full.pdf}
+		\includegraphics[width=0.99\textwidth]{parikshan/figs/arch_full.pdf}
 		\caption{\textbf{High level architecture of \parikshan}, showing the main components: Network Duplicator, Network Aggregator, and Cloning Manager. The replica (debug container) is kept in sync with the master (production container) through network-level record and replay. In our evaluation, we found that this light-weight procedure was sufficient to reproduce many real bugs.}
 		\label{fig:network_arch}
 	\end{centering}

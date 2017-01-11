@@ -10,32 +10,34 @@ We now discuss some applications of \livedebugging in the real-world, and in par
 
 The debug container allows for debuggers to apply any ad-hoc technique used in offline debugging.
 However, in order for us to have continuous debugging, it is essential to allow for forward progress in the debug container. 
-Furthermore, the divergence due to instrumentation (either due to slowdown, or functional) should not stop forward-progress in the debug-container.
-Having a debug-container which is isolated from the production, but still in sync with production services, allows a variety of ad-hoc debugging approaches to be integrated and leverage our framework.
-Traditional offline debugging approaches, such as dynamic instrumentation can be easily directly applied to the debug-container without any ramifications. 
+Furthermore, the divergence due to instrumentation should not stop forward-progress in the debug-container.
+%Having a debug-container which is isolated from the production, but still in sync with production services, allows a variety of ad-hoc debugging approaches to be integrated and leverage our framework.
+Traditional offline debugging approaches, such as dynamic instrumentation can be easily directly applied to the debug-container at a much higher granularity than would be allowed in normal production services. 
 Others like memory or performance profiling, and execution traces can also be applied in the debug container.
 Similarly the \debugcontainer can be used as a staging mechanism for record-replay on demand to ensure deterministic execution.
-The key to applying these approaches is that none of them functionally modifies the application.
+It is essential however, that none of them functionally modifies the application or else manages any modifications introduced such that forward progress is possible.
 
 This chapter is divided in the following key parts: Firstly, in section~\ref{sec:guidedDiscussion}, we discuss the advantages and limitations of \parikshan in real-world settings.
-Furthermore, we highlight certain key points that the debugger most be aware of when debugging applications with \parikshan, so that he can do reliable and fast debugging. 
+We highlight certain key points that the debugger most be aware of when debugging applications with \parikshan, so that he can do reliable and fast debugging. 
 In section~\ref{sec:activeDebuggingScenarios}, we classify debugging production applications in two high level debugging scenario categories: \emph{post-facto}, and \emph{proactive} analysis.
 We leverage these classifications to explain how different techniques can be applied in \parikshan, and in which scenarios debugging on the fly does not make sense.
 Next we list some existing debugging technologies, like statistical debugging, execution tracing, record and replay etc. to explain how they can be either directly applied or modified slightly and applied with the \parikshan framework to significantly improve their analysis.
 
-In the next section, we introduce \activedebugging whereby developers can apply a patch/fix or apply a test in the \debugcontainer.
+In the next section we introduce budget-limited adaptive instrumentation. Which focuses further on how to allow for continuous debugging with the maximum information gain.
+One of the key criteria for successful statistical debugging is to have higher instrumentation rates, to make the results more statistically significant. 
+There is a clear trade-off between instrumentation vs performance overhead for statistical instrumentation. 
+A key advantage of using this with \parikshan is that we can provide live feedback based buffer size and bounded overheads, hence squeezing the maximum advantage out of statistical debugging without impacting the overhead. 
+We evaluate the slack available in each request for instrumentation without risking a buffer overflow and getting out of sync of the production container.
+%Live interactive debugging provided by \parikshan further allows for quick updates to the instrumentation and targeting specific areas of the application code.
+Budget limited instrumentation is inspired from statistical debugging~\cite{statisticalDebugging}, and focuses on a two-pronged goal of bounding the instrumentation overhead to avoid buffer overflows in \parikshan, and simultaneously have maximum feedback regarding information gained from real-time instrumentation.
+
+In the last section, we introduce \activedebugging whereby developers can apply a patch/fix or apply a test in the \debugcontainer.
 \activedebugging ensures that any modifications in the \debugcontainer does not lead to a state change in the \productioncontainer.
 This will enable the debugger to fix/patch or run test-cases in the debug-container while ensuring forward progress and in sync with production. 
 We are inspired from existing perpetual invivo testing frameworks like INVITE~\cite{invivo}(which also provides partial test-isolation), in the production environment.
 We currently restrict \active debugging to patches/and test-cases only bring about local changes, and not global changes in the application.
 
-In the last section we introduce budget-limited adaptive instrumentation. Which focuses further on how to allow for continuous debugging with the maximum information gain.
-One of the key criteria for successful statistical debugging is to have higher instrumentation rates, to make the results more statistically significant. 
-There is a clear trade-off between instrumentation vs performance overhead for statistical instrumentation. 
-A key advantage of using this with \parikshan is that we can provide live feedback based buffer size and bounded overheads, hence squeezing the maximum advantage out of statistical debugging without impacting the overhead. 
-We evaluate the slack available in each request for instrumentation without risking a buffer overflow and getting out of sync of the production container.
-Live interactive debugging provided by \parikshan further allows for quick updates to the instrumentation and targeting specific areas of the application code.
-Budget limited instrumentation is inspired from statistical debugging~\cite{statisticalDebugging}, and focuses on a two-pronged goal of bounding the instrumentation overhead to avoid buffer overflows in \parikshan, and simultaneously have maximum feedback regarding information gained from real-time instrumentation.
+
 
 \xxx{This section is divided in the 3 parts: First in section, next in section, next in section, }
 
@@ -87,7 +89,7 @@ The following are some key advantages of \parikshan that can be leveraged for de
 	
 	\item \textbf{Sandboxed Environment}: The debug container runs in a sandboxed environment which is running in parallel to the real production system, but any changes in the \debugcontainer are not reflected to the end-user. This is a key advantage in several debugging techniques which are disruptive, and can change the final output. 
 	
-	Normal debugging mechanisms such as triggering a breakpoints or patching in a new exception/assertion to figure out if a particular "condition" in the application system state is breaking the code, cannot be done in a production code as it could lead to a critical system crash. On the other hand, \parikshan's debug containers are ideal for this scenario as they will allow developers to put in a patches without any fear of system failure.
+	Normal debugging mechanisms such as triggering a breakpoints or patching in a new exception/assertion to figure out if a particular ``condition" in the application system state is breaking the code, cannot be done in a production code as it could lead to a critical system crash. On the other hand, \parikshan's debug containers are ideal for this scenario as they will allow developers to put in a patches without any fear of system failure.
 	
 	\item \textbf{Zero Overhead Monitoring}:The most novel aspect of \parikshan is that it allows for zero overhead monitoring of the production system. This means that high-overhead debugging techniques can be applied on the debug-container without incurring a slow-down in production.
 	
@@ -111,7 +113,8 @@ At the same time there are some things that the administrator must be aware of
 
 \begin{itemize}
 	\item \textbf{Continuous Debugging and Forward Progress}:
-	\livedebugging allows users to debug applications on-the-fly. The debug-container where one can do debugging runs in parallel to the production container. This is done by first making a live replica of the system followed by duplicating and sending the network input to the \debugcontainer. 
+	%\livedebugging allows users to debug applications on-the-fly. 
+	The debug-container where one can do debugging runs in parallel to the production container. This is done by first making a live replica of the system followed by duplicating and sending the network input to the \debugcontainer. 
 	In a way the \debugcontainer still communicates with the entire system although it's responses are dropped. 
 	To ensure forward progress in the \debugcontainer, it is essential that the \debugcontainer is in-sync with the production container, so that the responses, and the requests from the network are the expected responses for forward progress in the application running on the \debugcontainer.
 	
@@ -134,7 +137,7 @@ At the same time there are some things that the administrator must be aware of
 	
 	There are multiple ways that this problem can be looked at. Firstly, while it's difficult to quantify, for all the non-deterministic cases in our case-studies, we were able to trigger the bug in both the production and the replica. 
 	In the case where the bug is actually triggered in the \debugcontainer, the debugging can take place as usual for other other bugs.
-	If that is not the case, there are several techniques which provide systematic "search" for different threading schedules based on a high granularity recording of all potential thread synchronization points, and read/write threads. While such high granularity recording is not possible in the production container, it can definitely be done in the \debugcontainer without any impact on the production service.
+	If that is not the case, there are several techniques which provide systematic ``search" for different threading schedules based on a high granularity recording of all potential thread synchronization points, and read/write threads. While such high granularity recording is not possible in the production container, it can definitely be done in the \debugcontainer without any impact on the production service.
 	
 \end{itemize}
 
@@ -187,7 +190,7 @@ There are three kind of bugs that can be considered in this kind of situation:
 	Crashing bugs are bugs that lead to a crash in the system thereby stopping the service.
 	Unhandled exceptions, or system traps are generally the cause of such crashes.
 	Unfortunately \parikshan has limited utilization for post-facto analysis of a crashing bug. 
-	Since \parikshan is not turned "on" at the time of the crash, any post-facto analysis for creating a \debugcontainer is not possible.
+	Since \parikshan is not turned ``on" at the time of the crash, any post-facto analysis for creating a \debugcontainer is not possible.
 
 	
 \end{itemize} 
@@ -204,7 +207,7 @@ Proactive recording is basically use to track bugs that could happen in the futu
 Once a bug is caught, the cause can be independently explored in the \debugcontainer.
 
 Proactive Analysis, is useful for both stateless and stateful bugs, we do not differentiate between them here as even in the case of a stateful bug, debugging is always turned on. 
-Proactive approaches can be compared to existing approaches like statistical debugging~\cite{statisticalDebugging} which use active statistical profiling to compare between successful and buggy runs, to isolate the problem. We discuss statistical debugging in section~\ref{sec:activeStatisticalDebugging} and present an advanced approach in section~\ref{sec:activeBudgetLimited}.
+Proactive approaches can be compared to existing approaches like statistical debugging~\cite{statisticalDebugging} which use active statistical profiling to compare between successful and buggy runs, to isolate the problem. We discuss statistical debugging in section~\ref{sec:activeStatisticalDebugging} and present an advanced approach based on the same in section~\ref{sec:activeBudgetLimited}.
 Other proactive body of work include record-replay infrastructures, which record production systems, and can replay the execution if a bug is discovered.
 In section~\ref{sec:activeStagedRecordReplay}, we have discussed staged record-and-replay, which is an advanced record-replay technique that can be applied with the help of \parikshan.
 
@@ -267,11 +270,11 @@ Such recording overhead is usually unacceptable in most production systems.
 
 Record and replay can be coupled with the \debugcontainer to avoid any overhead on the \productioncontainer.
 This is done by staging the recording for record-and-replay in the \debugcontainer instead of the production, and then replaying that for offline analysis.
-In figure~\ref{fig:stagedRecordReplay} we show how the production system can first be "live-cloned". A copy of the container's image can be stored/retained for future offline replay - this incurs no extra overhead as taking a live snapshot is a part of the live-cloning process. Recording can then be started on the \debugcontainer, and logs collected here can be used to do offline replay.
+In figure~\ref{fig:stagedRecordReplay} we show how the production system can first be ``live-cloned". A copy of the container's image can be stored/retained for future offline replay - this incurs no extra overhead as taking a live snapshot is a part of the live-cloning process. Recording can then be started on the \debugcontainer, and logs collected here can be used to do offline replay.
 
 An important aspect to remember here is that \textbf{non-determinism} can lead to different execution flows (with low probability as the system is a clone of the original) in the \debugcontainer v.s. the \productioncontainer.
 Hence simply replaying an execution trace in the \debugcontainer, may not lead to the same execution which triggers the bug.
-However several existing record-and-replay techniques offer "search" capabilities to replay and search through all possible concurrent schedules which could have triggered a non-deterministic error.
+However several existing record-and-replay techniques offer search capabilities to replay and search through all possible concurrent schedules which could have triggered a non-deterministic error.
 Hence we propose that the exact executing schedule which triggered a bug, and using the \debugcontainer for recording instead of the \productioncontainer is a viable alternative to traditional record-replay techniques.
 
 \subsection{A-B Testing}
@@ -355,7 +358,7 @@ We divide this task into  pro-active and re-active approaches which can compleme
 \begin{figure}[t!]
 
 		\centering
-		\includegraphics[width=0.99\textwidth]{queue/figs/queue.pdf}
+		\includegraphics[width=0.7\textwidth]{queue/figs/queue.pdf}
 		\caption{\parikshan applied to a mid-tier service}
 		\label{fig:queueModel}
 \end{figure}

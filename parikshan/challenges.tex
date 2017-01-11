@@ -37,6 +37,6 @@ Large-scale distributed systems are often comprised of several interacting servi
 \parikshan can be used on one or more containers and can be used to clone more than one communicating .
 Based on the nature of the service, it may be (a). Cloned, (b). Turned off or (c). Allowed without any modification.
 For example, storage services supporting a replica need to be cloned or turned off (depending on debugging environment) as they would propagate changes from the debug container to the production containers.
-Similarly, services such as NTP service can be allowed to continue without any cloning as they are publish\/subscribe broadcast based systems and the debug container cannot impact it in anyway.
+Similarly, services such as NTP service can be allowed to continue without any cloning as they are broadcast based systems and the debug container cannot impact it in anyway.
 Furthermore, instrumentation inserted in the replica, will not necessarily slowdown all services.
 For instance, instrumentation in a MySQL query handler will not slowdown file-sharing or NTP services running in the same container.
