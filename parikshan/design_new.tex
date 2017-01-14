@@ -41,8 +41,148 @@ The network proxy duplicator and aggregator are composed of the following intern
 \noindent
 %Next, we explain how these components are used:\\
 
-\input{parikshan/proxyDup_new}
-\input{parikshan/proxyAgg_new}
-\input{parikshan/window_new}
-\input{parikshan/divergence_new}
+
+
+\iffalse
+\begin{figure}[ht]
+	\begin{centering}
+		\includegraphics[width=0.9\textwidth]{parikshan/figs/network_dup.pdf}
+		%    \captionsetup{justification=centering}
+		\caption{Network Duplicator: Thread 1 sends traffic on links 1 and 3, Thread 2 manages links 2 and 4, Thread 3 forwards traffic on link 5, \& Thread 4 reads and drops data on link 6}
+		\label{fig:duplicator}
+	\end{centering}
+\end{figure}
+\fi
+
+
+
+\subsubsection{Proxy Network Duplicator:} 
+\label{sec:parikshanProxyDuplicator}
+To successfully perform online debugging in the replica to work, both production and debug containers must receive the same input.
+A major challenge in this process is that the production and debug container may execute at different speeds (debug will be slower than production): this will result in them being out of sync.
+Additionally, we need to accept responses from both servers and drop all the traffic coming from the debug-container, while still maintaining an active connection with the client.
+Hence simple port-mirroring and proxy mechanisms will not work for us. 
+
+TCP is a connection-oriented protocol and is designed for stateful delivery and acknowledgment that each packet has been delivered.
+Packet sending and receiving are blocking operations, and if either the sender or the receiver is faster than the other the send/receive operations are automatically blocked or throttled.
+This can be viewed as follows: Let us assume that the client was sending packets at $X Mbps$ (link 1), and the production container was receiving/processing packets at $Y Mbps$ (link 2), where $Y<X$. 
+Then automatically, the speed of link 1 and link 2 will be throttled to $Y Mbps$ per second, i.e the packet sending at the client will be throttled to accommodate the production server. 
+Network throttling is a default TCP behavior to keep the sender and receiver synchronized.
+However, if we also send packets to the debug-container sequentially in link 3 the performance of the production container will be dependent on the debug-container. 
+If the speed of link 3 is $Z$ $Mbps$, where $Z < Y$, and $Z < X$, then the speed of link 1, and link 2 will also be throttled to $Z$ $Mbps$.
+The speed of the debug container is likely to be slower than production: this may impact the performance of the production container.
+
+Our solution is a customized TCP level proxy. 
+This proxy duplicates network traffic to the debug container while maintaining the TCP session and state with the production container. 
+Since it works at the TCP/IP layer, the applications are completely oblivious to it.
+To understand this better let us look at Figure~\ref{fig:network_arch}: Here each incoming connection is forwarded to both the production container and the debug container . 
+This is a multi-process job involving 4 parallel processes (P1-P4): In P1, the asynchronous forwarder sends data from client to the production service, while simultaneously sending it to the buffer manager in a non-blocking send.  This ensures that there is no delay in the flow to the production container because of slow-down in the debug-container.
+In P2, the pass-through forwarder reads data from the production and sends it to the client (downstream component).
+Process P3, then sends data from Buffer Manager to the debug container, and Process P4 uses a dummy reader, to read from the production container and drops all the packets
+
+\iffalse
+To avoid a slowdown in the production container, we use 4 threads T1, T2, T3, T4  to manage each incoming connection to the proxy.
+Thread T1 forwards packets from the client to the proxy (link 1), and from the proxy to the production container (link 3). 
+It then uses a non-blocking send to forward packets to an internal pipe buffer shared between thread T1, and thread T3.
+Thread T2 reads the responses from the production container and forwards them to the client (link 4 and 2).
+Thread T3 then reads from this piped buffer and sends the  traffic forward to the debug-container( link 5), while Thread T4, receives packets from the debug-container and drops them (link 6).
+\fi
+
+The above strategy allows for non-blocking packet forwarding and enables a key feature of \parikshan, whereby it avoids slowdowns in the debug-container to impact the production container.
+We take the advantage of an in-memory buffer, which can hold requests for the debug-container, while the production container continues processing as normal.
+A side-effect of this strategy is that if the speed of the debug-container is too slow compared to the packet arrival rate in the buffer, it may eventually lead to an overflow. 
+We call the time taken by a connection before which the buffer overflows its \emph{debug-window}.
+We discuss the implications of the \emph{debug window} in Section \ref{sec:parikshanWindow}.  
+
+\iffalse
+\begin{figure}[ht!]
+	\begin{center}
+		\includegraphics[width=0.9\textwidth]{parikshan/figs/aggregator.pdf}
+		%    \captionsetup{justification=centering}
+		\caption{Description of the Network Aggregator. Thread 1 executes step [1,3], Thread 2 step [2,4], and Thread 3 step [5], and Thread 4 step [6]}
+		\label{fig:aggregator}
+	\end{center}
+\end{figure}
+\fi
+
+
+\subsubsection{Proxy Network Aggregator:}
+\label{sec:parikshanProxyAggregator}
+The proxy described in Section~\ref{sec:parikshanProxyDuplicator} is used to forward requests from downstream tiers to production and debug containers.
+While the network duplicator duplicates incoming requests, the network aggregator manages incoming ``responses'' for requests sent from the debug container. 
+Imagine if you are trying to debug a mid-tier application container, the proxy network duplicator will replicate all incoming traffic from the client to both debug and the production container. 
+Both the debug container and the production, will then try to communicate further to the backend containers.
+This means duplicate queries to backend servers (for instance, sending duplicate `delete' messages to MySQL), thereby leading to an inconsistent state.
+Nevertheless, to have forward progress the debug-container must be able to communicate and get responses from upstream servers.
+The ``proxy aggregator'' module stubs the requests from a duplicate debug container by replaying the responses sent to the production container to the debug-container and dropping all packets sent from it to upstream servers.
+
+As shown in  Figure~\ref{fig:network_arch}, when an incoming request comes to the aggregator, it first checks if the connection is from the production container or debug container. 
+In process P1, the aggregator forwards the packets to the upstream component using the pass-through forwarder.
+In P2, the asynchronous forwarder sends the responses from the upstream component to the production container, and sends the response in a non-blocking manner to the internal queue in the buffer manager. 
+Once again this ensures no slow-down in the responses sent to the production container.
+The buffer manager then forwards the responses to the debug container (Process P3).
+Finally, in process P4 a dummy reader reads all the responses from the debug container and discards them.
+
+%Responses from the backend server are sent to the aggregator (link 4), and then forwarded to the production container (link 2) and simultaneously saved in an internal queue.
+%The aggregator creates an in-memory persistent inter-process FIFO queue for each connection where the responses for each of these connections are stored.
+%When the corresponding connection from the duplicate debug container connects to the proxy (link 5); all packets being sent are quietly dropped. 
+%The aggregator then uses the queue to send replies to the debug-container (link 6).
+%In a way this is a streaming online record-and-replay, where we are recording the data in our buffer.
+
+We assume that the production and the debug container are in the same state, and are sending the same requests. 
+Hence, sending the corresponding responses from the FIFO queue instead of the backend ensures:
+(a) all communications to and from the debug container are isolated from the rest of the network,
+(b) the debug container gets a logical response for all it's outgoing requests, making forward progress possible,
+and (c). similar to the proxy duplicator, the communications from the proxy to internal buffer is non-blocking to ensure no overhead on the production-container.
+
+%In this design we assume that the order of incoming connections remains largely the same.
+%To allow for some flexibility, we use a fuzzy checking mechanism using the hash value of the da%ta being sent to correlate the connections. 
+%Each queue has a short wait time to check against incoming connections, this allows us to match slightly out of order connections.
+%In case a connection cannot be correlated, we send a TCP\_FIN, to close the connection, and inform the user.
+%\xxx{Does this come up? Need to talk about that as a limitation if so, or give some evidence that it doesnt otherwise}
+%\yyy{you are right removed, actually I needed to update the network aggregator anyways}
+%In case a connection cannot be correlated, we allow the connection to time out and send a TCP\_FIN.
+
+
+\subsection{Debug Window}
+\label{sec:parikshanWindow}
+
+\parikshan's asynchronous forwarder uses an internal buffer to ensure that incoming requests proceed directly to the production container without any latency, regardless of the speed at which the debug replica processes requests.
+The incoming request rate to the buffer is dependent on the user, and is limited by how fast the production container manages the requests (i.e. the production container is the rate-limiter).
+The outgoing rate from the buffer is dependent on how fast the debug-container processes the requests.
+Instrumentation overhead in the debug-container can potentially cause an increase in the transaction processing times in the debug-container.
+As the instrumentation overhead increases, the incoming rate of requests may eventually exceed the transaction processing rate in the debug container.
+If the debug container does not catch up, this in turn can lead to a buffer overflow. We call the time period until buffer overflow happens the \emph{debug-window}.
+This depends on the size of the buffer, the incoming request rate, and the overhead induced in the debug-container. 
+For the duration of the debugging-window, we assume that the debug-container faithfully represents the production container. 
+Once the buffer has overflown, the debug-container may be out of sync with the production container. 
+At this stage, the production container needs to be re-cloned, so that the replica is back in sync with the production and the buffer can be discarded.
+In case of frequent buffer-overflows, the buffer size needs to be increased or the instrumentation to be decreased in the replica, to allow for longer debug-windows.
+
+The debug window size also depends on the application behavior, in particular how it launches TCP connections. 
+\parikshan generates a pipe buffer for each TCP connect call, and the number of pipes are limited to the maximum number of connections allowed in the application.
+Hence, buffer overflows happen only if the requests being sent in the same connection overflow the queue.
+For webservers, and application servers, the debugging window size is generally not a problem, as each request is a new ``connection.''
+This enables \parikshan to tolerate significant instrumentation overhead without a buffer overflow.
+On the other hand, database and other session based services usually have small request sizes, but multiple requests can be sent in one session which is initiated by a user. 
+In such cases, for a server receiving a heavy workload, the number of calls in a single session may eventually have a cumulative effect and cause overflows.
+
+To further increase the \emph{debug window}, we propose load balancing debugging instrumentation overhead across multiple debug-containers, which can each get a duplicate copy of the incoming data. 
+For instance, debug-container 1 could have 50\% of the instrumentation, and the rest on debug-container 2.
+We believe such a strategy would significantly reduce the chance of a buffer overflow in cases where heavy instrumentation is needed.
+Section~\ref{sec:parikshanTimewindowPerformance} explains in detail the behavior of the debug window, and how it is impacted by instrumentation.
+\xxx{What happens when we exceed the debug window?}
+
+
+\subsection{Divergence Checking}
+\label{sec:parikshanDivergenceChecking}
+
+In \parikshan it is possible that non-deterministic behavior (discussed in Section~\ref{sec:parikshanThreatsNonDeterminism}) in the two containers or user instrumentation, causes the production and debug container to diverge with time.
+To understand and capture this divergence, we compare the corresponding network output received in the proxy.
+This is an optional component, which gives us a black-box mechanism to check the fidelity of the replica based on its communication with external components.
+In our current prototype, we use a hash on each data packet, which is collected and stored in memory for the duration that each packet's connection is active.
+The degree of acceptable divergence is dependent on the application behavior, and the operator's wishes. 
+For example, an application that includes timestamps in each of its messages (i.e. is expected to have some non-determinism) could perhaps be expected to have a much higher degree of acceptable divergence than an application that should normally be returning deterministic results.
+
+
 
