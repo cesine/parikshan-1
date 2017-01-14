@@ -22,7 +22,7 @@ However, they are inflexible and can only be turned on/off at compile-time or be
 Besides, usually only a small subset of functions is chosen to avoid larger overheads.
 
 
-In this paper, we introduce a dynamic instrumentation framework called \emph{iProbe}.
+In this chapter, we introduce a dynamic instrumentation framework called \emph{iProbe}.
 iProbe has instrumentation overheads comparable to print/debug statements, while still giving users the flexibility to choose targets in the execution stage. 
 We evaluated iProbe on micro-benchmark and SPEC CPU 2006 benchmarks.
 iProbe showed an order of magnitude performance improvement in comparison to SystemTap\cite{utrace} and DynInst\cite{dyninst} 
@@ -145,7 +145,7 @@ This is desirable in long-running services for both debugging and profiling usag
 
 %\end{itemize}
 
-The rest of the paper is organized as following. 
+The rest of the chapter is organized as following. 
 %Section \ref{sec:intro} introduces the motivation and key contributions behind iProbe. 
 Section \ref{sec:design} discusses the design of iProbe framework, explaining our ColdPatching, and HotPatching techniques;
 we also discuss how safety checks are enforced by iProbe to ensure correctness, and some extended options in iProbe for further flexibility.
@@ -153,9 +153,4 @@ Section \ref{sec:trampoline} compares traditional trampoline based approaches wi
 Section \ref{sec:Implementation} explains the implementation of iProbe, 
 and describes \emph{FPerf} a tool developed using iProbe framework. 
 In section \ref{sec:eval} we evaluate the iProbe prototype, 
-and section \ref{sec:conclusion} concludes this paper.
-
-%Its implementation details are presented in Section \ref{sec:implementation}. 
-%The evaluation of iProbe is demonstrated in Section \ref{sec:eval}. 
-%Section \ref{sec:related} discusses related work. 
-%Section \ref{sec:conclusion} presents the conclusion of this paper.
+and section \ref{sec:iProbeSummary} summarizes this chapter.

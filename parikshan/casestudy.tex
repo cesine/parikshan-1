@@ -73,10 +73,12 @@ Installing the correct version of cassandra which has this bug as well as it's d
 The Hadoop distributed file system (HDFS)~\cite{hdfs} is a distributed, scalable, and portable file system written in Java for the Hadoop framework.
 A Hadoop cluster has nominally a single namenode plus a cluster of datanodes, although redundancy options are available for the namenode due to its criticality. 
 Each datanode serves up blocks of data over the network using a block protocol specific to HDFS. The file system uses TCP/IP sockets for communication. Clients use remote procedure call (RPC) to communicate between each other.
-HDFS stores large files (typically in the range of gigabytes to terabytes[64]) across multiple machines. It achieves reliability by replicating the data across multiple hosts
+HDFS stores large files (typically in the range of gigabytes to terabytes[64]) across multiple machines. It achieves reliability by replicating the data across multiple hosts.
 
 
-
+In our implementation we use HDFS binary client which comes pre-packaged with Hadoop.
+We deployed a two node cluster with one master and and two slaves.
+The master as primary name-node, and one of the slaves as the secondary name-node.
 
 \section{Case Studies}
 \label{sec:parikshanCasestudy}
@@ -712,4 +714,8 @@ ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent 
 In this section we presented 16 real-life bug cases from 5 different categories of bugs: Semantic, Performance, Resource Leaks, Concurrency, and Configuration Bugs.
 These bugs spanned 5 well known open-source softwares.
 For each of these bugs, we presented it's symptoms and how they were re-created using parikshan's network duplication.
+Further we also presented a survey of 217 bugs from 3 well known applications, where we manually classify the bugs in these systems to the above given categories.
+
+
+The bugs discussed in this chapter are a representative of real world bugs for SOA applications.
 Based on our results, we believe that network duplication is enough to capture most bugs, and trigger them in \parikshan's \debugcontainer.
