@@ -2,7 +2,9 @@
 \section{Evaluation}
 \label{sec:eval}
 
-%In this section we evaluate various aspects of iProbe. Initially, we show the overhead of iProbe on SPEC CPU 2006 benchmarks\cite{specCPU2006}, we then showcase iProbe vs a normal mode, the binary generated with initial -finstrument-function flag, and the ColdPatched version of the same binary. Since iProbe is also geared towards monitoring large scale systems, we also show the overhead of iProbe "ColdPatched" binaries in terms of throughput in apache httpd server, and the mysql database. Then we present the overhead for "HotPatching" itself wherein we measure the time taken by iProbe to patch the functions in a live session. Lastly, we compare scalability of iProbe compared to existing state of the art technique SystemTap \cite{systemtap}
+In this section we evaluate various aspects of iProbe. Initially, we show the overhead of iProbe on SPEC CPU 2006 benchmarks\cite{specCPU2006}, we then showcase iProbe vs a normal mode, the binary generated with initial -finstrument-function flag, and the ColdPatched version of the same binary. 
+Since iProbe is also geared towards monitoring large scale systems, we also show the overhead of iProbe "ColdPatched" binaries in terms of throughput in apache httpd server, and the mysql database. 
+Then we present the overhead for "HotPatching" itself wherein we measure the time taken by iProbe to patch the functions in a live session. Lastly, we compare scalability of iProbe compared to existing state of the art technique SystemTap \cite{systemtap}
 
 \subsection{Overhead of ColdPatch}
 The SPEC INT CPU benchmarks 2006 \cite{specCPU2006} is a widely used benchmark in academia, industry and research as relevant representation of real world applications. 

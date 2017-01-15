@@ -1,21 +1,20 @@
-\chapter{Active Debugging and Applications of Live Debugging}
+\chapter{Applications of Live Debugging}
 \label{ch:activedebugging}
 
 \section{Overview}
 \label{sec:guided_overview}
 
 In the sections until now, we have introduced a framework for \livedebugging, a tool for pre-packaging binaries to make them \livedebugging friendly. 
-We now discuss some applications of \livedebugging in the real-world, and in particular introduce a new mechanism called \activedebugging.
+We now discuss some applications of \livedebugging in the real-world, and how it can be used for actual debugging with existing tools or by modifying existing mechanisms.
 
-
-The debug container allows for debuggers to apply any ad-hoc technique used in offline debugging.
-However, in order for us to have continuous debugging, it is essential to allow for forward progress in the debug container. 
+The debug container allows debuggers to apply any ad-hoc technique used in offline debugging.
+However, in order for us to have continuous debugging, it is essential to allow forward progress of the execution in the debug container. 
 Furthermore, the divergence due to instrumentation should not stop forward-progress in the debug-container.
-%Having a debug-container which is isolated from the production, but still in sync with production services, allows a variety of ad-hoc debugging approaches to be integrated and leverage our framework.
-Traditional offline debugging approaches, such as dynamic instrumentation can be easily directly applied to the debug-container at a much higher granularity than would be allowed in normal production services. 
-Others like memory or performance profiling, and execution traces can also be applied in the debug container.
+For instance, traditional monitoring approaches such as execution traces, memory or performance profiling,  which do not change the state or logic of the executing component can be directly applied to the debug-container with little chance of \debugcontainer diverging. 
+The debug container in this case offers the advantage of allowing for a much higher instrumentation overhead compared to what would be generally allowed in production services.
 Similarly the \debugcontainer can be used as a staging mechanism for record-replay on demand to ensure deterministic execution.
 It is essential however, that none of them functionally modifies the application or else manages any modifications introduced such that forward progress is possible.
+Other approaches with heavier impact like step-by-step execution in interactive debugging tools, or alternatively dynamic instrumentation through tools like Valgrind~\cite{valgrind} or PIN~\cite{pin} need a better controlled environment.
 
 This chapter is divided in the following key parts: Firstly, in section~\ref{sec:guidedDiscussion}, we discuss the advantages and limitations of \parikshan in real-world settings.
 We highlight certain key points that the debugger most be aware of when debugging applications with \parikshan, so that he can do reliable and fast debugging. 
@@ -23,62 +22,12 @@ In section~\ref{sec:activeDebuggingScenarios}, we classify debugging production 
 We leverage these classifications to explain how different techniques can be applied in \parikshan, and in which scenarios debugging on the fly does not make sense.
 Next we list some existing debugging technologies, like statistical debugging, execution tracing, record and replay etc. to explain how they can be either directly applied or modified slightly and applied with the \parikshan framework to significantly improve their analysis.
 
-In the next section we introduce budget-limited adaptive instrumentation. Which focuses further on how to allow for continuous debugging with the maximum information gain.
+Lastly, in section~\ref{sec:activeBudgetLimited} we introduce budget-limited adaptive instrumentation. Which focuses further on how to allow for continuous debugging with the maximum information gain.
 One of the key criteria for successful statistical debugging is to have higher instrumentation rates, to make the results more statistically significant. 
 There is a clear trade-off between instrumentation vs performance overhead for statistical instrumentation. 
 A key advantage of using this with \parikshan is that we can provide live feedback based buffer size and bounded overheads, hence squeezing the maximum advantage out of statistical debugging without impacting the overhead. 
 We evaluate the slack available in each request for instrumentation without risking a buffer overflow and getting out of sync of the production container.
-%Live interactive debugging provided by \parikshan further allows for quick updates to the instrumentation and targeting specific areas of the application code.
 Budget limited instrumentation is inspired from statistical debugging~\cite{statisticalDebugging}, and focuses on a two-pronged goal of bounding the instrumentation overhead to avoid buffer overflows in \parikshan, and simultaneously have maximum feedback regarding information gained from real-time instrumentation.
-
-In the last section, we introduce \activedebugging whereby developers can apply a patch/fix or apply a test in the \debugcontainer.
-\activedebugging ensures that any modifications in the \debugcontainer does not lead to a state change in the \productioncontainer.
-This will enable the debugger to fix/patch or run test-cases in the debug-container while ensuring forward progress and in sync with production. 
-We are inspired from existing perpetual invivo testing frameworks like INVITE~\cite{invivo}(which also provides partial test-isolation), in the production environment.
-We currently restrict \active debugging to patches/and test-cases only bring about local changes, and not global changes in the application.
-
-
-
-\xxx{This section is divided in the 3 parts: First in section, next in section, next in section, }
-
-\iffalse
-One possible route that we wish to explore further is how to allow for validation of test-cases, or validate functional patches/fixes, which may modify the output.
-For the purposes of our exploration, we have currently assumed that these patches/and test-cases only bring about local changes, and not global changes in the application.
-In this section, we introduce the concept of \activedebugging, whereby developers can apply a patch/fix or apply a test in the \debugcontainer.
-\activedebugging ensures that any modifications in the \debugcontainer does not lead to a state change in the \productioncontainer.
-This will enable the debugger to fix/patch or run test-cases in the debug-container while ensuring forward progress and in sync with production. 
-We are inspired from existing perpetual invivo testing frameworks like INVITE~\cite{invivo}(which also provides partial test-isolation), in the production environment.
-
-In recent years several monitoring techniques have been developed to monitor the health of production systems.
-For example most modern operating systems have resource monitors~\cite{linuxHealth, windowsHealth, macHealth}, which can be used to track the CPU, memory usage, cache misses, temperature etc. of the physical machine.
-These are useful to discover high workloads, or if the machine is stressed because of heavy resource usage.
-Similarly, application level monitoring tools are used to report transactions or errors in the application.
-Monitoring outputs usually provide the first clue towards resolving an error in the debugging process.
-%While useful, these monitoring mechanisms  have a performance trade-off with the amount of instrumentation that can be done.
-%Furthermore, the information provided by these logs may not be enough to understand the root-cause of the error.
-
-However all monitoring/instrumentation techniques impose a performance overhead on the applications.
-This can adversely impact user-experience, hence real-world production instrumentation is generally kept at very low levels.
-\parikshan provides an alternative mechanism where this debugging/instrumentation can be done in parallel on a sandboxed cloned container.
-Any instrumentation or monitoring in the debug-container has no performance impact on the production container.
-In the context of our system, debuggers can use a variety of ad-hoc approaches to capture the root-cause of an error.
-For example a naive approach could be to use trial-and-error instrumentation to find the execution trace for the error.
-Alternatively, the user could also do aggressive brute force instrumentation for all function execution, which could help locate the problem.
-However, both these approaches can have potentially high overheads, which in turn can lead to a buffer overflow.
-
-In this chapter we introduce a statistical sampling approach which imposes a bounded performance overhead, to ensure maximal live debugging information, without causing a buffer overflow.
-%In our search for more systematic approach towards live debugging, we looked towards two possible techniques.
-%Firstly, we try to implement an automated budget limited instrumentation approach for capturing application logs.
-We are inspired by previous work done in statistical debugging~\cite{cbi}, and delta debugging~\cite{delta} techniques which aim to streamline and automate the process of bug localization.
-This is achieved by having predicate profiles from both successful and failing runs of a program and applying statistical techniques to pinpoint the cause of the failure.
-The core advantage of statistical debugging is that the sampling frequency of the instrumentation can be decreased to reduce the instrumentation overhead.
-
-One of the key criteria for successful statistical debugging is to have higher instrumentation rates, to make the results more statistically significant. 
-There is a clear trade-off between instrumentation vs performance overhead for statistical instrumentation. 
-A key advantage of using this with \parikshan is that we can provide live feedback based buffer size and bounded overheads, hence squeezing the maximum advantage out of statistical debugging without impacting the overhead. 
-We evaluate the slack available in each request for instrumentation without risking a buffer overflow and getting out of sync of the production container.
-Live interactive debugging provided by \parikshan further allows for quick updates to the instrumentation and targeting specific areas of the application code.
-\fi
 
 \section{Live Debugging using Parikshan}
 \label{sec:guidedDiscussion}
@@ -479,17 +428,19 @@ They can together contribute towards debugging the error
 \subsection{Simulation}
 \label{sec:queueEval}
 
+This section is a \textbf{place-holder} and will be extended in a later iteration of the thesis
+
 In this section we present our evaluation strategy for simulating various workloads to model the hitting time and find how much resources to be allotted/instrumentation can be done for a given workload. 
 Our goal of these experiments is to provide the user with an upper-bound for instrumentation in terms of percentage of the average transaction time, based on a given buffer size, and expected time-window needed for debugging.
 
-In our experiments, we plot the time-window observed based on the hitting time explained in the equation ~\ref{eq:hitting}. 
-For a given buffer size, we run multiple iterations of instrumentation until we hit the pre-defined time limit. 
-In this case we assume that the time-taken to capture a trace good enough for debugging the problem, is 10 mins. 
-Please note, this is not the total debugging time, but rather just a trace instance large enough to capture the systems and root-cause.
-The time window will depend on the use-case, and is a user-specified argument.
+%In our experiments, we plot the time-window observed based on the hitting time explained in the equation. 
+%For a given buffer size, we run multiple iterations of instrumentation until we hit the pre-defined time limit. 
+%In this case we assume that the time-taken to capture a trace good enough for debugging the problem, is 10 mins. 
+%Please note, this is not the total debugging time, but rather just a trace instance large enough to capture the systems and root-cause.
+%The time window will depend on the use-case, and is a user-specified argument.
 
 
-\iffalse
+\begin{comment}
 The utilization factor for an M/M/1/K queue can be formulated as follows:
 
 \begin{equation}
@@ -531,7 +482,7 @@ E[] = relationship\ with\ request\ overhead
 
 Next we extend this to our asynchronous load-balanced model, the requests can be forwarded in multiple debug containers.
 This can reduce the waiting time further, for the asynchronous model the equations can be extended as follows\\ \\
-\fi
+\end{comment}
 
 
 \subsection{Reactive: Adaptive Instrumentation}
@@ -591,7 +542,7 @@ Each predicate is given a total score based on the following parameters:
 \end{itemize}
 
 
-\iffalse
+\begin{comment}
 \subsection{Feasibility}
 \label{sec:queue_feasability}
 \xxx{Re-label and figure out what to write here}
@@ -610,7 +561,7 @@ While the simulation gives us fine grained control in our observations, our micr
 We are currently in the process of making an adaptive sampling instrumentation mechanism. 
 For this we plan to use tools like \iprobe, systemtap~\cite{systemtap} and dyninst~\cite{dyninst}. These have been previously used in several large-scale instrumentation projects and demonstrated to be effective with low overheads. We will also derive inspiration for our model from previous statistical debugging approaches~\cite{statisticalPerformance}. These have been demonstrated to be effective in resolving several real-world bugs. This will be explored as part of the thesis.
 
-\fi
+\end{comment}
 
 \begin{figure}[ht]
 	\centering
@@ -620,52 +571,11 @@ For this we plan to use tools like \iprobe, systemtap~\cite{systemtap} and dynin
 	\caption{Debugging strategies for offline debugging}
 \end{figure}
 
-\section{Active Debugging}
-\label{sec:guided-approach}
 
-In Figure~\ref{fig:offline-debugging}, we show the traditional mechanism of testing or validating patch/fixes in an application. 
-In offline environments, developers apply patches and run the relevant inputs to verify that the patch works correctly. 
-This is an interactive process, which allows one to verify the result and corrections before applying it to the production system.
-Several cycles of this process is required, which may be followed by staged testing to ensure correctness before applying the update to the production.
-
-
-\emph{Active Debugging} (see figure~\ref{fig:active-debugging}) allows debuggers to apply fixes, modify binaries and apply hotpatches to applications. 
-The main idea is to do a fork/exec, or parallel execution of an unmodified application.
-The unmodified binary continues execution without any change in the input.
-The debug-container should ideally mimic the behavior of the production, so as to allow for forward progress in the application as the debug-container will receive the same input as production.
-The target process will be forked at the call of the testing function, the forked process can then be tested, the input can be transformed, or alternatively the same input can be used to validate any test-condition. 
-At the end of the execution the test-process output can be checked and killed. 
-The advantage of this technique is that any tests/fixes can be validated in the run-time environment itself.
-This reduces the time to fix and resolve the error. 
-The tests and fixes should have a local impact and should not be allowed to continue 
-
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=0.75\textwidth]{guided/figs/active-debugging.png}
-	\caption{Active Debugging}
-	\label{fig:active-debugging}
-	\caption{Debugging Strategies for Active Debugging}
-\end{figure}
-
-For Java programs, since there is no “fork”, we can utilize a JNI call to a simple native C program which executes the fork. 
-Performing a fork creates a copy-on-write version of the original process, so that the process running the unit test has its own writable memory area and cannot affect the in-process memory of the original. 
-Once the test is invoked, the application can continue its normal execution, while the unit test runs in the other process. 
-Note that the application and the unit test run in parallel in two processes; the test does not block normal operation of the application after the fork is performed.
-
-The fork-exec design of test-isolation ensures that the ``in-process'' memory of the process execution is effectively isolated. 
-The production/debug containers are completely isolated hence the test does not impact the production in any way. 
-To ensure further isolation, we can allow the test fork to only call wrapper libraries which allow write operations in a cloned cow filesystem.
-This can be done using a COW supported file-system with cloning functionality which are supported in ZFS and BTRFS.
-For instance BTRFS provides a clone operation that atomically creates a copy-on-write snapshot of a file. By cloning the file system does not create a new link pointing to an existing inode; instead it creates a new inode that initially shares the same disk blocks with the original file. As a result cloning works only within the boundaries of the same BTRFS file system, and modifications to any of the cloned files are not visible to the original file and vice versa. 
-This will of-course mean that we will constrain the debug/production environment to the File System of our choice.
-All test-cases in the debug-container share the test file system.
-
-\iffalse
 \section{Summary}
 \label{sec:activeSummary}
 
-\xxx{Finish Summary Section}
-In this chapter we presented se
-
-\fi
+In this section we have discussed how \parikshan can be applied in real-world bugs and how a developer can actually do debugging of production systems. 
+To explain the process better we first categorized the debugging scenarios into two distinct categories: \emph{post-facto}, and \emph{proactive} debugging.
+We have then described several existing debugging tools which can be applied in \parikshan's debug-container to make debugging more efficient and effective.
+Lastly, we introduced a budget limited adaptive debugging technique which can be used to model ``allowed" instrumentation overhead for continuous debugging in the \debugcontainer.
