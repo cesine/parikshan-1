@@ -9,16 +9,12 @@ environment and workload, so that developers can reproduce and identify the caus
 
 Existing state-of-art techniques for monitoring production systems rely on execution trace information. 
 These traces can be replayed in a developer's environment, allowing them to use dynamic instrumentation and debugging tools to understand the fault that occurred in production.
-On one extreme, these monitoring systems may capture only very minimal, high
-level information, for instance, collecting existing log information and
-building a model of the system and its irregularities from it~\cite{magpie,fay,failuresketching,problemsolvingSysTap}. \xxx{get more cites here too}
-While these systems impose almost no overhead on the production system being
-debugged (since they simply collect log information already being collected, or
-have light-weight monitoring), they are limited in their fault finding and reproduction power, hence limited in their utility to developers.
+On one extreme, these monitoring systems may capture only very minimal, high level information, for instance, collecting existing log information and building a model of the system and its irregularities from it~\cite{magpie,fay,failuresketching,problemsolvingSysTap}. \xxx{get more cites here too}
+While these systems impose almost no overhead on the production system being debugged (since they simply collect log information already being collected, or have light-weight monitoring), they are limited in their fault finding and reproduction power, hence limited in their utility to developers.
 On the other extreme, some monitoring systems capture complete execution traces, allowing the entire application execution to be exactly reproduced in a debugging environment \cite{odr,revirt,laadan2010transparent,geels2007friday}.
 Despite much work towards minimizing the amount of such trace data captured, overheads imposed by such tracing can still be unacceptable for production use: in most cases, the overhead of tracing is at least 10\%, and it can balloon up to 2-10x overhead. \cite{pinplay,drdebug}.
 
-We seek to allow developers to diagnose and resolve crashing and non-crashing failures of production service-oriented systems \emph{without suffering any performance overhead}.
+We seek to allow developers to diagnose and resolve crashing and non-crashing failures of production service-oriented systems \emph{without suffering any performance overhead due to instrumentation}.
 Our key insight is that for most service-oriented systems, a failure can be reproduced simply by replaying the network inputs passed to the application.
 For these failures, capturing very low-level sources of non-determinism (e.g. thread scheduling or general system calls, often with very high overhead) is unnecessary to successfully and automatically reproduce the buggy execution in a development environment.
 We evaluated this insight by studying 16 real-world bugs (see Section~\ref{sec:parikshanCasestudy}), which we were able to trigger by only duplicating and replaying network packets.
@@ -27,7 +23,7 @@ This suggests that our approach would be applicable to the bugs in our survey as
 %TODO - look into PRES to see if we can prove that capturing all sources of non-determinism is not important
 
 
-Guided by this insight, we have created \parikshan, which allows for real-time, online debugging of production services \textbf{\emph{without imposing any performance penalty}}.
+Guided by this insight, we have created \parikshan, which allows for real-time, online debugging of production services \textbf{\emph{without imposing any instrumentation performance penalty}}.
 At a high level, \parikshan leverages live cloning technology to create a sandboxed replica environment.
 This replica is kept isolated from the real world so that developers can modify the running system in the sandbox to support their debugging efforts without fear of impacting the production system.
 Once the replica is executing, \parikshan replicates all network inputs flowing to the production system, buffering and feeding them (without blocking the production system) to the debug system.
@@ -46,7 +42,7 @@ We present a more detailed explanation of these categories in Section~\ref{sec:p
 %We assume our target system has been deployed based on micro-service architecture~\cite{microservice-book,microservices}, which advocates running each service in isolation.
 We leverage container virtualization technology (e.g., Docker~\cite{docker}, OpenVZ~\cite{openvz}), which can be used to pre-package services so as to make deployment of complex multi-tier systems easier (i.e. DockerHub~\cite{dockerhub,dockerhub_article} provides pre-packaged containers for storage, webserver, database services etc.).
 Container based virtualization is now increasingly being used in practice~\cite{containerCloud}.
-In contrast to VM's containers run natively on the physical host (i.e. there is no hypervisor layer in between), this means that there is no additional overhead, and near-native performance for containers~\cite{performanceComparisonlxcVM,performanceEvalContainers}.
+In contrast to VM's, containers run natively on the physical host (i.e. there is no hypervisor layer in between), this means that there is no additional overhead, and near-native performance for containers~\cite{performanceComparisonlxcVM,performanceEvalContainers}.
 While \parikshan could also be deployed using VM's, container virtualization is much more light weight in terms of resource usage.
 
 %Essentially, micro-service architecture allows us to launch debug containers which targets one service at a time. 
@@ -60,8 +56,7 @@ While \parikshan could also be deployed using VM's, container virtualization is 
 \noindent
 The key benefits of our system are:
 \begin{itemize}[leftmargin=*,topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
-\item \textbf{Zero Overhead Monitoring:} While existing approaches have focused on minimizing the recording overhead. 
-\parikshan uses novel non-blocking network duplication to avoid any overhead at all in the production environment.	
+\item \textbf{No Instrumentation Overhead on Production System:} While existing approaches have focused on minimizing the recording overhead. \parikshan uses novel non-blocking network duplication to avoid any overhead at all in the production environment due to the instrumentation itself.	\footnote{There may be a negligible run-time overhead because asynchronous memory copy operation in network forwarding.}
 \item \textbf{Sandbox debugging:} \parikshan provides a cloned sandbox environment to debug the production application.
 This allows a safe mechanism to diagnose the error, without impacting the functionality of the application.
 \item \textbf{Capture large-scale context:} Allows capturing the context of large scale production systems, with long running applications. Under normal circumstances capturing such states is extremely difficult as they need a long running test input and large test-clusters.

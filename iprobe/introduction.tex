@@ -1,28 +1,25 @@
 \section{Introduction}
 \label{sec:intro}
 
-Our initial investigation towards low-overhead on-the-fly debugging involved investigating instrumentation strategies which would allow us to dynamically instrument the application, with the least possible overhead.
-Intuitively the least possible overhead of any instrumentation in an application is possible when it was already a part of the source-code, and not added as an after-thought when required for instrumentation.
-However, source-code level instrumentation is "always on" and has an overhead all the time on the application.
-Hence, our goal was to have a production system tracing tool should have zero-overhead when it is not activated and should have the least possible overhead when it is activated (we believe source code level instrumentation would have the least overhead as it would not have any overhead inserted by the tool itself). 
-%In other words, its performance should not adversely effect the usage of the traced application. 
-At the same time, it should be flexible enough so as to meet versatile instrumentation needs at run-time for management tasks such as trouble-shooting or performance analysis.
 
 Over the years researchers have proposed many tools to assist in application performance analytics \cite{pin,gdb,dtrace,systemtap,lttng,utrace,ptrace,dyninst}.
 While these techniques provide flexibility, and deep granularity in instrumenting applications, they often trade in considerable complexity in system design, implementation and overhead to profile the application. 
 For example, binary instrumentation tools like Intel's PIN Instrumentation tool \cite{pin}, DynInst \cite{dyninst} and GNU debugger \cite{gdb} allow complete blackbox analysis and instrumentation but incur a heavy overhead, which is unacceptable in production systems. 
 Inherently, these tools have been developed for the development environment, hence are not meant for a production system tracer.
-
 Production system tracers such as DTrace\cite{dtrace} and SystemTap\cite{systemtap} allow for low overhead kernel function tracing.
 These tools are optimized for inserting hooks in kernel function/system calls, and can monitor run-time application behavior over long time periods. 
 However, they have limited instrumentation capabilities for user-space instrumentation, and incur a high overhead due to frequent kernel context-switches and complex trampoline mechanisms.
-% compared to user level solutions (we compare overheads of iProbe in later sections).
 
 Software developers often utilize program print statements, write their own loggers, or use tools like log4j~\cite{log4j} or log4c~\cite{log4c} to track the execution of their applications.
-Those manually instrumented probe points can easily be deployed without additional libraries or kernel support, and have a low overhead to run 
-without impacting the application performance noticeably. 
+Those manually instrumented probe points can easily be deployed without additional libraries or kernel support, and have a low overhead to run without impacting the application performance noticeably. 
 However, they are inflexible and can only be turned on/off at compile-time or before starting the execution. 
 Besides, usually only a small subset of functions is chosen to avoid larger overheads.
+
+Our initial investigation towards low-overhead on-the-fly debugging involved investigating instrumentation strategies which would allow us to dynamically instrument the application, with the least possible overhead.
+Intuitively the least possible overhead of any instrumentation in an application is possible when it was already a part of the source-code, and not added as an after-thought when required for instrumentation.
+However, source-code level instrumentation is "always on" and has an overhead all the time on the application.
+Hence, our goal was to have a production system tracing tool should have zero-overhead when it is not activated and should have the least possible overhead when it is activated (we believe source code level instrumentation would have the least overhead as it would not have any overhead inserted by the tool itself). 
+At the same time, it should be flexible enough so as to meet versatile instrumentation needs at run-time for management tasks such as trouble-shooting or performance analysis.
 
 In this chapter, we introduce a dynamic instrumentation framework called \emph{iProbe}.
 iProbe has instrumentation overheads comparable to print/debug statements, while still giving users the flexibility to choose targets in the execution stage. 
@@ -69,13 +66,13 @@ We use a hybrid 2-step mechanism which offloads dynamic instrumentation complexi
 The following are the 2 stages of iProbe:
 \begin{itemize}
 
-\item \textbf{ColdPatch: } We first prepare the target executable by introducing dummy instructions as ``place-holders'' for hooks during the development stage of the application. 
+\item \textbf{ColdPatch:} We first prepare the target executable by introducing dummy instructions as ``place-holders'' for hooks during the development stage of the application. 
 This can be done in 3 different ways: Primarily, we can leverage compiler based instrumentation to introduce our ``place-holders''. 
 Secondly we can allow users to insert macros for calls to instrumentation functions which can be turned on and off at run-time. 
 Lastly we can use static binary rewriter to insert place-holders in the binary without any recompilation.  
 iProbe uses binary parsers to capture all place-holders in the development stage and generates a meta-data file with all possible probe points created in the binary.
 
-\item \textbf{HotPatch: } We then leverage these place-holders during the execution of the process to safely replace them with calls to our instrumentation functions during run-time. 
+\item \textbf{HotPatch:} We then leverage these place-holders during the execution of the process to safely replace them with calls to our instrumentation functions during run-time. 
 iProbe uses existing tools, ptrace \cite{ptrace}, to modify the code segment of a running process, and does safety check to ensure correctness of the executing process. 
 Using this approach in a systematic manner we reduce the overhead of iProbe while at the same time maintaining a relatively simple design. 
 
@@ -145,8 +142,7 @@ MySQL bug\#15811 presented in section~\ref{sec:mySQL15811} is an example of a bu
 %\end{itemize}
 
 The rest of the chapter is organized as following. 
-%Section \ref{sec:intro} introduces the motivation and key contributions behind iProbe. 
-Section \ref{sec:design} discusses the design of iProbe framework, explaining our ColdPatching, and HotPatching techniques;
+Section \ref{sec:iprobeDesign} discusses the design of iProbe framework, explaining our ColdPatching, and HotPatching techniques;
 we also discuss how safety checks are enforced by iProbe to ensure correctness, and some extended options in iProbe for further flexibility.
 Section \ref{sec:trampoline} compares traditional trampoline based approaches with our hybrid approach and discusses why we perform, and scale better.
 Section \ref{sec:Implementation} explains the implementation of iProbe, 

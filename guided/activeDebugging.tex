@@ -40,9 +40,9 @@ The following are some key advantages of \parikshan that can be leveraged for de
 	
 	Normal debugging mechanisms such as triggering a breakpoints or patching in a new exception/assertion to figure out if a particular ``condition" in the application system state is breaking the code, cannot be done in a production code as it could lead to a critical system crash. On the other hand, \parikshan's debug containers are ideal for this scenario as they will allow developers to put in a patches without any fear of system failure.
 	
-	\item \textbf{Zero Overhead Monitoring}:The most novel aspect of \parikshan is that it allows for zero overhead monitoring of the production system. This means that high-overhead debugging techniques can be applied on the debug-container without incurring a slow-down in production.
+	\item \textbf{Zero Overhead Instrumentation impact on production system}:The most novel aspect of \parikshan is that it allows for zero overhead impact of instrumentation on the production system. This means that high-overhead debugging techniques can be applied on the debug-container without incurring a slow-down in production.
 	
-	Debugging techniques like record-replay tools which have traditionally high recording overheads can generally not be applied in production systems. However, \parikshan can be used to decouple the recording overhead from production, and can allow for relatively higher overhead recording with more granularity.
+	Debugging techniques like record-replay tools which have traditionally high recording overheads can generally not be applied in production systems. However, \parikshan can be used to decouple the recording overhead from production, and can allow for relatively higher overhead recording with more granularity.\footnote{There is potentially a small overhead because of network forwarding in the duplication proxy}
 	
 	\item \textbf{Capturing production system state}:
 	One of the key factors behind capturing the root-cause of any bug is to capture the system state in which it was triggered. \parikshan has a live-cloning facility that clones the system state and creates a replica of the production. Assuming that the bug was triggered in the production, the replica captures the same state as the production container.
@@ -178,6 +178,10 @@ Depending on how much granularity the tracing is done at the overhead may be una
 Execution tracing can be de-coupled from original execution and put in \debugcontainer for higher granularity instrumentation. 
 Such techniques which decouple execution and analysis also been previously explored in papers like Aftersight~\cite{aftersight} and DoublePlay~\cite{doubleplay}.
 \parikshan provides a systematic framework for decoupling without enforcing strong constraints on the user.
+
+\subsubsection{Debugging Scenario}
+
+We now look into MySQL bug\#15811, this bug can be 
 
 \subsection{Statistical Debugging}
 \label{sec:activeStatisticalDebugging}

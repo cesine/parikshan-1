@@ -239,12 +239,58 @@ Section~\ref{sec:parikshanTimewindowPerformance} explains in detail the behavior
 \subsection{Divergence Checking}
 \label{sec:parikshanDivergenceChecking}
 
-In \parikshan it is possible that non-deterministic behavior (discussed in Section~\ref{sec:parikshanThreatsNonDeterminism}) in the two containers or user instrumentation, causes the production and debug container to diverge with time.
-To understand and capture this divergence, we compare the corresponding network output received in the proxy.
-This is an optional component, which gives us a black-box mechanism to check the fidelity of the replica based on its communication with external components.
-In our current prototype, we use a hash on each data packet, which is collected and stored in memory for the duration that each packet's connection is active.
-The degree of acceptable divergence is dependent on the application behavior, and the operator's wishes. 
-For example, an application that includes timestamps in each of its messages (i.e. is expected to have some non-determinism) could perhaps be expected to have a much higher degree of acceptable divergence than an application that should normally be returning deterministic results.
+\begin{itemize}
+	\item \textbf{Can production and debug container diverge?}
+	
+	Database operations, web-servers, application-servers for most typical scenarios generate the same output as long as the state of the machine and the input request is the same. 
+	Since the production and debug containers both start from the same state, and have received the same inputs, they should continue to keep giving the same output.
+	
+	However, it is possible for the two containers to diverge largely because of the following reasons:
+	\begin{itemize}
+		\item \emph{A non-deterministic bug} in the deployed application can cause different execution schedules in the production and debug-container resulting in divergent outputs. 
+		If parallelism is properly handled output should still be deterministic regardless of the execution orders.
+		However, in case of a concurrency bug, it is possible that the error is triggered in one of the containers and not the other.
+		\item Another possible source of divergence is internal non-determinism due to timing, or random number generators. 
+		For instance internal system timestamps or random generated id's could be included in the output values from an SOA application. However for most applications, we believe that the semantically relevant output would not be relevant on internal non-deterministic outputs.
+		\item User instrumentation itself in the debug-container can cause divergence, by either changing the state or execution ordering etc. We recommend \parikshan users to use instrumentation for monitoring purposes alone, and have largely non-invasive instrumentation, which would not lead to a state change.
+		Most debugging techniques only try and understand the execution and logic flow by observing/monitoring rather than changing state.
+	\end{itemize}
+	
+	\item \textbf{Can we measure and monitor divergence?}
+	
+	To understand and capture this divergence, we offer an \emph{optional feature} in \parikshan to capture and compare the network output  of the production-container with the debug-container received in the proxy.
+	Instead of discarding the network output from the debug container, we asynchronously take the hash of the output, and compare it to the production containers corresponding output.
+	This gives us a black-box mechanism to check the fidelity of the replica based on its communication with external components.
+	
+	Divergence checking, can be customized for each application, and different fields of the output can potentially be discarded for comparing the output.
+	Essentially, the degree of acceptable divergence is dependent on the application behavior, and the operator's wishes. 
+	For example, an application that includes timestamps in each of its messages (i.e. is expected to have some non-determinism) could perhaps be expected to have a much higher degree of acceptable divergence than an application that should normally be returning deterministic results.
+	Developers can use domain knowledge to design a better divergence checker depending on what part of the output ``must be" the same.
+		
+	\item \textbf{How can we manage divergence, so as to continue faithful debugging?}
+	
+	Once the production and debug container have diverged, \parikshan's debug replica can be re-synced with the production container to get it back to the same state.
+	This process of re-syncing can be periodically repeated or triggered when divergence is discovered to make the debug-container faithfully represent the production execution.
+	We discuss re-synchronization in further detail in section~\ref{sec:periodicSynch}
+	
+\end{itemize}
+
+
+\subsection{Re-Synchronization}
+\label{sec:periodicSynch}
+
+As described in the last section it is possible for the production and debug containers to diverge. 
+To manage this divergence, and for the debug-container to faithfully represent the production application it is necessary to re-synchronize the production container with the debug-container.
+%TODO: Add cites for re-synchronization by looking for bcrw/Aftersight can also be considered an earlier implementation of something similar
+Re-synchronization can be optimized by using a COW~\cite{cow} file system such as BTRFS~\cite{btrfs}, which can track deltas from the initial live clone snapshot. 
+This optimizes the re-synchronization process, as the only parts of the system snapshot that need to be checked are the deltas from the last snapshot (we assume the snapshot is a synch point when the production and debug-containers were live cloned).
+
+This process of re-synchronization can be triggered:
+\begin{itemize}
+	\item Periodically: Periodically check for divergence of the deltas, for the debug-container to have a high fidelity representation of the production-container
+	\item Divergent Output: Generally we care about output determinism, and as long as the output of the two containers do not diverge (see section ~\ref{sec:parikshanDivergenceChecking}), there is no need for re-synchronization.
+	\item Buffer Overflow: To avoid having any overhead for checking divergence in the system output, we can optionally trigger re-synchronization on buffer overflows.
+\end{itemize}
 
 
 

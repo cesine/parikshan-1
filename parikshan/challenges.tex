@@ -40,3 +40,36 @@ For example, storage services supporting a replica need to be cloned or turned o
 Similarly, services such as NTP service can be allowed to continue without any cloning as they are broadcast based systems and the debug container cannot impact it in anyway.
 Furthermore, instrumentation inserted in the replica, will not necessarily slowdown all services.
 For instance, instrumentation in a MySQL query handler will not slowdown file-sharing or NTP services running in the same container.
+
+\subsection{Overhead in Parikshan}
+\label{sec:parikshanOverhead}
+
+The key motivation of \parikshan is to remove all potential overheads such that instrumentation in the debug-container does not impact performance of the production application.
+We wish to clarify certain aspects which may lead to questions regarding overheads in the mind of the reader:
+\begin{itemize}
+	\item \textbf{Container virtualization:} Based on recent studies, user-space container virtualization give near native performance~\cite{performanceComparisonlxcVM,performanceEvalContainers}. 
+	User-space containers essentially leverage process level isolation and do not have a full just-in-time virtualization stack.
+	Since several existing SOA applications are deployed in virtualized cloud environments (including full virtualization), we believe that there is no additional overhead from \parikshan as far as container virtualization is concerned
+	
+	\item \textbf{Network Forwarding:} 
+	Another potential source of overhead is network forwarding due to in-memory copy of the data packets being forwarded to the debug-container. 
+	%TODO: Need to add experimental results
+	We believe that this overhead is minimal, and our evaluation in section~\ref{sec:xxx} compares network overhead in comparison to native execution, and that with proxy.
+	
+	\item \textbf{Live Cloning:}
+	The reader may also be concerned with overhead due to live cloning.
+	Live cloning involves a small time during which the machine must be suspended, this can impact the latency of requests.
+	Firstly, it is important to point out that live cloning is a single-time process (or periodic), and does not impact the general processing of requests in a SOA application.   
+	The amortized cost of this momentary suspend process process on a live running production application is generally considered acceptable (consider that live migration is used in production systems all the time)
+	
+	The current implementation for live cloning shown in this paper is derived from early work in live migration in container virtualization. 
+	We designed this mostly for the \emph{purposes of demonstrating a viable prototype} where live cloning is possible.
+	While live migration is a relatively well researched topic in full virtualized systems, it is relatively new in container virtualization.
+	Furthermore, it usually requires network file system support to to allow for fast cloning with short suspension times.
+	Using more optimal conditions well known live-migration methodologies can be suspend time as low as 
+	\xxx{cite here how low the suspend time can be}
+	%TODO: cite here how low the suspend time can be
+	
+
+\end{itemize}
+

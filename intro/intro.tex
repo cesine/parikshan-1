@@ -1,26 +1,52 @@
 \chapter{Introduction}
 \label{section:intro}
 
+%Motivation: What is the problem we are trying to solve? Why does it exist? Why is it important to the community?
 Although software bugs are nothing new, the complexities of virtualized environments coupled with large distributed systems have made bug localization harder.
 The large size of distributed systems means that any downtime has significant financial penalties for all parties involved.
 Hence, it is increasingly important to localize and fix bugs in a very short period of time.
 
+%What is the specific problem considered in this paper? This paragraph narrows down the topic area of the paper. In the first paragraph you have established general context and importance. Here you establish specific context and background.
+
+%In this paper, we show that ...". This is the key paragraph in the intro - you summarize, in one paragraph, what are the main contributions of your paper given the context you have established in paragraphs 1 and 2. What is the general approach taken? Why are the specific results significant? This paragraph must be really really good. If you can't "sell" your work at a high level in a paragraph in the intro, then you are in trouble. As a reader or reviewer, this is the paragraph that I always look for, and read very carefully.
+%You should think about how to structure this one or two paragraph summary of what your paper is all about. If there are two or three main results, then you might consider itemizing them with bullets or in test (e.g., "First, ..."). If the results fall broadly into two categories, you can bring out that distinction here. For example, "Our results are both theoretical and applied in nature. (two sentences follow, one each on theory and application)"
+
+%At a high level what are the differences in what you are doing, and what others have done? Keep this at a high level, you can refer to a future section where specific details and differences will be given. But it is important for the reader to know at a high level, what is new about this work compared to other work in the area.
+
+%The remainder of this paper is structured as follows..." Give the reader a roadmap for the rest of the paper. Avoid redundant phrasing, "In Section 2, In section 3, ... In Section 4, ... " etc.
+
+
+
+%Why do existing techniques not solve this problem
 Existing state-of-art techniques for monitoring production systems~\cite{dtrace,winetw,systemtap} rely on light-weight dynamic instrumentation to capture execution traces.
-Operators then feed these traces to analytic tools~\cite{magpie,clue} to find the root-cause of the error.
+Operators then feed these traces to analytic tools~\cite{magpie,clue} to connect logs in these traces and find the root-cause of the error.
 However, dynamic instrumentation has a trade-off between granularity of tracing and the performance overhead.
 Operators keep instrumentation granularity low, to avoid higher overheads in the production environment.
 This often leads to multiple iterations between the debugger and the operator, to increase instrumentation in specific modules, in order to diagnose the root-cause of the bug.
-
 Another body of work has looked into record-and-replay~\cite{odr,revirt,laadan2010transparent,geels2007friday} systems which capture the log of the system, in order to faithfully replay the trace in an offline environment.
 Replay systems try and capture system level information, user-input, as well as all possible sources of non-determinism, to allow for in-depth \textit{post-facto} analysis of the error.
 However, owing to the amount of instrumentation required, record-and-replay tools deal with an even heavier overhead, making them impractical for real-world production systems.
 
-This thesis is centered around the idea of a new debugging paradigm called \emph{``live debugging''}, whereby developers can do in-situ debugging without impacting the performance of the application.
-The key idea behind this approach is to give faster time-to-bug localization, deeper insight into the health and activity within the system, and to allow operators to dynamically debug applications without fear of changing application behavior.
-We leverage existing work in live migration and light-weight user-space container virtualization, to provide an end-to-end workflow for real-time debugging.
 
-Our work is inspired by three key observations in modern service oriented applications.
-Firstly, we observe that most service oriented applications(SOA) are launched on cloud based infrastructures.
+%Our approach and story - iprobe first then parikshan
+The high level goal of this thesis is to present tools and techniques which can help to reduce the time to bug localization, and can be applied in live running production service systems. 
+Our initial efforts focused on having the minimum possible instrumentation in the production system, which could at the same time be dynamically turned on or off. 
+We developed \iprobe (see chapter~\ref{ch:iprobe}) an intelligent instrumentation tool, which combined the advantages of static instrumentation and dynamic instrumentation to give an order of magnitude better performance in terms of overhead compared to existing state-of-art tools~\cite{dtrace,systemtap,dyninst,pin}.
+\iprobe uses placeholders added in the application binary at compile time, which can be leveraged to insert instrumentation when the application is actually running.
+In comparison, most current tools use trampoline based techniques (see DTrace~\cite{dtrace}, SystemTap~\cite{systemtap}, Dyninst~\cite{dyninst}), or just in time execution (PIN~\cite{pin}, Valgrind~\cite{valgrind}), requiring complex operations to allow for safe execution and incurs a much higher overhead.
+Our compilation driven place-holders allow us to leverage pre-existing space in the binary to safely insert instrumentation and achieve a much better performance.
+
+However, in the process of our experiments we realized one critical limitation of instrumentation based techniques - instrumentation and monitoring is always done within the code, and hence is sequentially executed. 
+Since instrumentation will always directly impact the performance of production applications, it needs to be limited to allow for good user experience.
+A better way to approach this problem is to ~\emph{decouple debugging instrumentation and application performance}, so that there is no direct impact of the instrumentation on the production application.
+This thesis is centered around the idea of a new debugging paradigm called \emph{``live debugging''}, whereby developers can debug/instrument the application while isolating the impact of this instrumentation from the user-facing production application.
+The key idea behind this approach is to give faster time-to-bug localization, deeper insight into the health and activity within the system, and to allow operators to dynamically debug applications without fear of changing application behavior.
+We leverage existing work in live migration and light-weight user-space container virtualization, to provide an end-to-end workflow for debugging.
+Our system replicates the application container into a clone which can be used solely for the purpose of debugging the application.
+
+%observations which led to the design of \parikshan
+Our work is inspired by three key observation: 
+Firstly, we observe that most service-oriented applications(SOA) are launched on cloud based infrastructures.
 These applications use virtualization to share physical resources, maintained by third-party vendors like Amazon EC2~\cite{ec2}, or Google compute~\cite{gcompute} platforms.
 Furthermore, there is an increasing trend towards light-weight user-space container virtualization, which is less resource hungry, and makes sharing physical resources easier.
 Frameworks like docker~\cite{docker} allow for scaled out application deployment, by allowing each application service instance to be launched in it's own container.
@@ -37,20 +63,21 @@ We have evaluated this insight by studying 16 real-world bugs, which we were abl
 Furthermore we categorized 217 bugs from three real-world applications, finding that most were similar in nature to the 16 that were reproduced, suggesting that our approach would be applicable to them as well.
 \xxx{Please look at section so and so for further details regarding the above}
 
+%contributions
 \noindent This thesis will make the following contributions:
 
 First, in Chapter~\ref{ch:parikshan} we will present a framework for ``live debugging'' applications while they are running in the production environment.
-This will involve a description of our system called \parikshan\footnote{\parikshan is the Sanskrit word for  testing}, which allows \textbf{real-time debugging} without any performance impact on the production service.
+This will involve a description of our system called \parikshan\footnote{\parikshan is the Sanskrit word for  testing}, which allows \textbf{real-time debugging} without any impact on the production service.
 We provide a facility to sandbox the production and debug environments so that any modifications in the debug environment do not impact user-facing operations.
 \parikshan avoids the need of large test-clusters, and can target specific sections of a large scale distributed application.
-In particular, \parikshan allows debuggers to apply debugging techniques with deeper granularity instrumentation, and profiling, without impacting application performance.
+In particular, \parikshan allows debuggers to apply debugging techniques with deeper granularity instrumentation, and profiling without worrying that the instrumentation will impact the production application performance.
 
 In chapter~\ref{ch:NetworkReplaySurvey} we will present details of our case-study presenting real-world bugs which were triggered by network input alone, and which show why using \parikshan would be enough to capture most real-world bugs. 
 Each case study presents a different variety of bugs from the following classes: performance, semantic, non-deterministic, configuration and resource leak. 
 We believe that these bugs form the most common classification of bugs in service oriented applications.
 
 In chapter~\ref{ch:iprobe} we will present a dynamic instrumentation mechanism called \iprobe, which can assist developers in making applications \parikshan ready.
-Chronologically \iprobe was our first tool developed towards achieving the goal of a low-overhead production debugging.
+As explained earlier, chronologically \iprobe was our first tool developed towards achieving the goal of a low-overhead production debugging.
 iProbe uses a novel two-stage design, and offloads much of the dynamic instrumentation complexity to an offline compilation stage.
 It leverages standard compiler flags to introduce ``place-holders" for hooks in the program executable.
 Then it utilizes an efficient user-space ``HotPatching'' mechanism which modifies the functions to be traced and enables execution of instrumented code in a safe and secure manner.

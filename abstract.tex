@@ -28,7 +28,7 @@ Secondly, \livedebugging should not impact user-facing performance for non bug t
 In large distributed applications, bugs which impact only a small percentage of users are common. 
 In such scenarios, debugging a small part of the application should not impact the entire system.
 
-With the above stated goals in mind, we have designed a platform called \parikshan\footnote{\parikshan is the \toolNameLang word for  testing}, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of \livedebugging. 
+With the above stated goals in mind, we have designed a framework called \parikshan\footnote{\parikshan is the \toolNameLang word for  testing}, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of \livedebugging. 
 \parikshan is driven by a  live-cloning process, which generates a replica (\debugcontainer) of production services for debugging or testing, cloned from a \productioncontainer which provides the real output to the user.
 The \debugcontainer provides a sandbox environment, for safe execution of test-cases/debugging done by the users without any perturbation to the execution environment.
 As a part of this framework, we have designed customized-network proxy agents, which replicate inputs from clients to both the production and test-container, as well safely discard all outputs from the test-container.
