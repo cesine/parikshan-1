@@ -1,6 +1,11 @@
 \section{Introduction}
-\label{sec:intro}
+\label{sec:iProbeIntro}
 
+As explained in section~\ref{sec:intro}, our initial investigation towards low-overhead on-the-fly debugging involved investigating instrumentation strategies which would allow us to dynamically instrument the application, with the least possible overhead.
+Intuitively the least possible overhead of any instrumentation in an application is possible when it was already a part of the source-code, and not added as an after-thought when required for instrumentation.
+However, source-code level instrumentation is "always on" and has an overhead all the time on the application.
+Hence, our goal was to have a production system tracing tool should have zero-overhead when it is not activated and should have the least possible overhead when it is activated (we believe source code level instrumentation would have the least overhead as it would not have any overhead inserted by the tool itself). 
+At the same time, it should be flexible enough so as to meet versatile instrumentation needs at run-time for management tasks such as trouble-shooting or performance analysis.
 
 Over the years researchers have proposed many tools to assist in application performance analytics \cite{pin,gdb,dtrace,systemtap,lttng,utrace,ptrace,dyninst}.
 While these techniques provide flexibility, and deep granularity in instrumenting applications, they often trade in considerable complexity in system design, implementation and overhead to profile the application. 
@@ -14,12 +19,6 @@ Software developers often utilize program print statements, write their own logg
 Those manually instrumented probe points can easily be deployed without additional libraries or kernel support, and have a low overhead to run without impacting the application performance noticeably. 
 However, they are inflexible and can only be turned on/off at compile-time or before starting the execution. 
 Besides, usually only a small subset of functions is chosen to avoid larger overheads.
-
-Our initial investigation towards low-overhead on-the-fly debugging involved investigating instrumentation strategies which would allow us to dynamically instrument the application, with the least possible overhead.
-Intuitively the least possible overhead of any instrumentation in an application is possible when it was already a part of the source-code, and not added as an after-thought when required for instrumentation.
-However, source-code level instrumentation is "always on" and has an overhead all the time on the application.
-Hence, our goal was to have a production system tracing tool should have zero-overhead when it is not activated and should have the least possible overhead when it is activated (we believe source code level instrumentation would have the least overhead as it would not have any overhead inserted by the tool itself). 
-At the same time, it should be flexible enough so as to meet versatile instrumentation needs at run-time for management tasks such as trouble-shooting or performance analysis.
 
 In this chapter, we introduce a dynamic instrumentation framework called \emph{iProbe}.
 iProbe has instrumentation overheads comparable to print/debug statements, while still giving users the flexibility to choose targets in the execution stage. 

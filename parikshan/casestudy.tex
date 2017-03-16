@@ -375,7 +375,7 @@ In this subsection we describe the Redis\#417 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
-It was reported that when two or more databases are replicated, and atleast one of them is >=db10. This is because the replication feed for the slaves creates static connection objects which are allocated and freed when replication is being done from db0-9. However, for database ID values greater than 10, the objects are dynamically created an never freed.
+It was reported that when two or more databases are replicated, and atleast one of them is \textgreater=db10. This is because the replication feed for the slaves creates static connection objects which are allocated and freed when replication is being done from db0-9. However, for database ID values greater than 10, the objects are dynamically created an never freed.
 This was leaving stale memory and leading to a memory leak in redis.
 Although the bug is visible in the verbose logs, it is difficult to pick out the root-cause of the bug.
 

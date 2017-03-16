@@ -90,7 +90,7 @@ At the same time there are some things that the administrator must be aware of
 	
 \end{itemize}
 
-\section{Debugging Scenarios}
+\section{Debugging Strategy Categorization}
 \label{sec:activeDebuggingScenarios}
 
 Based on our case-studies, and survey of commonly seen SOA bugs we classify the following scenarios for live debugging. 
@@ -179,9 +179,27 @@ Execution tracing can be de-coupled from original execution and put in \debugcon
 Such techniques which decouple execution and analysis also been previously explored in papers like Aftersight~\cite{aftersight} and DoublePlay~\cite{doubleplay}.
 \parikshan provides a systematic framework for decoupling without enforcing strong constraints on the user.
 
-\subsubsection{Debugging Scenario}
+\subsubsection{Debugging Scenario for execution tracing}
 
-We now look into MySQL bug\#15811, this bug can be 
+We now look into MySQL bug\#15811 (see also section~\ref{sec:parikshanCasestudy}), this is a performance bug which happens when dealing with complex scripts (Japanese, Chinese etc.). Let us look at how a debugger would go about finding the root cause of such a bug.
+Firstly, let us say that a high level report of a bug diagnosis reported by the user of a production deployed application, reports that a certain category of queries are having higher than expected transaction latencies.
+The user reports this as a potential bug and asks for it to be investigated.
+Based on the user report, a post-facto MySQL replica is created for debugging and analysis by the developer/debugger.
+The debugger then uses system tap to execution tracing which is optionally triggered whenever the input queries are found to be ``chinese". 
+This can be easily done in MySQL by setting trigger points when the language specification in the query is read inside MySQL query parser.
+
+Since the bug reported is a performance bug, the developer must first find out which module and specifically which function is the cause of the bug.
+To find the time taken in each function, function-level begin and exit instrumentation is added and the timestamp for each function is collected as log evidence.
+This detailed evidence allows the debugger to localize and find the root-cause of the error inside the \emph{``my\_strcasecmp()"} function in comparison to the time taken by the function for latin based queries.
+Once the performance bug, has been localized.
+The debug-container can then be dis-connected from the proxy (alternatively proxy input forwarding can be stopped).
+Now, some of the "read-only" queries which triggered this bug can be re-sent to the MySQL database, and a step-by-step execution can be followed inside this function using deeper instrumentation to further understand the code execution.
+
+In our experiments for localizing this bug, we found that function level instrumentation for profiling time-spent in each function can take from 1.5x to 1.8x overhead.
+This is clearly un-acceptable in production systems.
+However, the \parikshan framework allows for capturing such execution traces without impacting user-facing performance of the MySQL database.
+While such persistent bugs can be debugged offline, it may be argued that such bugs can also be debugged in an offline debugging environment.
+However, given no previous knowledge \parikshan gives a valuable ``first-attach'' mechanism to debug unknown problems.
 
 \subsection{Statistical Debugging}
 \label{sec:activeStatisticalDebugging}
@@ -230,6 +248,25 @@ Hence simply replaying an execution trace in the \debugcontainer, may not lead t
 However several existing record-and-replay techniques offer search capabilities to replay and search through all possible concurrent schedules which could have triggered a non-deterministic error.
 Hence we propose that the exact executing schedule which triggered a bug, and using the \debugcontainer for recording instead of the \productioncontainer is a viable alternative to traditional record-replay techniques.
 
+\subsubsection{Debugging Scenario for Staged Record-Replay}
+
+To show a use-case for staged record-replay we look at Redis bug\#761 (see also section~\ref{sec:parikshanCasestudy}). 
+As explained earlier this Redis bug is an integer overflow error.
+Let us look at how a debugger would go about finding the root cause of such a bug.
+Imagine that we are doing staged record-replay, whereby the debug container is getting duplicated network inputs, and ``recording" is happening
+in parallel by activating commodity record-replay tools.
+
+The bug happens over a period of time when a request happens for an addition/storage of a large integer, which leads to an integer overflow error.
+The execution trace of this bug will be captured in the "record" log of the debug container, and can be replayed offline for debugging purposes.
+Since the bug is a crashing bug, the execution can be replayed and a debugger can be attached to the execution in the replay mode.
+Ideally, the transaction which has caused the error, is the last network input. 
+This transaction can be executed step-by-step with roll-back to localize the error point.
+
+Under normal conditions, this recording would have caused an overhead on the production container. 
+\parikshan decouples it's staged recording and can proceed without any overhead to the production system.
+Recording overhead differs for different tools, and is often impractical for production software. 
+However, by decoupling recording instrumentation from the production container, we can record at high granularities all the time, and replay whenever a bug is observed.
+
 \subsection{A-B Testing}
 
 \begin{figure}[h!]
@@ -260,6 +297,25 @@ However this can be easily applied towards the \debugcontainer, where the execut
 While this does mean that the replica will not be able to service any more requests (except for those that have been buffered), the request which is inside the breakpoint will be processed.
 Generally breakpoint and step-by-step execution monitoring is used for a limited scope of execution within a single transaction.
 Once, finished future transactions can also be debugged after doing a re-sync by applying live cloning again.
+
+\subsubsection{Debugging Scenario for Interactive Debugging}
+
+As mentioned earlier, the downside of interactive debugging is that it puts significant overhead on the running program.
+This is because debuggers can do step-by-step execution on breakpoints, and can exactly map the execution of given training requests.
+Let us look at a memory leak example from Redis bug\#417. 
+The bug shows itself as an increasing memory footprint ( or a leak), which can be easily observed from any monitoring software by looking at the amount of memory being consumed by the Redis server.
+Once the bug is reported, the developer can trigger a live-clone in \parikshan and create a \debugcontainer.
+
+Since this bug is a slow-increasing memory leak it does not lead to an imminent crash (crash could take a few days). 
+Monitoring software and periodic memory or file process snapshots in the debug-container (use of lsof command, or vsz) can tell us that stale connections are left from the master to the slave.
+This indicates to the debugger that the problem is likely in replication logic of master.
+We then put a breakpoint in the replication source code at the point when a connection is created.
+This ``breakpoint'' will be triggered whenever a replication is triggered, and will allow the debugger to step-by-step execute the process.
+\parikshan debug-containers can manage significant overhead before they diverge from the production container. 
+However, once step-by-step execution is triggered it is ideally going to allow the debugger access to only those transactions currently in the proxy buffer (depending on the application, transactions and buffer-size it could range from one-to-many). 
+Regardless step-by-step execution, will give a detailed understanding to the user of the transaction that is being currently executed.
+This will allow the debugger to see that the connection was not closed at the end of the periodic replication process (which is causing the leak).
+The error was because of a condition which was skipping the ``connection close'' logic when db was configured \textgreater=10.
 
 \subsection{Fault Tolerance Testing}
 
@@ -353,7 +409,7 @@ The standard meanings associated with each of these letters are summarized below
 	\textbf{E} represents the Queueing Discipline that is followed. The typical ones are First Come First Served (FCFS), Last Come First Served (LCFS), Service in Random Order (SIRO) etc. If this is not given then the default queueing discipline of FCFS is assumed.
 \end{framed}
 
-\noindent The different possible distributions for \textbf{A} and \textbf{B} above are:
+The different possible distributions for \textbf{A} and \textbf{B} above are:
 
 \begin{framed}
 	\noindent \textbf{M} exponential distribution\\
