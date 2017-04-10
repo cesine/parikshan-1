@@ -98,12 +98,12 @@ We recreated 4 real-world production bugs from Redis~\cite{redis} queuing system
 
 \subsubsection{Redis \#761}
 
-In this subsection we describe the Redis\#761 semantic bug \\
+In this subsection we describe the Redis \#761 semantic bug \\
 
 \noindent \textbf{Cause of the error:}\\
 
 
-\noindent The Redis\#761 is an integer overflow error. 
+\noindent The Redis \#761 is an integer overflow error. 
 This error is triggered, when the client tries to insert and store a very large number. 
 This leads to an unmanaged exception, which crashes the production system. 
 Integer overflow, is a common error in several applications. 
@@ -131,11 +131,11 @@ We classify this as a semantic bug, which could have been fixed with an error ch
 
 \subsubsection{Redis \#487}
 
-In this subsection we describe the Redis\#487 semantic bug \\
+In this subsection we describe the Redis \#487 semantic bug \\
 
 \noindent \textbf{Cause of the error:} \\
-
-Redis\#487 resulted in expired keys still being retained in Redis, because of an unchecked edge condition.
+Redis \#487 is a bug reported by the user where expired keys were still being retained in Redis, despite them being deleted by the user.
+The error is a semantic bug because of an unchecked edge condition.
 While this error does not lead to any exception or any error report in application logs, it gives the user a wrong output.
 In the case of such logical errors, the application keeps processing, but the internal state can stay incorrect.
 The bug impacts only clients who set keys, and then expire them.\\
@@ -160,15 +160,15 @@ At the end it can be seen that the expired keys can be listed and accessed in bo
 
 \subsubsection{Cassandra \#5225}
 
-In this subsection we describe the Cassandra\#5225 semantic bug \\
+In this subsection we describe the Cassandra \#5225 semantic bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
-Missing columns when requesting specific columns from a wide row. 
-The data is still in the table, just it might not be returned to the user. 
+This error happens when a user requests columns from an extremely wide row.
+The output of the query, has missing columns when requesting specific columns. 
+The data is still in the table, just that it might not be returned to the user. 
 Taking closer look, Cassandra is reading from the wrong column index. 
-A problem was found with the index checking algorithm. 
-In fact, it was written in reverse.\\
+A problem was found with the index checking algorithm. In fact, it was written in reverse.\\
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -207,7 +207,7 @@ In fact, it was written in reverse.\\
 
 \subsubsection{Cassandra \#1837}
 
-In this subsection we describe the Cassandra\#1837 semantic bug \\
+In this subsection we describe the Cassandra \#1837 semantic bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -215,7 +215,7 @@ The main symptom of this error was that deleted columns become available again a
 With some domain knowledge, a developer found the error. 
 This happens because of a bug in the way deleted rows are interpreted once they leave the memtable. 
 In the CFS.getRangeSlice code, flush operation does not delete the data. 
-Thus querying for the data shows content as even after deletion.
+Thus querying for the data shows content even after deletion.
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -244,7 +244,7 @@ Hence, it is difficult to capture these bugs with traditional offline white-box 
 
 \subsubsection{MySQL \#26527}
 
-In this subsection we describe the MySQL\#26527 performance bug \\
+In this subsection we describe the MySQL \#26527 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -286,7 +286,7 @@ As high availability partitioner didn't allow these caches for underlaying table
 
 \subsubsection{MySQL \#49491}
 
-In this subsection we describe the MySQL\#49491 performance bug \\
+In this subsection we describe the MySQL \#49491 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -323,11 +323,11 @@ The impact of the binary-to-string conversion will become more visible with shor
 \subsubsection{MySQL \#15811}
 \label{sec:mySQL15811}
 
-In this subsection we describe the MySQL\#15811 performance bug \\
+In this subsection we describe the MySQL \#15811 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
-For one of the bugs in  MySQL\#15811, it was reported that some of the user requests which were dealing with complex scripts (Chinese, Japanese), were running significantly slower than others.
+For one of the bugs in  MySQL \#15811, it was reported that some of the user requests which were dealing with complex scripts (Chinese, Japanese), were running significantly slower than others.
 To evaluate \parikshan, we re-created a two-tier client-server setup with the server (container) running a buggy MySQL server and sent queries to the production container with complex scripts (Chinese).
 These queries were asynchronously replicated, in the debug container. To further investigate the bug-diagnosis process, we also turned on execution tracing in the debug container using SystemTap~\cite{systemtap}.
 This gives us the added advantage, of being able to profile and identify the functions responsible for the slow-down, without the tracing having any impact on production.\\
@@ -371,7 +371,7 @@ On the other hand, profiling tools are much lighter and can be dynamically patch
 
 \subsubsection{Redis \#417}
 
-In this subsection we describe the Redis\#417 performance bug \\
+In this subsection we describe the Redis \#417 resource leak bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -403,7 +403,7 @@ Although the bug is visible in the verbose logs, it is difficult to pick out the
 
 \subsubsection{Redis \#614}
 
-In this subsection we describe the Redis\#614 performance bug \\
+In this subsection we describe the Redis \#614 resource leak bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -471,7 +471,7 @@ The bugs here are taken from the bugbench database~\cite{bugbench}
 
 \subsubsection{Apache \#25520}
 
-In this subsection we describe the Apache\#25520 concurrency bug \\
+In this subsection we describe the Apache \#25520 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -512,7 +512,7 @@ It should be noted that in this bug, it is not important that the same order sho
 
 \subsubsection{Apache \#21287}
 
-In this subsection we describe the Apache\#21287 concurrency bug \\
+In this subsection we describe the Apache \#21287 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -542,7 +542,7 @@ This leads to an atomicity violation which can cause a dangling pointer and lead
 
 \subsubsection{MySQL \#644}
 
-In this subsection we describe the MySQL\#644 concurrency bug \\
+In this subsection we describe the MySQL \#644 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -571,7 +571,7 @@ We used a sqlreplay utility provided in bugbench to recreate this bug. It eventu
 
 \subsubsection{MySQL \#169}
 
-In this subsection we describe the MySQL\#169 concurrency bug \\
+In this subsection we describe the MySQL \#169 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
 It was reported that the Writing to binlog was not a transactional operation and there was a data-race. 
@@ -602,7 +602,7 @@ This leads to binlog showing that operations happen in a different order than ho
 
 \subsubsection{MySQL \#791}
 
-In this subsection we describe the MySQL\#791 performance bug \\
+In this subsection we describe the MySQL \#791 concurrency bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -635,7 +635,7 @@ These bugs usually get triggered at scale or for certain edge cases, making them
 
 \subsubsection{Redis \#957}
 
-In this subsection we describe the Redis\#957 configuration bug \\
+In this subsection we describe the Redis \#957 configuration bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -671,7 +671,7 @@ Once again, it can be easily observed in our debug-containers that the slave is 
 
 \subsubsection{HDFS \#1904}
 
-In this subsection we describe the HDFS\#1904 configuration bug \\
+In this subsection we describe the HDFS \#1904 configuration bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
@@ -710,14 +710,19 @@ ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent 
 
 \input{parikshan/bugTriggerEval}
 
+\begin{tcolorbox}[breakable, enhanced]
+	To answer \textbf{RQ3}, we found that almost 80\% of bugs were semantic in nature, a significant percentage of these (approx 30-40\%) were persistent bugs while less than 6\% of the bugs are non-deterministic.
+	About 13-14\% of bugs are performance and resource-leak bugs, which are also generally persistent in the system.
+\end{tcolorbox}
+
 \section{Summary}
 \label{sec:parikshanCaseStudySummary}
 
-In this section we presented 16 real-life bug cases from 5 different categories of bugs: Semantic, Performance, Resource Leaks, Concurrency, and Configuration Bugs.
-These bugs spanned 5 well known open-source softwares.
-For each of these bugs, we presented it's symptoms and how they were re-created using parikshan's network duplication.
+In chapter~\ref{ch:NetworkReplaySurvey} we demonstrated that network replay is enough to trigger real-world SOA bugs.
+We first presented 16 real-life bug cases from 5 different categories of bugs: \emph{Semantic, Performance, Resource Leaks, Concurrency, and Configuration Bugs}.
+These bugs spanned several well known open-source softwares. For each of these bugs, we presented it's symptoms and how they were re-created using parikshan's network duplication.
 Further we also presented a survey of 217 bugs from 3 well known applications, where we manually classify the bugs in these systems to the above given categories.
-
-
 The bugs discussed in this chapter are a representative of real world bugs for SOA applications.
-Based on our results, we believe that network duplication is enough to capture most bugs, and trigger them in \parikshan's \debugcontainer.
+Based on the sample of bugs and a study of similar bugs found from well known SOA applications, we believe that network duplication is enough to capture most bugs, and trigger them in \parikshan's \debugcontainer.	
+A significant percentage of both semantic and most performance bugs are persistent in nature, which make them easier to debug in the \debugcontainer. 
+While in this chapter, we have primarily shown that real-world bugs can indeed be triggered in the \debugcontainer, the actual process of debugging  of several of these bugs is discussed in further detail last chapter~\ref{ch:activedebugging} of this thesis.

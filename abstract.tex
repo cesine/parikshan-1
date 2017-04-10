@@ -5,15 +5,16 @@ In particular, production systems bugs can be the result of complex interactions
 Hence it is important, to be able to gain insight in the entire workflow of the system, both breadth-wise (across application tiers and network boundaries), and depth wise (across the execution stack from application to kernel).
 
 In addition to the inherent complexity in debugging, it is also essential to have a short time to bug diagnosis to reduce the financial impact of any error.
-Recent trends towards DevOps~\cite{devops}, and Agile~\cite{agile} software engineering paradigms further emphasize the need of having shorter debug cycles.
-DevOps stresses on close coupling between software developers and operators, and to merge the operations of both.
+%Recent trends towards DevOps~\cite{devops}, and Agile~\cite{agile} software engineering paradigms further emphasize the need of having shorter debug cycles.
+Recent trends towards \emph{DevOps}, and agile software engineering paradigms further emphasize the need of having shorter debug cycles.
+\emph{DevOps} stresses on close coupling between software developers and operators, and to merge the operations of both.
 Similarly agile programming has shorter development cycles called \textit{sprints}, which focus on faster releases, and quick debugging.
 The need for shorter bug resolution cycle is also reflected in the frequency of releases in modern SOA services: Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day.
 
 
 Existing debugging mechanisms provide light-weight instrumentation which can track execution flow in the application by instrumenting important points in the application code.
 These are followed by inference based mechanisms to find the root-cause of the problem.
-While such techniques are useful in getting a clue about the bug, they are limited in their ability to discover the root-cause (can point out the module or component which is faulty).
+While such techniques are useful in getting a clue about the bug, they are limited in their ability to discover the root-cause (can point out the module or component which is faulty, but cannot determine the root-cause at code, function level granularity).
 Another body of work uses record-and-replay infrastructures, which record the execution and then replay the execution offline.
 These tools generate a high fidelity representative execution for offline bug diagnosis, at the cost of a relatively heavy overhead, which is generally not acceptable in user-facing production systems.
 

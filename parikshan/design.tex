@@ -83,8 +83,8 @@ Algorithm \ref{algCloning} describes the specific process for cloning some produ
 	\end{enumerate}
 \end{algorithm}
 
-
-The suspend time of cloning depends on the operations happening within the container between step 2 and step 4 (the first and the second rsync), as this will increase the number of dirty pages in the memory, which in turn will impact the amount of memory that needs to be copied during the suspend phase.
+Step 6 here is the key step which determines the suspend time of cloning. It is important to understand that the live cloning process before this step does not pause the production container and is doing a synch of the file system on the fly. Step 2 ensures that the majority of the pages between the production machine and the machine containing the \debugcontainer, are in synch.
+The suspend time of cloning depends on the operations happening within the container between step 2 and step 4 (the first and the second sync), as this will increase the number of dirty pages in the memory, which in turn will impact the amount of memory that needs to be copied during the suspend phase.
 This suspend time can be viewed as an amortized cost in lieu of instrumentation overhead.
 We evaluate the performance of live cloning in Section~\ref{sec:parikshanPerformance}.
 
@@ -97,7 +97,7 @@ The network proxy duplicator and aggregator are composed of the following intern
 	\item \textbf{Asynchronous Forwarder}: The asynchronous forwarder is a daemon that takes the input from a source port, and forwards it to a destination port, and also to an internal buffer. The forwarding to the buffer is done in a non-blocking manner, so as to not block the network forwarding. 
 	\item \textbf{Buffer Manager}: Manages a FIFO queue for data kept internally in the proxy for the debug-container.
 	It records the incoming data, and forwards it a destination port. 
-	\item \textbf{Dummy Reader}: This is a standalone daemon, which reads and drops packets from a source port
+	\item \textbf{Dummy Reader}: This is a standalone daemon, which reads and drops packets from a source port, or optionally saves them for divergence checking (see section~\ref{sec:parikshanDivergenceChecking})
 \end{itemize}
 
 \noindent
@@ -120,7 +120,7 @@ The network proxy duplicator and aggregator are composed of the following intern
 
 \subsubsection{Proxy Network Duplicator:} 
 \label{sec:parikshanProxyDuplicator}
-To successfully perform online debugging in the replica to work, both production and debug containers must receive the same input.
+To successfully perform online debugging, both production and debug containers must receive the same input.
 A major challenge in this process is that the production and debug container may execute at different speeds (debug will be slower than production): this will result in them being out of sync.
 Additionally, we need to accept responses from both servers and drop all the traffic coming from the debug-container, while still maintaining an active connection with the client.
 Hence simple port-mirroring and proxy mechanisms will not work for us. 
@@ -183,7 +183,7 @@ In process P1, the aggregator forwards the packets to the upstream component usi
 In P2, the asynchronous forwarder sends the responses from the upstream component to the production container, and sends the response in a non-blocking manner to the internal queue in the buffer manager. 
 Once again this ensures no slow-down in the responses sent to the production container.
 The buffer manager then forwards the responses to the debug container (Process P3).
-Finally, in process P4 a dummy reader reads all the responses from the debug container and discards them.
+Finally, in process P4 a dummy reader reads all the responses from the debug container and discards them (optionally it can also save the output for comparison, this is explained further in section~\ref{sec:parikshanDivergenceChecking}).
 
 %Responses from the backend server are sent to the aggregator (link 4), and then forwarded to the production container (link 2) and simultaneously saved in an internal queue.
 %The aggregator creates an in-memory persistent inter-process FIFO queue for each connection where the responses for each of these connections are stored.
@@ -209,13 +209,16 @@ and (c). similar to the proxy duplicator, the communications from the proxy to i
 \subsection{Debug Window}
 \label{sec:parikshanWindow}
 
-\parikshan's asynchronous forwarder uses an internal buffer to ensure that incoming requests proceed directly to the production container without any latency, regardless of the speed at which the debug replica processes requests.
-The incoming request rate to the buffer is dependent on the user, and is limited by how fast the production container manages the requests (i.e. the production container is the rate-limiter).
+\parikshan's asynchronous forwarder uses an internal buffer to ensure that incoming requests proceed directly to the production container without any delay, regardless of the speed at which the debug replica processes requests.
+The incoming request rate to the buffer is dependent on the client, and is limited by how fast the production container manages the requests (i.e. the production container is the rate-limiter).
 The outgoing rate from the buffer is dependent on how fast the debug-container processes the requests.
+
+
 Instrumentation overhead in the debug-container can potentially cause an increase in the transaction processing times in the debug-container.
 As the instrumentation overhead increases, the incoming rate of requests may eventually exceed the transaction processing rate in the debug container.
-If the debug container does not catch up, this in turn can lead to a buffer overflow. We call the time period until buffer overflow happens the \emph{debug-window}.
-This depends on the size of the buffer, the incoming request rate, and the overhead induced in the debug-container. 
+If the debug container does not catch up, it can lead to a buffer overflow. 
+We call the time period until buffer overflow happens the \emph{debug-window}.
+The length of the \emph{debug-window} depends on the size of the buffer, the incoming request rate, and the overhead induced in the debug-container. 
 For the duration of the debugging-window, we assume that the debug-container faithfully represents the production container. 
 Once the buffer has overflown, the debug-container may be out of sync with the production container. 
 At this stage, the production container needs to be re-cloned, so that the replica is back in sync with the production and the buffer can be discarded.
@@ -239,26 +242,31 @@ Section~\ref{sec:parikshanTimewindowPerformance} explains in detail the behavior
 \subsection{Divergence Checking}
 \label{sec:parikshanDivergenceChecking}
 
+To understand divergence between the production and the debug container, we look at the following questions:
+
 \begin{itemize}
 	\item \textbf{Can production and debug container diverge?}
 	
 	Database operations, web-servers, application-servers for most typical scenarios generate the same output as long as the state of the machine and the input request is the same. 
 	Since the production and debug containers both start from the same state, and have received the same inputs, they should continue to keep giving the same output.
-	
 	However, it is possible for the two containers to diverge largely because of the following reasons:
 	\begin{itemize}
 		\item \emph{A non-deterministic bug} in the deployed application can cause different execution schedules in the production and debug-container resulting in divergent outputs. 
 		If parallelism is properly handled output should still be deterministic regardless of the execution orders.
-		However, in case of a concurrency bug, it is possible that the error is triggered in one of the containers and not the other.
+		However, in case of a concurrency bug, it is possible that the bug is triggered in one of the containers and not the other, leading to divergence.
 		\item Another possible source of divergence is internal non-determinism due to timing, or random number generators. 
-		For instance internal system timestamps or random generated id's could be included in the output values from an SOA application. However for most applications, we believe that the semantically relevant output would not be relevant on internal non-deterministic outputs.
-		\item User instrumentation itself in the debug-container can cause divergence, by either changing the state or execution ordering etc. We recommend \parikshan users to use instrumentation for monitoring purposes alone, and have largely non-invasive instrumentation, which would not lead to a state change.
+		For instance internal system timestamps or random generated id's could be included in the output values from an SOA application. 
+		However for most applications, we believe that the semantically relevant output would not be relevant on internal non-deterministic outputs.		
+		\item User instrumentation itself in the debug-container can cause divergence, by either changing the state or execution ordering etc. 
+		We recommend \parikshan users to use instrumentation for monitoring purposes alone, and have largely non-invasive instrumentation, which would not lead to a state change.
 		Most debugging techniques only try and understand the execution and logic flow by observing/monitoring rather than changing state.
+		Additionally, service-oriented applications maintain a FIFO ordering for incoming requests. 
+		Hence, transactions are executed in the order they are received. We found this to be the case in all the services we experimented on.
 	\end{itemize}
 	
 	\item \textbf{Can we measure and monitor divergence?}
 	
-	To understand and capture this divergence, we offer an \emph{optional feature} in \parikshan to capture and compare the network output  of the production-container with the debug-container received in the proxy.
+	To understand and capture this divergence, we offer an \textbf{\emph{optional feature}}\footnote{It is important to note that this feature is optional, and for better performance the packets can simply be dropped} in \parikshan to capture and compare the network output  of the production-container with the debug-container received in the proxy.
 	Instead of discarding the network output from the debug container, we asynchronously take the hash of the output, and compare it to the production containers corresponding output.
 	This gives us a black-box mechanism to check the fidelity of the replica based on its communication with external components.
 	
@@ -271,7 +279,7 @@ Section~\ref{sec:parikshanTimewindowPerformance} explains in detail the behavior
 	
 	Once the production and debug container have diverged, \parikshan's debug replica can be re-synced with the production container to get it back to the same state.
 	This process of re-syncing can be periodically repeated or triggered when divergence is discovered to make the debug-container faithfully represent the production execution.
-	We discuss re-synchronization in further detail in section~\ref{sec:periodicSynch}
+	We discuss re-synchronization in further detail in the next section~\ref{sec:periodicSynch}
 	
 \end{itemize}
 
@@ -285,11 +293,21 @@ To manage this divergence, and for the debug-container to faithfully represent t
 Re-synchronization can be optimized by using a COW~\cite{cow} file system such as BTRFS~\cite{btrfs}, which can track deltas from the initial live clone snapshot. 
 This optimizes the re-synchronization process, as the only parts of the system snapshot that need to be checked are the deltas from the last snapshot (we assume the snapshot is a synch point when the production and debug-containers were live cloned).
 
-This process of re-synchronization can be triggered:
+This process of re-synchronization can be triggered in three different ways based on operator requirements:
 \begin{itemize}
-	\item Periodically: Periodically check for divergence of the deltas, for the debug-container to have a high fidelity representation of the production-container
-	\item Divergent Output: Generally we care about output determinism, and as long as the output of the two containers do not diverge (see section ~\ref{sec:parikshanDivergenceChecking}), there is no need for re-synchronization.
-	\item Buffer Overflow: To avoid having any overhead for checking divergence in the system output, we can optionally trigger re-synchronization on buffer overflows.
+	
+	\item \textbf{Periodically}: Periodically check for divergence of the deltas, for the debug-container to have a high fidelity representation of the production-container.
+	Periodic re-synchronization ensures higher fidelity, but may lead to un-necessary synchronizations, even though the containers have the same state.
+	
+	\item \textbf{Divergent Output}: Generally we care about output determinism, and as long as the output of the two containers do not diverge (see section ~\ref{sec:parikshanDivergenceChecking}), there is no need for re-synchronization.
+	Once the output has diverged, the containers need to be re-synchronized for the debug-container to represent the production container. 
+	To ensure such synchronization, the outputs from both containers must be tracked, which puts a recording overhead on the production system in the proxy.
+	
+	\item \textbf{Buffer Overflow}: To avoid having any overhead for checking divergence in the system output, we can trigger re-synchronization on buffer overflows.
+	Buffer overflow is an indicator that the production and debug containers have definitely diverged.
+	The debugging in this scenario is ``optimistic", as the production and debug containers could have divergent states even before the overflow.
+	However unlike the other two modes, there is no overhead because of periodic synchronization, and production output recording.
+	
 \end{itemize}
 
 

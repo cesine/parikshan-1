@@ -7,9 +7,9 @@ However, there may be several threats to the validity of our experiments.
 For instance, in our case study, the bugs that we selected to study may not be truly representative of a broad range of different faults.
 Perhaps, \parikshan's low-overhead network record and replay approach is less suitable to some classes of bugs.
 To alleviate this concern, we selected bugs that represented a wide range of categories of bugs, and further, selected bugs that had already been studied in other literature, to alleviate a risk of selection bias.
-We further strengthened this studied with a follow-up categorization of 217 bugs in three real-world applications, finding that most of those bugs were semantic in nature, and very few were non-deterministic, and hence, having similar characteristics to those 16 that we reproduced. 
+We further strengthened this studied with a follow-up categorization of 217 bugs in three real-world applications, finding that most of those bugs were semantic in nature, and very few were non-deterministic, and hence, having similar characteristics to those 16 that we reproduced. \\
 
-There are also some underlying limitations and assumptions regarding \parikshan's applicability:
+\noindent There are also some underlying limitations and assumptions regarding \parikshan's applicability:
 
 \xxx{Clarify what exactly we can and cannot do WRT non-determinism and distirbuted services.}
 
@@ -53,22 +53,25 @@ We wish to clarify certain aspects which may lead to questions regarding overhea
 	
 	\item \textbf{Network Forwarding:} 
 	Another potential source of overhead is network forwarding due to in-memory copy of the data packets being forwarded to the debug-container. 
-	%TODO: Need to add experimental results
-	We believe that this overhead is minimal, and our evaluation in section~\ref{sec:xxx} compares network overhead in comparison to native execution, and that with proxy.
+	To evaluate (see section~\ref{sec:end2endEval}) the overhead we looked at how network overhead can impact bandwidth and latency in both raw TCP requests (micro-benchmarks), as well as how it impacted a few real-world applications (wikibench, and mysql).
+	When compared to SOA applications with proxies, we found that the impact in both throughput and latency was negligible (max 1-2\%).
+	We also verified \textbf{that increasing the overhead in the debug container has no impact on the production service}. 
+	Given that proxies are used commonly in deployed web/service level applications, we could clearly demonstrate that duplication does not add any discernible overhead to production services. 
+	Web proxies like squid~\cite{squid} are commonly used to give an order of magnitude performance improvement, and reducing system load by caching frequently fetched pages and links.
+	\parikshan can easily be coupled with such already existing web proxies in the system thereby not adding a new network hop by introducing it's own proxy.
 	
 	\item \textbf{Live Cloning:}
 	The reader may also be concerned with overhead due to live cloning.
 	Live cloning involves a small time during which the machine must be suspended, this can impact the latency of requests.
-	Firstly, it is important to point out that live cloning is a single-time process (or periodic), and does not impact the general processing of requests in a SOA application.   
-	The amortized cost of this momentary suspend process process on a live running production application is generally considered acceptable (consider that live migration is used in production systems all the time)
+	Firstly, it is important to point out that live cloning is \textbf{a single-time process (or periodic)}, and does not impact the general processing of requests in the SOA application, when we are not trying to sync with the production container.   
+	The amortized cost of this momentary suspend process process on a live running production application is generally considered acceptable (consider that live migration is used in production systems all the time).
 	
-	The current implementation for live cloning shown in this paper is derived from early work in live migration in container virtualization. 
+	The current implementation for live cloning shown in this thesis is derived from early work in live migration in container virtualization of openvz container virtualization~\cite{vzctl}. 
 	We designed this mostly for the \emph{purposes of demonstrating a viable prototype} where live cloning is possible.
 	While live migration is a relatively well researched topic in full virtualized systems, it is relatively new in container virtualization.
-	Furthermore, it usually requires network file system support to to allow for fast cloning with short suspension times.
-	Using more optimal conditions well known live-migration methodologies can be suspend time as low as 
-	\xxx{cite here how low the suspend time can be}
-	%TODO: cite here how low the suspend time can be
+	Furthermore, network file system support can tremendously improve cloning time and decrease suspension time.
+	Live migration is actively used in production systems of several well-known cloud service providers such as amazon~\cite{ec2}, google compute~\cite{gcompute} etc.
+	With further advancement in live migration technologies in the user-space container virtualization, state-of-art migration techniques can be modified for live-cloning and can help in the adoption of \parikshan with much shorter suspend times.
 	
 
 \end{itemize}

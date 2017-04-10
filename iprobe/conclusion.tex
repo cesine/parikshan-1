@@ -7,7 +7,13 @@ It provides a dynamic application profiling framework to allow for easy and perv
 and selective activation. 
 We presented in the evaluation that iProbe is significantly faster than existing state-of-the-art tools, and scales well in large application software.
 
-\iprobe can be used as a standalone debugging tool as well as within the \debugcontainer in \parikshan for assisting debuggers to do execution tracing and thereby catching the error.
+As stated earlier \iprobe is still limited in the sense that the overhead of \iprobe depends on the amount of instrumentation and the instrumentation points.
+Similar to other monitoring and instrumentation tools, this makes it impossible to use for higher granularity monitoring or debugging scenarios which can potentially impact production services. 
+The results of our experiments with \iprobe motivated us to create \parikshan, which instead of simply reducing the instrumentation overhead, de-couples the instrumentation problem from the user-facing production service.
+Instrumentation in \parikshan's debug container has no impact on the production container, and allows debuggers to instrument with higher overheads.
+
+\iprobe can still be used as a standalone debugging tool as well as within the \debugcontainer in \parikshan for assisting debuggers to do execution tracing and thereby catching the error.
+It's low overhead can help in an increased and longer \debugwindow as compared to other instrumentation tools.
 
 %It is applicable to both user and kernel event tracing. It can be utilized using 
 %a simple GUI interface which reads all instrumentable functions in a binary. 

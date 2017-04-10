@@ -4,9 +4,10 @@
 To evaluate the performance of \parikshan, we pose and answer the following research questions:
 
 \begin{itemize}
-\item \textbf{RQ1:} How long does it take to create a live clone of a production container and what is it's impact on the performance of the production container?\\
-\item \textbf{RQ2:} What is the size of the debugging window, and how does it depend on resource constraints?\\ 
-\item \textbf{RQ3:} Can we generalize the results of our case study to see if \parikshan can target even more real bugs?
+\item \textbf{RQ1:} How long does it take to create a live clone of a production container and what is it's impact on the performance of the production container?
+\item \textbf{RQ2:} What is the size of the debugging window, and how does it depend on resource constraints? 
+%\item \textbf{RQ3:} Can we generalize the results of our case study to see if \parikshan can target even more real bugs?
+\item \textbf{RQ3:} What is the performance overhead of our network duplicator on a service oriented applications? In particular how does forwarding packets to the debugger impact latency, bandwidth and throughput of the application? Does slowdown in debug container impact production service? 
 \end{itemize}
 
 We evaluated the \textbf{internal mode} on two identical VM's with an Intel i7 CPU, with 4 Cores, and 16GB RAM each in the same physical host (one each for production and debug containers).
@@ -178,19 +179,20 @@ Since it was difficult to observe systematic behavior in a live system to unders
 
 \xxx{We did some experiments, and also simulations because... The setup was... The buffer size was...}
 \yyy{added the reason, as a small intro}
+
 \begin{table}[ht]
 	\centering
 	\setlength{\tabcolsep}{2pt}
-	\begin{tabular}{c r r r }
+	\begin{tabular}{c c c c }
 		\toprule
 		{\bf Input Rate} & \textbf{Debug Window} & \textbf{Pipe Size} & \textbf{Slowdown} \\ \midrule
-		530 bps, 27 rq/s                                            & $\infinity$                                                                                     & 4096                                                                            & 1.8x                                                                             \\ %\hline
-		530 bps, 27 rq/s                                            & 8 sec                                                                              & 4096                                                                            & 3x                                                                               \\ %\hline
-		530 bps, 27 rq/s                                            & 72 sec                                                                             & 16384                                                                           & 3x                                                                               \\ %\hline
-		Pois., $\lambda$ = 17 rq/s                                        & 16 sec                                                                             & 4096                                                                            & 8x                                                                               \\ %\hline
-		Pois.,		$\lambda$ = 17 rq/s                                        & 18 sec                                                                             & 4096                                                                            & 5x                                                                               \\ %\hline
-		Pois.,$\lambda$ = 17 rq/s                                        & $\infinity$                                                                                     & 65536                                                                           & 3.2x                                                                             \\ %\hline
-		Pois.,$\lambda$ = 17 rq/s                                        & 376 sec                                                                            & 16384                                                                           & 3.2x                                                                             \\ %\hline
+		530 bps, 27 rq/s & $\infinity$ & 4096 & 1.8x \\ %\hline
+		530 bps, 27 rq/s & 8 sec & 4096 & 3x \\ %\hline
+		530 bps, 27 rq/s & 72 sec & 16384 & 3x \\ %\hline
+		Pois., $\lambda$ = 17 rq/s & 16 sec & 4096 & 8x \\ %\hline
+		Pois., $\lambda$ = 17 rq/s & 18 sec & 4096 & 5x \\ %\hline
+		Pois.,$\lambda$ = 17 rq/s & $\infinity$ & 65536 & 3.2x \\ %\hline
+		Pois.,$\lambda$ = 17 rq/s & 376 sec & 16384 & 3.2x \\ %\hline
 		\bottomrule
 	\end{tabular}
 	%\captionsetup{justification=centering}
@@ -203,20 +205,23 @@ Since it was difficult to observe systematic behavior in a live system to unders
 As explained earlier, the size of this debug-window depends on the overhead of the ``instrumentation'', the incoming workload distribution, and the size of the buffer.
 To evaluate the approximate size of the debug-window, we sent requests to both a production and debug MySQL container via our network duplicator.
 Each workload ran for about 7 minutes (10,000 ``select * from table'' queries), with varying request workloads.
-We also profiled the server, and found that is able to process a max of 27 req/s\footnote{Not the same as bandwidth, 27 req/s is the maximum rate of sequential requests MySQL server is able to handle for a user session} in a single user connect session. 
+We also profiled the server, and found that is able to process a max of ~30 req/s\footnote{Not the same as bandwidth, ~30 req/s is the maximum rate of sequential requests MySQL server is able to handle for a user session} in a single user connect session. 
 For each of our experiments, we vary the buffer sizes to get an idea of debug-window. 
 Additionally, we generated a slowdown by first modeling the time taken by MySQL to process requests (27 req/s or 17req/s), and then putting an approximate sleep in the request handler.
 
-Initially, we created a connection and sent requests at the maximum request rate the server was able to handle (27 req/s).
+Initially, we created a connection and sent requests at 90\% of the maximum request rate the server was able to handle (27 req/s).
 We found that for overheads up-to 1.8x (approx) we experienced no buffer overflows.
 For higher overheads the debug window rapidly decreased, primarily dependent on buffer-size, request size, and slowdown.
 
-Next, we mimic user behavior, to generate a realistic workload.
-We send packets using a Poisson process with an average request rate of 17 requests per second to our proxy. 
-This varies the inter-request arrival time, and let's the cloned debug-container catch up with the production container during idle time-periods in between request bursts.
+%Next, we mimic user behavior, to generate a realistic workload.
+We then sent requests at about 60\% of the maximum request rate i.e. average 17 req/s. 
+The requests were sent at varying intervals using a poisson distribution. 
+This varies the inter-request arrival time (this is similar to production requests under normal workloads) and let's the cloned debug-container catch up with the production container during idle time-periods in between request bursts.
 We observed, that compared to earlier experiments, there was more slack in the system. 
 This meant that our system was able to tolerate a much higher overhead (3.2x) with no buffer overflows.
 
+Our experiments showed that idle time between requests can be used by the \debugcontainer to catch up to the production container. 
+Most production systems run much below the maximum capacity, this would allow the \debugcontainer to catch up to the \productioncontainer thereby allowing for long debug windows.
 
 \begin{figure}[ht]
 	%{0.45\textwidth}
@@ -414,3 +419,221 @@ However, a system running continuously at capacity is unlikely to tolerate signi
 \fi
 
 
+\subsection{Network Duplication Performance Overhead}
+\label{sec:DupPerformanceOverhead}
+
+%TODO- Finish performance overhead
+As explained in section~\ref{sec:parikshanOverhead}, a potential overhead in \parikshan is the network level duplication and forwarding. 
+For each packet received by the duplicator it is copied to the outgoing buffer of connections to both the production and the debug container. 
+The communication to the production and the debug container is done in parallel, using non-blocking I/O. 
+This ensures that packet forwarding to the debug-container has a negligible impact on packet-forwarding to production.
+Another potential overhead can be because of the extra-hop introduced by a proxy. 
+This is easily avoided by coupling our network duplication with existing proxies in the deployed application.
+Proxies are commonly used in most SOA applications, for security, and performance purposes~\cite{squid} (they allow caching which gives significant performance boosts).
+
+%While we do have an extra-hop when using the duplication proxy compared to native communication, using proxies is common in most SOA applications, and usually does not incur much overhead.
+%TODO cite split tcp effect to improve latency in case of proxy
+
+\begin{figure}[ht]
+	%{0.45\textwidth}
+	\centering
+	\resizebox{.85\linewidth}{!}{
+		\begin{tikzpicture}
+		\begin{axis}[
+		%title = {Optimization based upon co-occurences},
+		xbar,
+		width=10cm,
+		xtick={1,2,3},
+		xticklabels={%
+			native,
+			proxy,
+			duplication},
+		%grid=major,
+		]
+		
+		\addplot[
+		fill=blue!25,
+		draw=black,
+		ybar,
+		point meta=y,
+		visualization depends on=\thisrow{label} \as \barlabel,
+		nodes near coords=\pgfmathprintnumber{\barlabel},
+		every node near coord/.style={inner ysep=1pt},
+		error bars/.cd,
+		y dir=both,
+		y explicit
+		] 
+		table [row sep=crcr, y error=error] {
+			x   y           error    label\\
+			1   941   2 2 \\
+			2   941    2 2 \\
+			3   938  3 3 \\
+		};
+		
+		%\draw ({rel axis cs:0,0}|-{axis cs:0,0}) -- ({rel axis cs:1,0}|-{axis cs:0,0});
+		\end{axis}
+		\end{tikzpicture}
+	}
+	%\captionsetup{justification=centering}
+	\caption{Performance impact on network bandwidth when using network duplication. The above chart shows network bandwidth performance comparison of native execution, with proxy}
+	\label{fig:performanceBandwidth}
+\end{figure}
+
+In this section, we have focused on the end-to-end performance overhead of a system running with the debug container and duplicating the network traffic.
+For our testing purposes, we have run each of the experiments in the following three modes : 
+
+\begin{itemize}
+	\item \textbf{Native:} In this mode we only run the client and the server without any proxy or any external network forwarding. 
+	\item \textbf{Proxy Only:} In this mode we have a proxy which is  forwarding packets from the client to the server, without any duplication. 
+	\item \textbf{Duplication:} Here we have \parikshan's network duplicator, which is forwarding packets from the client to the server, as well as to the debug container.
+\end{itemize}
+
+We divide our evaluation into two parts, first into micro-benchmarks which focus on raw TCP level connection performances, such as impact on bandwidth and latency. Next we look at the impact on two real-world applications - MediaWiki~\cite{mediawiki}, and MySQL~\cite{mysql}.
+
+\subsubsection{Micro-benchmark - Bandwidth and Latency}
+\label{sec:microBenchBandwidthLatency}
+
+In order to understand the overhead that our duplicator can have on network performance, we look at how much the network forwarding of raw-packets is impacted by duplication in the proxy. This can be in two different aspects, firstly throughput (or bandwidth), and secondly latency.\\
+
+
+\noindent\textbf{Network Bandwidth:}
+To understand the impact of network duplication on the bandwidth between a client and a server we run a micro-benchmark using iperf~\cite{iperf} - a well known tool for performing network throughput measurements. It can test either TCP or UDP throughput measurements.  To perform an iperf test  the  user must establish both a server (to discard traffic) and a client (to generate traffic).
+
+The iperf server and the proxy run on the same physical machine, in each of the the three modes, and the client, as well as the debug container is running on a different machine in the same network. Figure~\ref{fig:performanceBandwidth} shows the bandwidth of native execution compared to that with a proxy forwarding packets and a duplicator, which also sends packets to the debug container apart from the production container. 
+
+In this setup, the client, proxy, production and debug container are all running on physical machines in the same subnet. Also, the proxy and the production container are running on the same machine. The maximum bandwidth which can be supported by the native execution was found to be 941Mb/s, with a standard deviation of 2Mb/s, the setup with the proxy had no discernible difference and had the exact same performance over 10 execution runs. When duplicating packets to the debug container as well, the performance comes down slightly to 938, with a standard deviation of 3Mb/s. This was an average slowdown of less than 0.5\%, when compared to production and debug containers. We believe this difference in bandwidth is negligible for most practical applications and will not impact application end-to-end performance. \\
+
+\noindent \textbf{Network Latency:}
+Network latency is the end-to-end round trip time for the completion of any request. 
+It is important to maintain the best possible latency, as often SOA applications are user-facing and any slow-down in latency impacts user-experience. 
+Once again to measure \parikshan's duplication's impact on network latency, we consider the three modes given above: native, proxy only, and duplication.
+
+We first used \emph{httping}~\cite{httping} to measure latency of an http \emph{HEAD} request and observe the difference in the performance in all three modes. 
+Unlike \emph{GET} requests, \emph{HEAD} requests leaves the data and only gets the header information of the packet requested. 
+Hence, it is important to note that we are primarily looking at local network performance for HTTP \emph{HEAD} requests, rather than back-end server processing time.
+Table~\ref{tab:httping} shows the latencies observed for the three modes in microseconds:\\
+
+\begin{table}[ht]
+	\centering
+	\setlength{\tabcolsep}{4pt}
+	\begin{center}
+		\begin{tabular}{c c c}
+			\toprule
+			\textbf{Direct} & \textbf{Proxy} & \textbf{Duplication} \\
+  			\midrule
+  			0.5& 0.904& 0.907 \\
+  			\bottomrule
+		\end{tabular}
+	\end{center}
+\caption{ \emph{httping} latency in micro-seconds for direct, proxy and duplication modes for HTTP HEAD requests}
+\label{tab:httping}
+\end{table}
+  
+As can be seen the latencies observed by the client, when running with only the proxy, compared to with network duplication were found to be almost equal. 
+The difference in the latencies between direct and proxy can be attributed to the extra-hop between the proxy and the production container. \\
+
+
+We followed this up with measurements of page fetch requests, where we fetched a random 1MB file from a \emph{thttpd} webserver~\cite{thttpd} using the \emph{wget}~\cite{wget} http download tool.
+Here we kept the file url the same and increased the file size in the debug container to emulate a slow-down in the debug-container.
+Table~\ref{tab:increasedSize} shows our results with different file sizes in the debug container.
+Here the first column shows the size of the file being fetched in the debug-container, and the last column shows the average time taken to download the file.
+As can be seen the time taken to download the file, from the debug container gradually increases as the file size is increased.
+However, the download time from our duplication proxy, when duplicating the request to the debug container does not change.
+This shows that a slow-down in the debug-container does not negatively impact the client facing latencies, and hence any instrumentation  
+
+\begin{table}
+\centering
+\begin{center}
+	\begin{tabular}{l c c c c}
+	\toprule
+	\textbf{File Size} & \textbf{Direct} & \textbf{Proxy} & \textbf{Duplication} & \textbf{Slowdown} \\
+	\midrule
+	1MB & 0.015s & 0.017s & 0.017s & 0.0165 \\
+	10MB & -- & -- & 0.0168s & 0.094s\\
+	100MB & -- & -- & 0.0174s & 0.898s\\
+	\bottomrule
+	\end{tabular}
+\end{center}
+\caption{File download times when increasing file size in the debug-container. Please note the file size is not increased for the proxy and direct communication. The last column shows the time taken for downloading the file from the debug container.}
+\label{tab:increasedSize}
+\end{table}
+ 
+
+
+\subsubsection{End-to-end overhead in real-world applications}
+\label{sec:end2endEval}
+
+In this section we look at end-to-end performance, of network duplication when seen in the context of a real-world application.\\
+
+\noindent \textbf{\underline{Latency}}
+
+\begin{table}[]
+\centering
+\begin{tabular}{ccccc}
+\hline
+\textbf{Direct} & \textbf{Proxy} & \textbf{Duplication} & \textbf{\begin{tabular}[c]{@{}c@{}}Proxy \\ Overhead\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Duplication \\ Overhead\end{tabular}} \\ \hline
+0.29702582 & 0.306969121 & 0.306230625 & 3.347 & -0.2405 \\
+0.061174009 & 0.06154608 & 0.062500115 & 6.08 & 1.55 \\
+0.05342713 & 0.056767733 & 0.055644723 & 6.25 & -1.97825 \\
+0.054240793 & 0.054382414 & 0.054373268 & 0.261 & -0.0168 \\
+ \hline
+\end{tabular}
+\caption{Latencies of GET/POST requests in seonds from wikipedia for all three modes, and the overhead in of proxy compared to direct mode, and duplication over proxy mode}
+\label{tab:wikibench}	
+\end{table}
+
+
+Firstly we re-created ~\emph{Wikipedia}~\cite{wikipedia}, a well known free online open-source encyclopedia. 
+The wikipedia database and application called mediawiki~\cite{mediawiki} is an open-source LAMP(Linux, apache, mysql and PHP stack) application and allows developers to create their own wiki websites.
+We leverage wikipedia traces and dumps available through the wikibench~\cite{wikibench} database~\footnote{Please note this database dump does not have most of the wiki images so most of the HTTP requests in our traces, which are image specific had to be filtered out. 
+Several post requests, which need user log-ins were also filtered out. 
+Hence, we looked at only the requests from the traces which were successful based on the data snapshot available} to re-create the wikipedia application and database in one of our containers.
+%The original wikibench is a distributed real-world trace replay to look at the performance of a system under test. 
+Once the website was created we used a small sample set of wikipedia HTTP requests traces from 2008, and compared the latency of about 500 HTTP requests in three modes of deployment as we have explained before : Native, Proxy and Duplication. 
+We then compared the average change in latencies for each requests.
+
+Table~\ref{tab:wikibench} gives a snapshot of 4 such URL's and it's latencies. 
+The last two columns give the overhead of the  between the direct and the proxy, whereas the second gives the percentage overhead between the duplicate mode as compared to only proxy.
+We found that while the proxy was generally slower than the direct connection, the slowdown ranged from 1-15\%, more importantly we found that when comparing the latencies in the duplication mode to our proxy mode, the overhead was negligible and in most cases was less that 2\%. 
+Accounting for some variance because of caching, we believe the overhead in a realistic system running with a debugging container will have negligible impact to a similar system running with only a proxy. 
+
+\begin{comment}
+One of the difficulties in accurately measuring latencies was that since most GIT page fetches were sub-second, database, and webservers caching came into play. 
+This meant that in several of our initial runs the latency observed for some of the requests were better with the proxy or duplicator, compared to the native execution.
+However after a couple of runs of the entire trace, the latencies observed were consistent.
+\end{comment}
+
+Apart from wikipedia traces we also looked into mysql-server. 
+\textbf{Mysqlslap} is a diagnostic program designed to emulate client load for a MySQL server, and to report the timing of each stage. 
+It works as if multiple clients are accessing the server. The \emph{mysqlslap} tool runs several iterations of the queries over multiple different parallel connections, and gives an average distribution of the response time for running all queries.
+The queries and the test database used is a sample employee database initially provided by Siemens Corporate Research. 
+The database contains about 300,000 employee records with 2.8 million salary entries. The export data is 167 MB, which is not huge, but heavy enough to be non-trivial for testing.
+
+We used 5 sample queries, which create 20 concurrent connections, and iterate each of the queries from each of the concurrent threads in 10 iterations.
+The \emph{mysqlslap} reports the average number of seconds to run all queries. As is shown below in table~\ref{tab:mysqlslap}, the average amount of time to run all the queries in each of the three modes was found to have minimal difference between the proxy and the duplication modes.
+
+\begin{table*}
+	\centering
+\begin{center}
+	\begin{tabular}{l c}
+	\toprule
+	\textbf{Modes} & \textbf{mysqlslap}\\
+	\midrule
+	\textbf{Direct} & 8.220s \\
+	\textbf{Proxy} & 8.230s \\
+	\textbf{Duplication} & 8.232s \\
+	\bottomrule
+	\end{tabular}
+\end{center}
+\caption{Average time to finish \emph{mysqlslap} queries on a sample database}
+\label{tab:mysqlslap}
+\end{table*}   
+
+\begin{comment}
+\noindent \textbf{\underline{Throughput}}\\ 
+To check the impact on application throughput, we looked at \emph{httperf}~\cite{httperf},  	
+\end{comment}
+
+\begin{tcolorbox}[breakable, enhanced]
+	To answer \textbf{RQ3}, we first separated the overhead comparisons between that due to duplication, and that due to an extra-hop because of a proxy. We were able to verify that the performance in terms of both latency and throughput of the duplicator when ~\textbf{compared to a similar system with only a proxy is nearly the same (within 1-2\%)}. The overhead in terms of latency of the proxy vs native communication on was less than 7\% depending on the size of the request and the request processing time in the server. We also verified that ~\textbf{slowdown in the debug container does not have any impact on production service}. 
+\end{tcolorbox}

@@ -3,16 +3,16 @@
 
 \input{parikshan/introduction}
 \input{parikshan/design}
-\input{parikshan/evaluation}
-
 \input{parikshan/challenges}
-
+\input{parikshan/evaluation}
 \section{Summary}
 \label{sec:parikshanSummary}
 
 \parikshan is a novel framework that uses redundant cloud resources to debug production SOA applications in real-time.
-Compared to existing monitoring solutions, which have focused on reducing instrumentation overhead, our tool is able to avoid any performance slowdown at all, at the same time potentially allow significant monitoring for the debugger.
-We have made \parikshan prototype tool available on GitHub for use by other researchers and practitioners.
+Compared to existing monitoring solutions, which have focused on reducing instrumentation overhead, our tool decouples instrumentation from the production container.
+This allows for high level instrumentation, without impacting user experience.
+
+%We have made \parikshan prototype tool available on GitHub for use by other researchers and practitioners.
 
 %For each of the 16 faults studied in our case study, we have also created a docker containers for most of our experiments, and in the rest we have left a detailed README of the install instructions, and the bug trigger mechanism.
 %An extended version of the paper is present in CUCS Tech Reports~\cite{parikshanTR,parikshanQueue}, details about the project, and source code is available on github~\cite{github}. 

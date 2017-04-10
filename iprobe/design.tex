@@ -27,14 +27,14 @@ Next, we present the details of each phase.
 
 ColdPatching is a pre-processing phase which generates the place-holders for hooks to be replaced with the calls for instrumentation. 
 This operation is performed offline before any execution by statically patching the binary file. 
-This phase is composed of three internal steps that are demonstrated in Figure \ref{fig:coldpatch}. 
+This phase is composed of three internal steps that are demonstrated in Figure~\ref{fig:coldpatch}. 
 
 \begin{itemize}
 
 \item Firstly, iProbe uses compiler techniques to insert instrumentation calls at the beginning and end of each function call. 
 The instrumentation parameters, are decided on the basis of the design of the compiler pass. 
 The current implementation by default passes callsite information and the base stack pointer as they can be used to inspect and form execution traces. 
-Calls to the these instrumentation functions must be \emph{cdecl} calls so that stack correctness can be maintained, this is discussed in further detail in Section \ref{sec:safety}.
+Calls to the these instrumentation functions must be \emph{cdecl} calls so that stack correctness can be maintained, this is discussed in further detail in Section~\ref{sec:safety}.
 
 \item Secondly, iProbe parses the executable and replaces all instrumentation calls with a \texttt{NOP} instruction which is a no-operation or null instruction. 
 This generates instructions in the binary which does no-operation, hence has a negligible overhead, and acts as an empty space for iProbe to be overwritten at run-time.
@@ -110,7 +110,7 @@ The period between time T2 and time T3 is our monitoring period, wherein all eve
 
 \end{itemize}
 
-\noindent \textbf{State Transition Flow}: \quad Figure \ref{fig:state_rep} demonstrates the operational flow of iProbe in the example to instrument the entry and exit of the \texttt{func\_foo} function. 
+\noindent \textbf{State Transition Flow}: \quad Figure~\ref{fig:state_rep} demonstrates the operational flow of iProbe in the example to instrument the entry and exit of the \texttt{func\_foo} function. 
 The left most figure represents the instructions of a native binary. 
 As an example, it shows three instructions (i.e., push, pop, inc) in the prolog and one instruction (i.e., pop) in the epilog of the function \texttt{func\_foo}. 
 The next figure shows the layout of this binary when it is compiled with the instrumentation option. 
@@ -128,8 +128,8 @@ Our default instrumentation passes the call site information, and the function a
 Each monitoring event can be differentiated by these dispatchers using a quick hashing mechanism representing the source of each dispatch.
 This allows iProbe to uniquely define instrumentation for each function at run-time, and identify its call sites.
 
-\input{iprobe/safety}
-\input{iprobe/advanced}
+%\input{iprobe/safety}
+%\input{iprobe/advanced}
 %iProbe hot-tracing completely operates in the user-space hence there is no overhead of context-switches because of software/kernel trap mechanisms \cite{dtrace,sytemtap,lttng}. In the evaluation section, we compare the performance of iProbe with current state-of-the-art approaches.
 
 %Once the application is \textit{"coldpatched"}, instrumentation can be applied at run-time. Figure.\ref{fig:hottracing}, shows a step wise diagram of a normal usage case scenario for iProbe. As mentioned earlier in section.\ref{sec:hotpatch} HotPatching needs to load the code segment and activate or deactivate instrumentation as required by the user.Before executing the program all instrumentation code is preloaded in the execution environment. This ensures that the instrumentation library is a part of the code segment of the target application.

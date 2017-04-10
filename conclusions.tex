@@ -9,7 +9,7 @@ The core of the material presented in this thesis is based on techniques for deb
 The following are the contributions made in this thesis:
 
 \begin{itemize}
-	\item We presented a \textbf{general framework called  \parikshan} (see chapter~\ref{ch:parikshan}), which allows debuggers faster time to \textbf{bug resolution at zero-overhead in parallel to a production application}. 
+	\item We presented a \textbf{general framework called  \parikshan} (see chapter~\ref{ch:parikshan}), which allows debuggers faster time to \textbf{bug resolution at negligible overhead in parallel to a production application}. 
 	The system first creates a live replica (clone) of a running system, and uses this replica specifically for debugging purposes.
 	Next we duplicate and send network inputs to both the production application and the replica using a customized network proxy.
 	As stated previously our main emphasis is to isolate any changes or slow-down in the replica from the user-facing production service, hence never impacting user-experience.
