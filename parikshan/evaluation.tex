@@ -488,20 +488,28 @@ For our testing purposes, we have run each of the experiments in the following t
 	\item \textbf{Duplication:} Here we have \parikshan's network duplicator, which is forwarding packets from the client to the server, as well as to the debug container.
 \end{itemize}
 
+The server and the proxy run on the same physical machine, in each of the the three modes.
+The client, as well as the debug container are run on a different physical machines to avoid resource contention.
+Additionally, all components are in the same local subnet.
+
 We divide our evaluation into two parts, first into micro-benchmarks which focus on raw TCP level connection performances, such as impact on bandwidth and latency. Next we look at the impact on two real-world applications - MediaWiki~\cite{mediawiki}, and MySQL~\cite{mysql}.
 
 \subsubsection{Micro-benchmark - Bandwidth and Latency}
 \label{sec:microBenchBandwidthLatency}
 
-In order to understand the overhead that our duplicator can have on network performance, we look at how much the network forwarding of raw-packets is impacted by duplication in the proxy. This can be in two different aspects, firstly throughput (or bandwidth), and secondly latency.\\
+In order to understand the overhead that our duplicator can have on network performance, we look at how much the network forwarding of TCP packets is impacted by duplication in the proxy. 
+This can be in two different aspects, firstly throughput (or bandwidth), and secondly latency.\\
 
 
 \noindent\textbf{Network Bandwidth:}
-To understand the impact of network duplication on the bandwidth between a client and a server we run a micro-benchmark using iperf~\cite{iperf} - a well known tool for performing network throughput measurements. It can test either TCP or UDP throughput measurements.  To perform an iperf test  the  user must establish both a server (to discard traffic) and a client (to generate traffic).
+To understand the impact of network duplication on the bandwidth between a client and a server we run a micro-benchmark using iperf~\cite{iperf} - a well known tool for performing network throughput measurements. It can test either TCP or UDP communication throughput measurements. 
+To perform an iperf test  the  user must establish both a server (to discard traffic) and a client (to generate traffic).
 
-The iperf server and the proxy run on the same physical machine, in each of the the three modes, and the client, as well as the debug container is running on a different machine in the same network. Figure~\ref{fig:performanceBandwidth} shows the bandwidth of native execution compared to that with a proxy forwarding packets and a duplicator, which also sends packets to the debug container apart from the production container. 
-
-In this setup, the client, proxy, production and debug container are all running on physical machines in the same subnet. Also, the proxy and the production container are running on the same machine. The maximum bandwidth which can be supported by the native execution was found to be 941Mb/s, with a standard deviation of 2Mb/s, the setup with the proxy had no discernible difference and had the exact same performance over 10 execution runs. When duplicating packets to the debug container as well, the performance comes down slightly to 938, with a standard deviation of 3Mb/s. This was an average slowdown of less than 0.5\%, when compared to production and debug containers. We believe this difference in bandwidth is negligible for most practical applications and will not impact application end-to-end performance. \\
+ Figure~\ref{fig:performanceBandwidth} shows the bandwidth of native execution compared to that with a proxy forwarding packets and a duplicator, which also sends packets to the debug container apart from the production container. 
+The maximum bandwidth which can be supported by the native execution was found to be 941Mb/s, with a standard deviation of 2Mb/s, the setup with the proxy had no discernible difference and had the exact same performance over 10 execution runs. 
+When duplicating packets to the debug container as well, the performance comes down slightly to 938, with a standard deviation of 3Mb/s. 
+This was an average slowdown of less than 0.5\%, when compared to production and debug containers. 
+We believe this difference in bandwidth is negligible for most practical applications and will not impact application end-to-end performance. \\
 
 \noindent \textbf{Network Latency:}
 Network latency is the end-to-end round trip time for the completion of any request. 
@@ -533,20 +541,23 @@ As can be seen the latencies observed by the client, when running with only the 
 The difference in the latencies between direct and proxy can be attributed to the extra-hop between the proxy and the production container. \\
 
 
-We followed this up with measurements of page fetch requests, where we fetched a random 1MB file from a \emph{thttpd} webserver~\cite{thttpd} using the \emph{wget}~\cite{wget} http download tool.
-Here we kept the file url the same and increased the file size in the debug container to emulate a slow-down in the debug-container.
+Since ping requests do not process any data,
+we followed up with measurements of page fetch requests, where we fetched a random 1MB file from a \emph{thttpd} webserver~\cite{thttpd} using the \emph{wget}~\cite{wget} http download tool.
+In order to measure the impact of slowdown in the debug container on the latency observed by the client, 
+we kept the file url the same and increased the file size in the debug container. This emulate a gradual slow-down in the debug-container, and allows us to observe it's impact on the client.
 Table~\ref{tab:increasedSize} shows our results with different file sizes in the debug container.
-Here the first column shows the size of the file being fetched in the debug-container, and the last column shows the average time taken to download the file.
+The first column shows the size of the file being fetched in the debug-container, and the last column shows the average time taken to download the file.
 As can be seen the time taken to download the file, from the debug container gradually increases as the file size is increased.
 However, the download time from our duplication proxy, when duplicating the request to the debug container does not change.
-This shows that a slow-down in the debug-container does not negatively impact the client facing latencies, and hence any instrumentation  
+This shows that \textbf{a slow-down in the debug-container does not negatively impact the client facing latencies}.
+This demostrates \parikshan's key advantage in avoiding instrumentation overhead impact on end-users.  
 
 \begin{table}
 \centering
 \begin{center}
 	\begin{tabular}{l c c c c}
 	\toprule
-	\textbf{File Size} & \textbf{Direct} & \textbf{Proxy} & \textbf{Duplication} & \textbf{Slowdown} \\
+	\textbf{File Size} & \textbf{Direct} & \textbf{Proxy} & \textbf{Duplication} & \textbf{Debug Container} \\
 	\midrule
 	1MB & 0.015s & 0.017s & 0.017s & 0.0165 \\
 	10MB & -- & -- & 0.0168s & 0.094s\\
@@ -583,8 +594,8 @@ In this section we look at end-to-end performance, of network duplication when s
 \end{table}
 
 
-Firstly we re-created ~\emph{Wikipedia}~\cite{wikipedia}, a well known free online open-source encyclopedia. 
-The wikipedia database and application called mediawiki~\cite{mediawiki} is an open-source LAMP(Linux, apache, mysql and PHP stack) application and allows developers to create their own wiki websites.
+Firstly we re-created a scaled down deployment of ~\emph{Wikipedia}~\cite{wikipedia}, a well known free online open-source encyclopedia. 
+The wikipedia database and application called mediawiki~\cite{mediawiki} is an open-source LAMP (Linux, apache, mysql and PHP stack) application and allows developers to create their own wiki websites.
 We leverage wikipedia traces and dumps available through the wikibench~\cite{wikibench} database~\footnote{Please note this database dump does not have most of the wiki images so most of the HTTP requests in our traces, which are image specific had to be filtered out. 
 Several post requests, which need user log-ins were also filtered out. 
 Hence, we looked at only the requests from the traces which were successful based on the data snapshot available} to re-create the wikipedia application and database in one of our containers.
@@ -594,7 +605,7 @@ We then compared the average change in latencies for each requests.
 
 Table~\ref{tab:wikibench} gives a snapshot of 4 such URL's and it's latencies. 
 The last two columns give the overhead of the  between the direct and the proxy, whereas the second gives the percentage overhead between the duplicate mode as compared to only proxy.
-We found that while the proxy was generally slower than the direct connection, the slowdown ranged from 1-15\%, more importantly we found that when comparing the latencies in the duplication mode to our proxy mode, the overhead was negligible and in most cases was less that 2\%. 
+We found that while the proxy was generally slower than the direct connection, the slowdown ranged from 1-8\%, more importantly we found that when comparing the latencies in the duplication mode to our proxy mode, the overhead was negligible and in most cases was less that 2\%. 
 Accounting for some variance because of caching, we believe the overhead in a realistic system running with a debugging container will have negligible impact to a similar system running with only a proxy. 
 
 \begin{comment}
@@ -635,5 +646,5 @@ To check the impact on application throughput, we looked at \emph{httperf}~\cite
 \end{comment}
 
 \begin{tcolorbox}[breakable, enhanced]
-	To answer \textbf{RQ3}, we first separated the overhead comparisons between that due to duplication, and that due to an extra-hop because of a proxy. We were able to verify that the performance in terms of both latency and throughput of the duplicator when ~\textbf{compared to a similar system with only a proxy is nearly the same (within 1-2\%)}. The overhead in terms of latency of the proxy vs native communication on was less than 7\% depending on the size of the request and the request processing time in the server. We also verified that ~\textbf{slowdown in the debug container does not have any impact on production service}. 
+	To answer \textbf{RQ3}, we first separated the overhead comparisons between that due to duplication, and that due to an extra-hop because of a proxy. We were able to verify that the performance in terms of both latency and throughput of the duplicator when ~\textbf{compared to a similar system with only a proxy is nearly the same (\textless 2\%)}. The overhead in terms of latency of the proxy vs native communication on was less than 8\% depending on the size of the request and the request processing time in the server. We also verified that ~\textbf{slowdown in the debug container does not have any impact on production service}. 
 \end{tcolorbox}

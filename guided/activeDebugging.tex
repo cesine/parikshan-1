@@ -478,39 +478,50 @@ The incoming rate remains the same as $\lambda$, as the requests are asynchronou
 
 To simplify the problem, we identify the following variables:
 
+This is the maximum capacity at which the \productioncontainer can process requests
+
 \begin{equation}\label{eq:1}
 \mu_{1} = \emph{processing time for requests of original container}
 \end{equation}
 
+This is the maximum capacity at which the \debugcontainer can process requests
 
 \begin{equation}\label{eq:2}
 \mu_{2} = \emph{processing time for requests of debug container}
 \end{equation}
 
+Taking the above two equations, the overhead can be modeled as follows
+
 \begin{equation}\label{eq:3}
-\mu_{3} = \mu_{1} - \mu_{2} -> \emph{slowdown of debug compared to original}
+\mu_{3} = \mu_{1} - \mu_{2}  = \emph{slowdown of debug compared to original}
 \end{equation}
 
 The remaining processing time for both the production container and the debug container is going to be the same. 
 Since the TCP buffer in the production container is a blocking queue, we can assume that any buffer overflows in the proxy buffer are only caused because of the instrumentation overhead in the debug-container, which is accounted for by $\mu_{3}$.
 
-The goal for bounded overhead instrumentation is to \emph{optimize slowdown such that}:
+However for our debug system to be stable the goal still remains to allocate debugging overhead such that:
 
-\begin{equation}\label{eq:4}
-  \mu_{3} < \lambda
+\begin{equation}\label{eq:four}
+  \lambda < \mu_{2}
 \end{equation}
 
-In general the incoming rate of requests, is much less than the server processing time ( and for our purposes in the debug container is definitely bounded by the server processing times). 
-This is because servers generally 
+The equation above gives us the basis to build certain guidlines for the instrumentation overhead guarantees in the debug containers, and how to create the buffer. 
+As can be easily understood, that if the rate of incoming requests ($\lambda$) to the \productioncontainer itself is continuously equal to $\mu_{1}$ (i.e. it's maximum capacity), then intuitively there is no ``slack" available to \debugcontainer to catch up to the \productioncontainer. 
+However for production services, which generally run far below the maximum capacity, there will be significant opportunity for instrumentation in the \debugcontainer, without impacting the user performance.
+This \debugcontainer uses the idle time in between requests to catch up to the \productioncontainer, thereby remaining in synch.
 
-\xxx{explain Brownian motion once it's reached the bounds}
+The advantage of the of our internal buffer in the duplication proxy in this scenario, is that it provides a lengthy \debugwindow in the case of a spike in the workload.
+Once the \debugcontainer starts lagging behind the \productioncontainer, the requests start piling in the internal buffer. 
+Spikes are generally short, bursty and infrequent, hence given some idea of the spike in the workload the operator can set the buffer size and instrumentation such that he can avoid the overflow.
+
 
 \subsection{Extended Load-balanced duplicate clones}
 
 Our model can be further extended into a load-balanced instrumentation model as shown in figure~\ref{fig:queueBalanced}. 
 This is useful when the debugging needs to be higher, but we have a lower overhead bound through only one clone.
 Here we can balance the instrumentation across more than one clones, each of which receive the same input.
-They can together contribute towards debugging the error
+They can together contribute towards debugging the error, as well as increase the amount of instrumentation that can be done without incurring an overhead.
+Hence, if earlier we had enough slack in the ``production system" to have a 2x overhead instrumentation in the \debugcontainer, with an extra replica, the amount instrumentation can be potentially raised to 4x overhead.
 
 \begin{figure}[h!]
 	\begin{center}

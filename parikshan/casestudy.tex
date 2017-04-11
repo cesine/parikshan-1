@@ -4,9 +4,9 @@
 \section{Overview}
 \label{sec:netReplayOverview}
 
-Several existing record and replay have a much higher overhead as they record low level of non-determinism in order to capture and replay the exact state of execution. 
+Several existing record and replay systems have a high performance overhead as they record events, at a low level of non-determinism to enable deterministic replay. 
 However, most bugs in service oriented application do not require such low level of recording.
-We hypothesize that network input with live cloning is enough to trigger most bugs in user-facing services.
+In this chapter, we show that most bugs found in real-world SOA applications can be triggered by network level replay.
 
 To validate this insight, we selected sixteen real-world bugs, applied \parikshan, reproduced them in a production container, and observed whether they were also simultaneously reproduced in the replica.
 For each of the sixteen bugs that we triggered in the production environments, \parikshan faithfully reproduced them in the replica. 
@@ -15,13 +15,13 @@ We selected our bugs from those examined in previous studies \cite{bugbench,simp
 We have further categorized these bugs whether they lead to a crash or not, and if they can be deterministically reproduced.
 Table \ref{tab:casestudy} presents an overview of our study.
 
-In the rest of this section we discuss the bug-reproduction technique in each of these case-studies in further detail.
+In the rest of this chapter we discuss the bug-reproduction technique in each of these case-studies in further detail.
 
 \input{parikshan/casestudy-table1}
 
 \section{Applications Targeted}
 
-In our case-studies we have targeted the following applications: MySQL, Apache, Redis, Cassandra, HDFS. Apart from this we have also tried \parikshan on PetStore~\cite{petstore} a J2EE JBOSS~\cite{jboss} multi-tier application. We also did a survey of 217 real-world bugs, and found them similar to the bugs presented in this case study( more details regarding the survey can be found at section~\ref{sec:parikshanSurvey}).
+In our case-studies we have targeted the following applications: MySQL, Apache, Redis, Cassandra, HDFS. Apart from this we have also tried \parikshan on PetStore~\cite{petstore} a J2EE JBOSS~\cite{jboss} multi-tier application. We also did a survey of 217 real-world bugs, and found them similar to the bugs presented in this case study (more details regarding the survey can be found at section~\ref{sec:parikshanSurvey}).
 In this section we explain the applications that have been used in the bug case-studies.
 
 \subsection{MySQL}
@@ -64,9 +64,13 @@ For our experiments we have used the \emph{redis-cli} client given with the defa
 
 Cassandra~\cite{cassandra} is a well known wide column store NoSQL database, designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure.
 Cassandra offers robust support for clusters spanning multiple datacenters, with asynchronous masterless replication allowing low latency operations for all clients.
+Other similar systems include MongoDB~\cite{mongodb}, HBase~\cite{hbase} etc.
 
 %To facilitate re-creating of cassandra bug, we have provided dockerized containers, which 
-Installing the correct version of cassandra which has this bug as well as it's dependencies is a little tricky. The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We provide these libraries as a part of our package in github project. We also provide a python script for the cassandra client to trigger the bug conditions.
+Installing the correct version of cassandra which has this bug as well as it's dependencies is a little tricky. 
+The re-compilation of the version which has the bug is significantly difficult as some of the dependency libraries are no longer available using simply their Apache IVY build files. We provide these libraries as a part of our package in github project. 
+We also provide a python script for the cassandra client to trigger the bug conditions.
+We use the standard python cassandra client for our testing.
 
 \subsection{HDFS}
 
@@ -74,7 +78,7 @@ The Hadoop distributed file system (HDFS)~\cite{hdfs} is a distributed, scalable
 A Hadoop cluster has nominally a single namenode plus a cluster of datanodes, although redundancy options are available for the namenode due to its criticality. 
 Each datanode serves up blocks of data over the network using a block protocol specific to HDFS. The file system uses TCP/IP sockets for communication. Clients use remote procedure call (RPC) to communicate between each other.
 HDFS stores large files (typically in the range of gigabytes to terabytes[64]) across multiple machines. It achieves reliability by replicating the data across multiple hosts.
-
+Other similar systems include Ceph~\cite{ceph}, Lustre~\cite{Lustre}.
 
 In our implementation we use HDFS binary client which comes pre-packaged with Hadoop.
 We deployed a two node cluster with one master and and two slaves.
@@ -94,7 +98,6 @@ These bugs often happen because an edge condition was not checked during the dev
 Many such errors result in an unexpected output or possibly can crash the system.
 We recreated 4 real-world production bugs from Redis~\cite{redis} queuing system, and Cassandra~\cite{cassandra} a NoSQL database.
 
-\xxx{TODO:Nipun - Add some explanation for Redis, and Cassandra}
 
 \subsubsection{Redis \#761}
 
@@ -168,7 +171,7 @@ This error happens when a user requests columns from an extremely wide row.
 The output of the query, has missing columns when requesting specific columns. 
 The data is still in the table, just that it might not be returned to the user. 
 Taking closer look, Cassandra is reading from the wrong column index. 
-A problem was found with the index checking algorithm. In fact, it was written in reverse.\\
+A problem was found with the index checking algorithm, whereby the order in which data was being read to be indexed had some unhandled edge cases\\
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -213,9 +216,9 @@ In this subsection we describe the Cassandra \#1837 semantic bug \\
 
 The main symptom of this error was that deleted columns become available again after doing a flush.
 With some domain knowledge, a developer found the error. 
-This happens because of a bug in the way deleted rows are interpreted once they leave the memtable. 
-In the CFS.getRangeSlice code, flush operation does not delete the data. 
-Thus querying for the data shows content even after deletion.
+This happens because of a bug in the way deleted rows are not properly interpreted once they leave the memory table (\emph{memtable}). 
+Hence, the flush operation does not correctly delete the data. 
+Thus querying for the data after the operation continues to shows content even after deletion.
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -248,10 +251,10 @@ In this subsection we describe the MySQL \#26527 performance bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
-This has to do with a caching problem for large inserts where large amount of data in a partitioned table.
+This error has to do with a caching problem for large inserts where large amount of data in a partitioned table.
 It was reported that inserting data with \texttt{LOAD DATA INFILE} is very slow with partitioned table and sometimes crawls to a stop.
 The reason behind the error was found to be that MySQL uses a handler function to prepare caches for large inserts.
-As high availability partitioner didn't allow these caches for underlaying tables, the inserts were much slower.
+As high availability partitioner didn't allow these caches for underlaying tables, the inserts were much slower.\\
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -297,7 +300,7 @@ It was reported that the calculation of MD5 and SHA1 hash values using the built
 \end{itemize}
 
 The run time of the hash computation depends on the length of the input string whereas the overhead of the binary-to-string conversion can be considered as a fixed constant as it will always operate on hash values of 16 (MD5) or 20 (SHA1) bytes length.
-The impact of the binary-to-string conversion will become more visible with shorter input strings than with long input strings. For short input strings it seems that more time is spent in the binary-to-string conversion than in the actual hash computation part.\footnote{A patch provided by a developer improved the performance by an order of magnitude. However for the purposes of our discussion, we have limited ourselves to bug-recreation}
+The impact of the binary-to-string conversion will become more visible with shorter input strings than with long input strings. For short input strings it seems that more time is spent in the binary-to-string conversion than in the actual hash computation part.\footnote{A patch provided by a developer improved the performance by an order of magnitude. However for the purposes of our discussion, we have limited ourselves to bug-recreation}\\
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -375,9 +378,9 @@ In this subsection we describe the Redis \#417 resource leak bug \\
 
 \noindent \textbf{Cause of the error:} \\
 
-It was reported that when two or more databases are replicated, and atleast one of them is \textgreater=db10. This is because the replication feed for the slaves creates static connection objects which are allocated and freed when replication is being done from db0-9. However, for database ID values greater than 10, the objects are dynamically created an never freed.
+It was reported that when two or more databases are replicated, and atleast one of them is \textgreater=db10, a resource leak was being observed. This was because the replication feed for the slaves created static connection objects which are allocated and freed when replication is being done from db (0-9). However, for database ID values greater than 10, the objects are dynamically created and never freed.
 This was leaving stale memory and leading to a memory leak in redis.
-Although the bug is visible in the verbose logs, it is difficult to pick out the root-cause of the bug.
+Although the bug is visible in the verbose logs, it is difficult to pick out the root-cause of the bug.\\
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -408,7 +411,7 @@ In this subsection we describe the Redis \#614 resource leak bug \\
 \noindent \textbf{Cause of the error:} \\
 
 The debugger reported replication bug while attempting to use Redis as a reliable queue with a Lua script pushing multiple elements onto the queue. 
-It appears the wrong number of RPOP operations are sent to the slave instance, resulting in the queue on the slave growing unbounded, out of sync with master.
+It appears the wrong number of RPOP operations are sent to the slave instance, resulting in the queue on the slave growing unbounded, out of sync with master.\\
 
 \noindent \textbf{Steps for reproduction:} \\
 
@@ -503,7 +506,7 @@ There is nothing to prevent memcopy operations in buffered log writers by differ
 		./httperf  --server=<your-httpd-server-name>  --uri=/index.html.en --num-conns=100 --num-calls=100
 		\end{lstlisting}
 		
-		\item The bug might manifest in \emph{accesslog}, showing some of the logs to be corrupted. In our experiments, we were able to see the anomaly in both \productioncontainer and \debugcontainer simultaneously most of the time.
+		\item If this bug manifests itself, it can be seen in the \emph{access logs}. Access logs get corrupted, and multiple logs are thrown out in the same line or they overwrite each other making no semantic sense and having bad formatting. In our experiments, we were able to see the anomaly in both \productioncontainer and \debugcontainer simultaneously most of the time.
 		
 	\end{enumerate}
 \end{adjustwidth}
@@ -594,7 +597,7 @@ This leads to binlog showing that operations happen in a different order than ho
 		./mysql -u root -D test -e 'insert into b values (1)' &
 		\end{lstlisting}
 		
-		\item Wait and press enter. You will see detection log entry and the insert log entry has disordered binlog index.
+		\item You will see detection log entry and the insert log entry is out of order in the binlog index.
 		
 	\end{enumerate}
 \end{adjustwidth}	

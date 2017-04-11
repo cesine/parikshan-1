@@ -35,10 +35,10 @@ Similar to \parikshan, aftersight records a production system and replays it con
 While both Aftersight and \parikshan allow debuggers an almost real-time diagnosis facility, Aftersight suffers from recording overhead in the production VM.
 The average slow-down in Aftersight is 5\% and can balloon upto 31\% to 2.6x for worst-case scenario.
 While in it's normal mode, aftersight \emph{requires} the replica virtual machine to catch up with the original.
-Although, aftersight also has mode which allows it to proceed with divergence, this removes the overhead required for catching up to the original execution - \parikshan mainly differs in it's philosphy with aftersight, while aftersight focuses more on determinism, \parikshan focuses more on parallel execution and debugging, while allowing for more divergence without any recording overhead.
+Although, aftersight also has mode which allows it to proceed with divergence, this removes the overhead required for catching up to the original execution - \parikshan mainly differs in it's philosphy with aftersight, while aftersight focuses more on determinism and synchronization between the production and debug VM, \parikshan focuses more on parallel execution and debugging, while allowing for more divergence without any recording overhead.
 
 
-Another recent paper called, VARAN~\cite{Hosek:2015:VUE:2694344.2694390} is an N-version execution monitor that maintains replicas of an existing app, while checking for divergence.
+Another recent work called, VARAN~\cite{Hosek:2015:VUE:2694344.2694390} is an N-version execution monitor that maintains replicas of an existing app, while checking for divergence.
 \parikshan's debug containers are effectively replicas: however, while VARAN replicates applications at the system call level, \parikshan's lower overhead mechanism does not impact the performance of the master (production) app.
 Unlike lower-level replay based systems, \parikshan tolerates a greater amount of divergence from the original application: i.e., the replica may continue to run even if the analysis slightly modifies it.
 
