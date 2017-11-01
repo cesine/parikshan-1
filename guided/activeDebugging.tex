@@ -241,7 +241,7 @@ Apart from regular semantic bugs, previous body of works have shown that statist
 \subsection{Staging Record and Replay}
 \label{sec:activeStagedRecordReplay}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 	
 	\centering
 	\includegraphics[width=0.99\textwidth]{guided/figs/stagedRecordReplay.pdf}
@@ -295,7 +295,7 @@ However, by decoupling recording instrumentation from the production container, 
 
 \subsection{A-B Testing}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 	
 	\centering
 	\includegraphics[width=0.99\textwidth]{guided/figs/ABTesting.pdf}
@@ -414,7 +414,7 @@ Secondly, we propose a reactive mechanism, whereby buffer utilization can be con
 %\end{figure*}
 
 \iffalse
-\begin{figure}[h]
+\begin{figure}[!ht]
 	\begin{center}
 		\includegraphics[width=0.8\textwidth]{queue/figs/queue.pdf}
 		\caption{An example of a simple queue applied to a SOA application. Here the arrival rate of the requests to the queue is a poisson process with rate $\lambda$, and the service time of each request is a poisson process with rate $\mu$. }
@@ -425,10 +425,10 @@ Secondly, we propose a reactive mechanism, whereby buffer utilization can be con
 \fi
  
 In this section we model the testing window by using concepts well used in queuing theory (for the sake of brevity we will avoid going into too much detail, readers can find more about queuing theory models~\cite{queueBook}).
-Queueing theory is commonly used to do capacity planning for service-oriented architectures(SOA).
+%Queueing theory is commonly used to do capacity planning for service-oriented architectures(SOA).
 Queues in a SOA application can be modeled as a M/M/1/K queue (Kendall's notation~\cite{kendall}).
-Kendall's notation is a well known model which allows a compact representation for queues in SOA architectures.
-This is a shorthand notation of the type A/B/C/D/E where A, B, C, D, E describe the queue.
+%Kendall's notation is a well known model which allows a compact representation for queues in SOA architectures.
+%This is a shorthand notation of the type A/B/C/D/E where A, B, C, D, E describe the queue.
 %This notation may be easily applied to cover a large number of simple queueing scenarios.
 The standard meanings associated with each of these letters are summarized below.\\
 
@@ -499,7 +499,9 @@ Taking the above two equations, the overhead can be modeled as follows
 The remaining processing time for both the production container and the debug container is going to be the same. 
 Since the TCP buffer in the production container is a blocking queue, we can assume that any buffer overflows in the proxy buffer are only caused because of the instrumentation overhead in the debug-container, which is accounted for by $\mu_{3}$.
 
-However for our debug system to be stable the goal still remains to allocate debugging overhead such that:
+Without going into the theoretical basis, Kendall's notation and queuing theory suggest that for a stable queue with a bounded buffer the incoming rate of requests should be less than the outgoing rate. 
+Once the incoming rate is more than the outgoing rate from the queue, the queue follows brownian motion, and exponentially fills up.
+Hence for our debug system to be stable the goal still remains to allocate debugging overhead such that:
 
 \begin{equation}\label{eq:four}
   \lambda < \mu_{2}
@@ -521,7 +523,7 @@ Our model can be further extended into a load-balanced instrumentation model as 
 This is useful when the debugging needs to be higher, but we have a lower overhead bound through only one clone.
 Here we can balance the instrumentation across more than one clones, each of which receive the same input.
 They can together contribute towards debugging the error, as well as increase the amount of instrumentation that can be done without incurring an overhead.
-Hence, if earlier we had enough slack in the ``production system" to have a 2x overhead instrumentation in the \debugcontainer, with an extra replica, the amount instrumentation can be potentially raised to 4x overhead.
+Hence, if earlier we had enough slack in the ``production system" to have a 2x overhead instrumentation in the \debugcontainer, with an extra replica, the amount instrumentation can be potentially raised to 4x overhead, each managing some part of the instrumentation.
 
 \begin{figure}[h!]
 	\begin{center}
@@ -530,6 +532,8 @@ Hence, if earlier we had enough slack in the ``production system" to have a 2x o
 		\label{fig:queueBalanced}
 	\end{center}
 \end{figure}
+
+As explained earlier, the overhead in each of load balanced debug containers should ensure that it can process the incoming request rate. 
 
 %TODO - Finish simulation experiments if time permits
 \begin{comment}
@@ -600,13 +604,13 @@ This can reduce the waiting time further, for the asynchronous model the equatio
 Adaptive instrumentation reduces or increases sampling rate of the dynamic instrumentation in order to decrease the overhead. 
 This allows the debug-container time to catch up to the production container without causing a buffer overflow.
 
-\begin{figure*}[ht!]
-	\begin{center}
-		\includegraphics[width=0.96\textwidth]{queue/figs/reactive-controller.png}
-		\caption{Reactive Instrumentation}
-		\label{fig:reactive}
-	\end{center}
-\end{figure*}
+%\begin{figure*}[!ht]
+%	\begin{center}
+%		\includegraphics[width=0.96\textwidth]{queue/figs/reactive-controller.png}
+%		\caption{Reactive Instrumentation}
+%		\label{fig:reactive}
+%	\end{center}
+%\end{figure*}
 
 A mechanism similar to TCP's network congestion avoidance mechanisms can be applied on the monitoring buffer.
 We also derive inspiration from statistical debugging~\cite{statisticalPerformance,holmes,statisticalDebugging}, which shows how probabilistically instrumenting \emph{predicates}, can assist in localizing and isolating the bug. 
@@ -618,12 +622,12 @@ Similar techniques have also been applied for probabilistic call context encodin
 
 
 The sampling rate of instrumentation in the debug-container can be modified based on the amount of buffer usage.
-There are three key components of our adaptive instrumentation mechanism.
+The following are the key components of adaptive instrumentation:
 
 \begin{itemize}
-	\item \textbf{Monitoring Buffer:}
+	\item \textbf{Buffer Monitoring:}
 	The first step involves monitoring the buffer usage of the network duplicator. 
-	If the buffer usage is more than X percentage of the buffer, the sampling rate of instrumentation can be exponentially decreased.
+	If the buffer usage is more than a certain threshold, the sampling rate of instrumentation can be exponentially decreased.
 	This would increase the idle time in the debug container allowing it to catch up to the production and reducing the buffer usage.
 	
 	\item \textbf{Controller:}
@@ -650,6 +654,8 @@ Each predicate is given a total score based on the following parameters:
 	\item \textbf{Instrumentation Overhead Score:} Adaptive score keeping track of counters of each predicate. Can be used as a weighing mechanism for figuring out the total cost.
 \end{itemize}
 
+Hence \parikshan can be combined with standard statistical debugging techniques to manage the instrumentation overhead such that it does not exceed the debug window or the debug container does not lag to far behind the production container.
+While an actual implementation is beyond the scope of this thesis, the above discussion presents some grounds on how this solution can be designed.
 
 \begin{comment}
 \subsection{Feasibility}

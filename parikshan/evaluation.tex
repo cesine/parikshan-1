@@ -434,6 +434,8 @@ Proxies are commonly used in most SOA applications, for security, and performanc
 %While we do have an extra-hop when using the duplication proxy compared to native communication, using proxies is common in most SOA applications, and usually does not incur much overhead.
 %TODO cite split tcp effect to improve latency in case of proxy
 
+\begin{comment}
+	
 \begin{figure}[ht]
 	%{0.45\textwidth}
 	\centering
@@ -478,6 +480,15 @@ Proxies are commonly used in most SOA applications, for security, and performanc
 	\caption{Performance impact on network bandwidth when using network duplication. The above chart shows network bandwidth performance comparison of native execution, with proxy}
 	\label{fig:performanceBandwidth}
 \end{figure}
+\end{comment}
+
+\begin{figure}[!ht]
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{parikshan/figs/Bandwidth.png}
+		\caption{Performance impact on network bandwidth when using network duplication. The above chart shows network bandwidth performance comparison of native execution, with proxy}
+		\label{fig:performanceBandwidth}
+	\end{center}
+\end{figure}
 
 In this section, we have focused on the end-to-end performance overhead of a system running with the debug container and duplicating the network traffic.
 For our testing purposes, we have run each of the experiments in the following three modes : 
@@ -521,6 +532,7 @@ Unlike \emph{GET} requests, \emph{HEAD} requests leaves the data and only gets t
 Hence, it is important to note that we are primarily looking at local network performance for HTTP \emph{HEAD} requests, rather than back-end server processing time.
 Table~\ref{tab:httping} shows the latencies observed for the three modes in microseconds:\\
 
+
 \begin{table}[ht]
 	\centering
 	\setlength{\tabcolsep}{4pt}
@@ -544,7 +556,8 @@ The difference in the latencies between direct and proxy can be attributed to th
 Since ping requests do not process any data,
 we followed up with measurements of page fetch requests, where we fetched a random 1MB file from a \emph{thttpd} webserver~\cite{thttpd} using the \emph{wget}~\cite{wget} http download tool.
 In order to measure the impact of slowdown in the debug container on the latency observed by the client, 
-we kept the file url the same and increased the file size in the debug container. This emulate a gradual slow-down in the debug-container, and allows us to observe it's impact on the client.
+we kept the file url the same and increased the file size in the debug container. 
+This emulates a gradual slow-down in the debug-container, and allows us to observe it's impact on the client.
 Table~\ref{tab:increasedSize} shows our results with different file sizes in the debug container.
 The first column shows the size of the file being fetched in the debug-container, and the last column shows the average time taken to download the file.
 As can be seen the time taken to download the file, from the debug container gradually increases as the file size is increased.
@@ -578,6 +591,14 @@ In this section we look at end-to-end performance, of network duplication when s
 
 \noindent \textbf{\underline{Latency}}
 
+\begin{figure}[!ht]
+	\begin{center}
+		\includegraphics[width=0.9\textwidth]{parikshan/figs/wikipedia_graph.png}
+		\caption{Latencies in all different modes for wikipedia trace}
+		\label{fig:wikipediaGraph}
+	\end{center}
+\end{figure}
+
 \begin{table}[]
 \centering
 \begin{tabular}{ccccc}
@@ -589,7 +610,7 @@ In this section we look at end-to-end performance, of network duplication when s
 0.054240793 & 0.054382414 & 0.054373268 & 0.261 & -0.0168 \\
  \hline
 \end{tabular}
-\caption{Latencies of GET/POST requests in seonds from wikipedia for all three modes, and the overhead in of proxy compared to direct mode, and duplication over proxy mode}
+\caption{Snapshot of the first four latencies of GET/POST requests(secondss) from wikipedia, and the overhead of proxy compared to direct mode, and duplication over proxy mode}
 \label{tab:wikibench}	
 \end{table}
 
@@ -604,8 +625,8 @@ Once the website was created we used a small sample set of wikipedia HTTP reques
 We then compared the average change in latencies for each requests.
 
 Table~\ref{tab:wikibench} gives a snapshot of 4 such URL's and it's latencies. 
-The last two columns give the overhead of the  between the direct and the proxy, whereas the second gives the percentage overhead between the duplicate mode as compared to only proxy.
-We found that while the proxy was generally slower than the direct connection, the slowdown ranged from 1-8\%, more importantly we found that when comparing the latencies in the duplication mode to our proxy mode, the overhead was negligible and in most cases was less that 2\%. 
+The second last column gives the overhead of proxy compared to direct communication, whereas the second gives the percentage difference between the duplicate mode as compared to proxy mode.
+We found that the proxy was generally slower than the direct connection, the slowdown ranged from 1-8\%, more importantly we found that when comparing the latencies in the duplication mode to our proxy mode, the overhead was negligible and in most cases was less that 2\%. 
 Accounting for some variance because of caching, we believe the overhead in a realistic system running with a debugging container will have negligible impact to a similar system running with only a proxy. 
 
 \begin{comment}

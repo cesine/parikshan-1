@@ -44,7 +44,7 @@ Negligible overhead of ColdPatching process of iProbe shows that applications ca
 %\end{table}
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \begin{center}
     \includegraphics[width=0.8\textwidth]{iprobe/Images/OverheadCold.eps}
     \caption{Overhead of iProbe ``ColdPatch Stage" on SPEC CPU 2006 Benchmarks.}
@@ -69,7 +69,7 @@ While iProbe executed in 1.5 seconds, the overhead observed in SystemTap is arou
 As explained in Section \ref{sec:trampoline}, tools such as DynInst use a trampoline mechanism, hence have a minimum of 2 call instructions for each instrumentation.
 Additionally SystemTap uses a context switch to switch to the kernel space over and above the traditional trampoline mechanism, resulting in the high overhead, and less scalability observed in our results.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \begin{center}
     \includegraphics[width=0.8\textwidth]{iprobe/Images/scalability.eps}
     \caption{Overhead and Scalability Comparison of iProbe HotPatching vs. SystemTap vs. DynInst using a Micro-benchmark.}

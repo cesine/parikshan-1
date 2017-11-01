@@ -2,14 +2,14 @@ Software debugging is the process of localizing, and finding root-cause of defec
 %In a world of increasingly complex and large scale distributed systems, such bugs can be very subtle and can have a compounded impact on the application.
 %Unfortunately, replicating production bugs in an offline environment continues to be a substantial challenge.
 In particular, production systems bugs can be the result of complex interactions between multiple system components and can cause faults either in the kernel, middleware or the application itself.
-Hence it is important, to be able to gain insight in the entire workflow of the system, both breadth-wise (across application tiers and network boundaries), and depth wise (across the execution stack from application to kernel).
+Hence it is important, to be able to gain insight into the entire workflow of the system, both breadth-wise (across application tiers and network boundaries), and depth wise (across the execution stack from application to kernel).
 
 In addition to the inherent complexity in debugging, it is also essential to have a short time to bug diagnosis to reduce the financial impact of any error.
 %Recent trends towards DevOps~\cite{devops}, and Agile~\cite{agile} software engineering paradigms further emphasize the need of having shorter debug cycles.
 Recent trends towards \emph{DevOps}, and agile software engineering paradigms further emphasize the need of having shorter debug cycles.
 \emph{DevOps} stresses on close coupling between software developers and operators, and to merge the operations of both.
-Similarly agile programming has shorter development cycles called \textit{sprints}, which focus on faster releases, and quick debugging.
-The need for shorter bug resolution cycle is also reflected in the frequency of releases in modern SOA services: Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day.
+Similarly, agile programming has shorter development cycles called \textit{sprints}, which focus on faster releases, and quick debugging.
+This trend is also reflected in the frequency of releases in modern SOA services, for instance Facebook mobile has 2 releases a day, and Flickr has 10 deployment cycles per day.
 
 
 Existing debugging mechanisms provide light-weight instrumentation which can track execution flow in the application by instrumenting important points in the application code.
@@ -19,17 +19,16 @@ Another body of work uses record-and-replay infrastructures, which record the ex
 These tools generate a high fidelity representative execution for offline bug diagnosis, at the cost of a relatively heavy overhead, which is generally not acceptable in user-facing production systems.
 
 
-Therefore, to meet the demands of a low-latency distributed computing environment of modern service oriented systems, it is important to have debugging tools which have \textit{minimal to negligible impact} on the application, and can provide a fast update to the operator to allow for \textit{shorter time to debug}.
+Therefore, to meet the demands of a low-latency distributed computing environment of modern service oriented systems, it is important to have debugging tools which have \textit{minimal to negligible impact} on the application and can provide a fast update to the operator to allow for \textit{shorter time to debug}.
 To this end, we introduce a new debugging paradigm called \livedebugging.
 There are two goals that any \livedebugging infrastructure must meet:
 Firstly, it must offer real-time insight for bug diagnosis and localization, which is paramount when errors happen in user-facing service-oriented applications. 
-Several modern day 24*7 applications have developers serving as operators who are available in \textit{shifts} at all times to tackle any problems that occur in the system.
-Having a shorter debug cycles and quicker patches is essential to ensure application quality, and reliability.
+%Several modern-day 24*7 applications have developers serving as operators who are available in \textit{shifts} at all times to tackle any problems that occur in the system.
+Having a shorter debug cycles and quicker patches is essential to ensure application quality and reliability.
 Secondly, \livedebugging should not impact user-facing performance for non bug triggering events.
-In large distributed applications, bugs which impact only a small percentage of users are common. 
-In such scenarios, debugging a small part of the application should not impact the entire system.
+Most bugs which impact only a small percentage of users. In such scenarios, debugging the application should not impact the entire system and other users who are not triggering the bug.
 
-With the above stated goals in mind, we have designed a framework called \parikshan\footnote{\parikshan is the \toolNameLang word for  testing}, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of \livedebugging. 
+With the above-stated goals in mind, we have designed a framework called \parikshan\footnote{\parikshan is the \toolNameLang word for  testing}, which leverages user-space containers (OpenVZ/ LXC) to launch application instances for the express purpose of debugging. 
 \parikshan is driven by a  live-cloning process, which generates a replica (\debugcontainer) of production services for debugging or testing, cloned from a \productioncontainer which provides the real output to the user.
 The \debugcontainer provides a sandbox environment, for safe execution of test-cases/debugging done by the users without any perturbation to the execution environment.
 As a part of this framework, we have designed customized-network proxy agents, which replicate inputs from clients to both the production and test-container, as well safely discard all outputs from the test-container.
@@ -78,7 +77,7 @@ We will use the buffer size and usage as a trigger and present novel sampling te
 
 Lastly, while \parikshan is a platform to quickly attack bugs, in itself it's a debugging platform. 
 For the last section of this dissertation we look at how various existing debugging techniques can be adapted to \livedebugging, making them more effective. 
-We first enumerate scenarios in which debugging can take place: \emph{post-facto} - turning livedebugging on after a bug has occured, \emph{proactive} - having debugging on before a bug has happened.
+We first enumerate scenarios in which debugging can take place: \emph{post-facto} - turning livedebugging on after a bug has occurred, \emph{proactive} - having debugging on before a bug has happened.
 We will then discuss how existing debugging tools and strategies can be applied in the \debugcontainer to be more efficient and effective. We will also discuss potential new ways that existing debugging mechanisms can be modified to fit in the \livedebugging domain.
 
 %We then introduce two new approaches: \activedebugging, which will allow developers to apply patches/fix or do testing in parallel to the production container, and \emph{budget-limited instrumentation} which will allow longer continuous debugging with a controlled overhead.
