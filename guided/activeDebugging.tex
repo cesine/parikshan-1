@@ -273,6 +273,7 @@ Admittedly, \textbf{non-determinism} can lead to different execution flows in th
 Hence simply replaying an execution trace in the \debugcontainer, may not lead to the same execution which triggers the bug.
 However several existing record-and-replay techniques offer search capabilities to replay and search through all possible concurrent schedules which could have triggered a non-deterministic error~\cite{dpor,best}.
 %We propose that the exact high granularity recording of the using the \debugcontainer for recording instead of the \productioncontainer is a viable alternative to traditional record-replay techniques.
+For instance PRES~\cite{pres} which uses a execution sketch of synchronization record points which are used to guide search in the replay phase and try different threading schedules. For doing search, feedback from previous replay executions is used to eliminate the threading schedules that have already been tried. 
 
 
 \subsubsection{CaseStudy: Staged Record-Replay}

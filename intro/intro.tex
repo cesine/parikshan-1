@@ -60,7 +60,7 @@ We believe by providing a means to observe the application when the bug is activ
 Lastly, our key insight is that for most service-oriented applications (SOA), a failure can be reproduced simply by replaying the network inputs passed on to the application.
 For these failures, capturing very low-level sources of non-determinism (e.g. thread scheduling or general system calls, often with high overhead) is unnecessary to successfully and automatically reproduce the buggy execution in a development environment. 
 We have evaluated this insight by studying 16 real-world bugs, which we were able to trigger by only duplicating and replaying network packets.
-Furthermore we categorized 217 bugs from three real-world applications, finding that most were similar in nature to the 16 that were reproduced, suggesting that our approach would be applicable to them as well.
+Furthermore we categorized 220 bugs from three real-world applications, finding that most were similar in nature to the 16 that were reproduced, suggesting that our approach would be applicable to them as well.
 \xxx{Please look at section so and so for further details regarding the above}
 
 %contributions
@@ -358,7 +358,7 @@ The rest of this thesis is organized as follows:
 	
 	\item Chapter~\ref{ch:NetworkReplaySurvey} we discuss case-studies involving 16 real-world bugs, from 5 well known service oriented application.
 	We show how network input replay is enough to capture most real-world bugs (concurrency, performance, semantic, resource leak, and mis-configuration).
-	In addition, to further help our claim, we did a survey of 217 real-world bugs which we manually classified and found were similar to the 16 bugs stated above.
+	In addition, to further help our claim, we did a survey of 220 real-world bugs which we manually classified and found were similar to the 16 bugs stated above.
 	
 	\item Chapter~\ref{ch:iprobe} introduces \iprobe a novel hybrid instrumentation technique. 	
 	We first begin with an explanation of \iprobe's design, which is split in a two phase process - ColdPatching and HotPatching. This is explained in stateful diagrams to show how the code is modified at different states in the binary.

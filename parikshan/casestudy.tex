@@ -21,7 +21,7 @@ In the rest of this chapter we discuss the bug-reproduction technique in each of
 
 \section{Applications Targeted}
 
-In our case-studies we have targeted the following applications: MySQL, Apache, Redis, Cassandra, HDFS. Apart from this we have also tried \parikshan on PetStore~\cite{petstore} a J2EE JBOSS~\cite{jboss} multi-tier application. We also did a survey of 217 real-world bugs, and found them similar to the bugs presented in this case study (more details regarding the survey can be found at section~\ref{sec:parikshanSurvey}).
+In our case-studies we have targeted the following applications: MySQL, Apache, Redis, Cassandra, HDFS. Apart from this we have also tried \parikshan on PetStore~\cite{petstore} a J2EE JBOSS~\cite{jboss} multi-tier application. We also did a survey of 220 real-world bugs, and found them similar to the bugs presented in this case study (more details regarding the survey can be found at section~\ref{sec:parikshanSurvey}).
 In this section we explain the applications that have been used in the bug case-studies.
 
 \subsection{MySQL}
@@ -126,10 +126,22 @@ We classify this as a semantic bug, which could have been fixed with an error ch
 		zinterstore out 9223372036854775807 zset zset2
 		\end{lstlisting}
 		
-		This tries to set the variable to the integer in the request, and leads to an integer overflow error. The integer overflow error is simultaneously triggered both in the production and the debug containers.
-	
+		This tries to set the variable to the integer in the request, and leads to an integer overflow error. The integer overflow error is simultaneously triggered both in the production and the debug containers. Since this is a crashing bug, both the production and debug containers crash once the bug is triggered. 
+					
 \end{enumerate}
 \end{adjustwidth}
+
+\noindent \textbf{How to debug with \parikshan}
+
+Debugging such a bug could be done by having recording or logging turned on for record and replay infrastructures in the debug container before the bug happened (or at all times). This debugging scenario is described further in Staged Record and Replay (see section~\ref{sec:activeStagedRecordReplay}). This would remove any instrumentation overhead from the production container, and the bug would be triggered both in the debug and production container leading to a crash. Replaying the recorded logs will significantly reduce the amount of time to fix this bug.\\ 
+
+\noindent \textbf{Advantage}
+
+The key advantage here is that the instrumentation overhead of record-and-replay can be avoided using staged recording.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Without \parikshan, the bug could be debugged using a record-replay on the production system itself, which would add overhead and impact user-experience (depends on instrumentation overhead). Alternatively, debuggers could find the root-cause by analyzing the integer overflow exception to find the root-cause of the bug, which along with trial and error could potentially help in fixing the error.
 
 
 \subsubsection{Redis \#487}
@@ -159,7 +171,20 @@ The bug impacts only clients who set keys, and then expire them.\\
 \end{adjustwidth}
 
 
-At the end it can be seen that the expired keys can be listed and accessed in both the production and debug container. This is a persistent error, which does not impact most other aspects of the service. The debug container can be used to look at the transactional logs, and have further instrumentation to understand the root cause of the error.
+At the end it can be seen that the expired keys can be listed and accessed in both the production and debug container. This is a persistent error, which does not impact most other aspects of the service. The debug container can be used to look at the transactional logs, and have further instrumentation to understand the root cause of the error.\\
+
+\noindent \textbf{How to debug with \parikshan}
+
+Redis \#487 can be debugged using \parikshan, by either using a proactive staged record and replay, where recording has already been turned on for the container . Alternatively, \parikshan can also be useful for a post-facto analysis of the bug (analyzing the bug in debug container after it has been triggered). Since the machine is still running but not crashed yet, a debugger could reason about the machine by running more flush/expire key queries (they do not need to be queries being sent by the user), and instrument and get the path of execution in the codebase. This can help quickly isolate the error. Since the running state has been "cloned", and the bug itself is persistent it gives a quick mechanism to debug the error.\\
+
+\noindent \textbf{Advantage}
+
+For proactive approach, \parikshan helps to avoid instrumentation overhead imposed by monitoring for a record-replay system. 
+On the other hand for post-facto approach, the main advantage of \parikshan is that it gives a quick debug environment which clones the original system state. \\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Under normal circumstances the user would have to re-create the application state in a test-environment where this bug could be re-created based on transaction logs (or better yet, a snapshot of the VM could be taken and re-started offline in a way similar to live cloning). The disadvantage would be that there would be valuable time lost in re-creating this environment, a feature automated in \parikshan.
 
 \subsubsection{Cassandra \#5225}
 
@@ -208,6 +233,19 @@ A problem was found with the index checking algorithm, whereby the order in whic
 
 \end{adjustwidth}
 
+\noindent \textbf{How to debug with \parikshan}
+
+This is a tricky bug to re-create as the bug is triggered by an edge condition when a large number of columns are inserted. The error can be ideally found by doing post-facto analysis of the live clone by first capturing incoming requests, and their responses in the debug container once the error has been reported. An initial understanding of the kind of requests which are failing, can lead to debuggers issuing their own requests, and tracing the execution through the application (using a debugger, or heavy instrumentation). This will help localize the bug.\\
+
+\noindent \textbf{Advantage}
+
+Similar to previous bugs, post-facto analysis can be easily done by re-creating the state of the machine and tracing incoming requests to see which kind of requests are failing. The debug container also provides a safe environment to debug (execute requests etc) to find execution traces and localize the problem.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Since this bug is dependent on the system state it's difficult to know what led to certain queries failing. 
+Alternative mechanisms would require taking a snapshot, and then running queries which were reported to have failed. 
+
 \subsubsection{Cassandra \#1837}
 
 In this subsection we describe the Cassandra \#1837 semantic bug \\
@@ -234,7 +272,30 @@ Thus querying for the data after the operation continues to shows content even a
 	\end{enumerate}
 \end{adjustwidth}
 
-Once again we have provide dockerized containers for Cassandra, as well as execution scripts for the client.
+Once again we have provide dockerized containers for Cassandra, as well as execution scripts for the client.\\
+
+\noindent \textbf{How to debug with \parikshan}
+
+Similar to previous semantic bugs, staged record-and-replay or a post-facto analysis can be used to find out the root-cause. One of the advantages of this bug is that once the system state is reached all future flush requests result in the same behavior. Hence, an execution trace on subsequent flush queries executed in the debug container can help in finding the root-cause (i.e. that the delete query has not properly marked the columns for deletion). \\
+
+\noindent \textbf{Advantage}
+
+Post-facto analysis can be easily done by re-creating the state of the machine and tracing incoming requests to see which kind of requests are failing. The debug container also provides a safe environment to debug (execute requests etc) to find execution traces and localize the problem.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Alternative mechanisms would require either a record-replay system, or taking a snapshot, and then running queries which were reported to have failed.
+
+\subsubsection{Summary}
+
+Broadly, the major advantage that \parikshan provides in most semantic bugs is two-fold: 
+
+\begin{itemize}
+	\item Firstly it provides a mechanism to do staged-record and replay thereby removing the overhead of a normal record-replay system from the production environment.
+	\item For post-facto analysis (starting the debug container after the bug was observed), it allows the debugger to observe incoming requests, dig deeper into the system state and run execution trace/ system debugger on suspect queries. This adhoc trial and error process may help in localizing the root cause much faster.
+\end{itemize}
+
+It can be argued that the advantage in some sense is limited in semantic bugs, as staged record-replay has a cost of an extra machine (as well as potentially re-cloning).\\
 
 \subsection{Performance Bugs}
 
@@ -286,6 +347,17 @@ As high availability partitioner didn't allow these caches for underlaying table
 	\end{enumerate}
 \end{adjustwidth}	
 
+\noindent \textbf{How to debug with \parikshan}
+
+While technically, this is a performance bug, MySQL bug \#26527 happens for an edge condition where a large amount of data is being uploaded to the database. This is an unusual query and the future queries in the system are unlikely to be impacted by this particular bug. Since only edge cases are impacted, \parikshan's main advantage would be in providing either a staged record-replay or a post-facto analysis of the system state, where the problem query can be re-run (given that the debugger has some idea of under what circumstances the slow-down was observed).\\  
+
+\noindent \textbf{Advantage}
+
+The major advantage in this scenario is that \parikshan can provide a safe debugging environment for performance profiling of queries or alternatively a staged record-replay with no instrumentation overhead on production.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Since the bug is quite difficult to re-create unless a record replay system has been running, this bug is likely to be debugged based on trial and error, and using user bug reports as the initial guide.
 
 \subsubsection{MySQL \#49491}
 
@@ -321,7 +393,17 @@ The impact of the binary-to-string conversion will become more visible with shor
 	\end{enumerate}
 \end{adjustwidth}	
 
+\noindent \textbf{How to debug with \parikshan}
 
+\parikshan is significantly helpful in debugging this bug. Since the bug is a persistent performance problem, \parikshan's debug container can be used to do performance profiling and to find which queries are problematic. A significant percentage of the incoming user-input could potentially be impacted by the hash computation, thereby impacting performance. Performance profiles at functional granularity in a post-facto analysis can significantly reduce the amount of effort spent in debugging this error.\\
+
+\noindent \textbf{Advantage}
+
+Post-facto analysis in such performance bugs which are persistent and impact a significant percentage of incoming queries are easily debugged using performance profiling.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Without \parikshan the debugger is limited to use bug reports to recreate the bug in an offline environment (this could be tricky). Alternatively performance profiling could be turned on in the production container to capture the root-cause which would impact application performance.\\
 
 \subsubsection{MySQL \#15811}
 \label{sec:mySQL15811}
@@ -358,7 +440,23 @@ This gives us the added advantage, of being able to profile and identify the fun
 		\item Now create a mysqldump of the table
 		\item Load this table back again, and observe a significant slow response for large table insert requests. This is magnified several times when using complex scripts
 	\end{enumerate}
-\end{adjustwidth}	
+\end{adjustwidth}
+
+\noindent \textbf{How to debug with \parikshan}
+
+This is a persistent stateless bug, similar to the bug shown earlier MySQL\#15811 and impacts a significant percentage of queries. Based on user bug reports it can be observed that only queries of complex character sets have a slowdown. In a post-facto analysis of the bug, execution traces (function level profiling) of mysql for incoming queries can help in localizing the error to the root-cause function.\\
+
+\noindent \textbf{Advantage}
+
+\parikshan provides a significant advantage in quickly resolving and finding the root-cause of the error by providing an easy and quick cloned debug environment where incoming queries can be observed. \\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Without \parikshan the debugger would have to record incoming queries and have instrumentation turned on in the production container adding an unnecessary overhead. Alternatively, the debugger would have to use a trial and error to recreate the problem in an offline debug environment based on user-bug reports.\\
+
+\subsubsection{Summary}
+
+In summary for performance bugs \parikshan can be immensely useful especially in the sub-categories of performance bugs which are persistent in nature (i.e. keep impacting future queries), and a significant percentage of the incoming queries are likely to be impacted. In this scenario, the debugger can look into the root-cause by doing function level profiling or execution tracing and find the root-cause. This will be a post-facto analysis, and will potentially be much faster than creating a debug environment where the bug is re-created.
 
 
 
@@ -401,8 +499,21 @@ Although the bug is visible in the verbose logs, it is difficult to pick out the
 		\item After the two sets, check the master \debugcontainer, you can observe the tremendous increase of memory usage - this shows the memory leak.
 		
 	\end{enumerate}
-\end{adjustwidth}	
+\end{adjustwidth}
 
+\noindent \textbf{How to debug with \parikshan}
+
+This is a two-node setup where we run the \productioncontainer with a slave for replication, and a memory profile of the system shows a memory leak. The bug happens in a particular state of the machine when the redis database has is doing replication. Given that we already have the state of the database where the bug is happening, in a post-facto analysis the resource leak can be observed in a memory profile and an execution trace can help localize the error. 
+
+\noindent \textbf{Advantage}
+
+One of the major advantages of \parikshan in this scenario is that it can replicate part of a two node cluster, without having to create a distributed test bed. Secondly since the bug is a slow memory leak, it will not lead to an immediate out-of-memory error. This allows the debugger to use \parikshan after the bug was triggered/reported, and find the root-cause using execution tracing or memory profiling of functions in the \debugcontainer. \\
+
+The overhead of memory profiling could potentially be high, but since the bug impacts most incoming requests, overflowing the debug window should not be a problem as long as we can capture some representative execution traces.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+In an alternative scenario, a debugger would have to create a distributed environment and use trial-and-error based on user bug reports to localize the error.\\
 
 \subsubsection{Redis \#614}
 
@@ -462,7 +573,21 @@ It appears the wrong number of RPOP operations are sent to the slave instance, r
 	\end{enumerate}
 \end{adjustwidth}
 
+\noindent \textbf{How to debug with \parikshan}
 
+Debugging this particular bug will require to create a clone of both the production and the debug container (simply cloning the production container may be enough as well), and looking at a growing memory profile in isolation. This bug is a slow growing memory leak that happens because of a bug in the blocking queue which is a part of the replication logic. Any update operations in the master container will lead to the bug being triggered and memory profile increasing in the master. Once the bug is reported the debugger can generate the cloned environment, and do execution tracing of incoming requests. This will help the debugger localize the issue in the function profile. \\
+
+\noindent \textbf{Advantage}
+
+The advantage in debugging this bug with \parikshan is that it provides the debugger a fast mechanism to localize the error.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Without \parikshan debuggers need to look up the bug reports, and try to recreate the error. This would be a trial and error mechanism, which could take considerably longer than localizing it with \parikshan.
+
+\subsubsection{Summary}
+
+Similar to performance bugs, \parikshan provides a significant advantage in resolving resource leaks especially slowly growing resource leaks. Debuggers can look at function level profile, and execution traces to localize the error. Furthermore, a debugger like gdb can be attached  to do a step by step execution to find the error interactively. 
 
 \subsection{Concurrency Bugs}
 One of the most subtle bugs in production systems are caused due to concurrency errors.
@@ -511,7 +636,7 @@ There is nothing to prevent memcopy operations in buffered log writers by differ
 	\end{enumerate}
 \end{adjustwidth}
 
-It should be noted that in this bug, it is not important that the same order should trigger this datarace condition. Simply the presence of a datarace(visible through log corruption) is enough to indicate the error, and can be a starting point for the debugger in the \debugcontainer. This is a bug that is persistent in the system and does not cause a crash.
+It should be noted that in this bug, it is not important that the same order should trigger this datarace condition. Simply the presence of a datarace(visible through log corruption) is enough to indicate the error, and can be a starting point for the debugger in the \debugcontainer. This is a bug that is persistent in the system and does not cause a crash.\\
 
 \subsubsection{Apache \#21287}
 
@@ -600,7 +725,8 @@ This leads to binlog showing that operations happen in a different order than ho
 		\item You will see detection log entry and the insert log entry is out of order in the binlog index.
 		
 	\end{enumerate}
-\end{adjustwidth}	
+\end{adjustwidth}
+
 
 
 \subsubsection{MySQL \#791}
@@ -628,8 +754,13 @@ This bug is caused by one thread's write-write access pair interleaved by anothe
 		If the bug is triggered you will observe that the insert is NOT recorded in mysql bin log.
 		
 	\end{enumerate}
-\end{adjustwidth}	
+\end{adjustwidth}
 
+
+\textbf{How to debug concurrency bugs with \parikshan}
+Concurrency bugs are non-deterministic in nature, hence \parikshan cannot guarantee that if a bug is observed in the production system it will be observed in the replica (or vice-versa). A way to overcome this is to use a staged record-replay mechanism (described in further detail in section~\ref{sec:activeStagedRecordReplay}). Once a bug has been reported the staged recording can be replayed and several third-party tools can be used to check through all possible thread interleavings in order to search for the bug. 
+
+``Search" through thread interleavings during replay phase to find the correct thread schedule which triggered the concurrency bug is a common technique used by existing replay tools. In one of our previous papers~\cite{best} we have used DPOR (dynamic partial order reduction) to search through possible interleavings in TCP communication syscall records. Please see section ~\ref{sec:activeStagedRecordReplay} for more details regarding staged record replay.
 
 \subsection{Configuration Bugs}
 Configuration errors are usually caused by wrongly configured parameters, i.e., they are not bugs in the application, but bugs in the input (configuration).
@@ -672,6 +803,18 @@ Once again, it can be easily observed in our debug-containers that the slave is 
 \end{adjustwidth}
 
 
+\noindent \textbf{How to debug with \parikshan}
+
+For the configuration error described above \parikshan can only be useful if used for staged record-replay before the bug is triggered on the production container. The main reason for this is that once the bug is itself triggered the connection to the slave is lost, and it's a fatal error - i.e. future progress may be halted.
+
+\noindent \textbf{Advantage}
+
+Using staged record-replay may assist in localizing the cause of the error, and at the same time there will be no overhead on the production service.
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Potentially, record-replay infrastructures could be used to catch the execution trace of the bug, and replay it offline. When replaying the error causing execution trace, the debugger can look into function level profiles and see where the crash is happening. Capturing execution traces will add an overhead on the production service which can be avoided via \parikshan.
+
 \subsubsection{HDFS \#1904}
 
 In this subsection we describe the HDFS \#1904 configuration bug \\
@@ -706,8 +849,20 @@ ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent 
 
 \end{adjustwidth}
 
+\noindent \textbf{How to debug with \parikshan}
+
+While \parikshan could be useful for this bug, however this configuration bug happens right at the startup for simple makefile/makedir commands, following up with a crash of the system. A staged record-replay on \parikshan can help to recreate the namenode and capture the error offline.\\
+
+\noindent \textbf{Alternative mechanisms without \parikshan}
+
+Simply getting the configuration and recreating the debug environment will easily allow the debugger to understand the bug.
+
+\subsubsection{Summary}
+
+\parikshan can be useful for configuration bugs depending on the nature of the bug. However, alternate mechanisms apart from \parikshan where the bug is simply triggered by re-using the same configuration file might also help localize the bug as well thereby reducing the advantage of livedebugging.
+
 %\section{Discussion}
-%\label{sec:parikshanNetworkSumDiscussion}
+%\label{sec:parikshanNetworkSumDiscussion} 
 
 \xxx{Network input }
 
@@ -724,7 +879,7 @@ ERROR namenode.SecondaryNameNode: java.lang.NullPointerException: Panic: parent 
 In chapter~\ref{ch:NetworkReplaySurvey} we demonstrated that network replay is enough to trigger real-world SOA bugs.
 We first presented 16 real-life bug cases from 5 different categories of bugs: \emph{Semantic, Performance, Resource Leaks, Concurrency, and Configuration Bugs}.
 These bugs spanned several well known open-source softwares. For each of these bugs, we presented it's symptoms and how they were re-created using parikshan's network duplication.
-Further we also presented a survey of 217 bugs from 3 well known applications, where we manually classify the bugs in these systems to the above given categories.
+Further we also presented a survey of 220 bugs from 3 well known applications, where we manually classify the bugs in these systems to the above given categories.
 The bugs discussed in this chapter are a representative of real world bugs for SOA applications.
 Based on the sample of bugs and a study of similar bugs found from well known SOA applications, we believe that network duplication is enough to capture most bugs, and trigger them in \parikshan's \debugcontainer.	
 A significant percentage of both semantic and most performance bugs are persistent in nature, which make them easier to debug in the \debugcontainer. 

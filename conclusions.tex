@@ -18,7 +18,7 @@ The following are the contributions made in this thesis:
 	
 	\item We have presented case-studies (see chapter~\ref{ch:NetworkReplaySurvey}) which demonstrate that \textbf{network input is enough to capture most bugs in service oriented applications}. We used a network duplication proxy, and re-created 16 real-world bugs from several well known service applications (Apache, MySQL, Redis, HDFS, and Cassandra). The purpose of this study was to show that if the network input was duplicated and sent to both the production service and it's replica(\debugcontainer), the bug will be triggered in both for most common bugs.
 	We chose bugs from the following categories: semantic, resource leak, concurrency, performance and mis-configuration. 
-	To show that these categories represent most of the bugs found in service systems, we did a survey of 217 bugs reported in three well known applications (MySQL, Apache, and Hadoop), and manually categorized the bugs we found. 
+	To show that these categories represent most of the bugs found in service systems, we did a survey of 220 bugs reported in three well known applications (MySQL, Apache, and Hadoop), and manually categorized the bugs we found. 
 	
 	\item We have presented a ~\textbf{novel hybrid instrumentation tool called \iprobe} (see chapter~\ref{ch:iprobe}), as part of our tool-set to enable debugging applications. 
 	Similar to existing techniques \iprobe allows run-time binary instrumentation of execution points (functions entry, exit etc.), with significantly less overhead.

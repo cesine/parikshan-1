@@ -49,6 +49,10 @@ Online program analysis is widely regarded as an effective technique to debug pr
 However, online program analysis is not efficient, especially when the analysis is performed at instruction granularity. 
 Many online program analysis techniques may even bring over a 10 times slowdown on commodity computer systems~\cite{Newsome05dynamictaint}.
 
+
+REPFRAME~\cite{repframe} is another tool which provides an efficient and transparent framework that decouples execution and analysis by constructing multiple equivalent executions. REPFRAME leverages a fault tolerant technique ( transparent state machine replication), which runs the same software on a set of machines or replica's, and ensures that all the replicas see the same sequence of input and process these inputs with the same efficient thread interleavings automatically. This is achieved by leveraging a technique called transparent state machine replication and deterministic multi-threading to ensure that the same execution is followed by the replicas. Unlike \parikshan, deterministic multi-threading in all replicas ensures that the same execution is done in all replica's and analysis can be parallelized (i.e. non-determinism is not an issue). However the core focus on REPFRAME is dynamic analysis of code execution as an offline process instead of an in-production system.
+
+
 \iffalse
 \subsection{Real-Time techniques:}
 \label{sec:relatedRealTime}
@@ -72,6 +76,7 @@ For example Sun et al.~\cite{Sun:2009:FLC:1581383.1582148} use copy-on-write mec
 Similarly, another approach ~\cite{gebhart2009dynamic} uses live-cloning to do cluster-expansion of systems.
 However, unlike \parikshan, both these approaches starts a VM with a new network identity and may require re-configuration of the duplicate node.
 
+Back-and-forth live migration~\cite{backforth}, which means a running VM migrates between two physical machines back and forth. Traditional methods treat each migration as a single event, so the VM releases its system resources on the source site after migration. However, many resources can be kept to mitigate the cost of the next migration back to the machine. \parikshan's process of live cloning from production to debug-container is similar to back and forth migration. The total migration time can be saved up to 99\% for some applications.
 
 \subsection{Monitoring and Analytics}
 

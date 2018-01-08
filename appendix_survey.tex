@@ -1,0 +1,742 @@
+\chapter{Survey of Real World Bugs}
+\label{sec:appendix_survey}
+
+In this appendix, we present details of MySQL and Apache bug list, with labels and further subcategorizations. This is a follow up of section~\ref{sec:parikshanSurvey}.
+
+\subsection{Apache Buglist and details}
+\label{sec:apachebugs}
+
+
+Table~\ref{tab:apachebugcategories} shows the apache table categories list. Apart from the categories mentioned earlier in section~\ref{sec:parikshanSurvey} the following further categories have been added here as a more detailed categories:
+
+\begin{itemize}
+	\item \textbf{Feature Request} These were bugs that were actually requests for new features or significant improvements in existing features.
+	
+	\item \textbf{Uncategorized} Bugs categorized as uncategorized were those that we were unable to categorize into any of our categories, mostly because the description was insufficient.
+	
+	\item \textbf{Skipped} These bugs were skipped, either at random or after a look at the short topic summarization.
+	
+	\item \textbf{Documentation} These bugs required further explanation in the documentation
+	
+	\item \textbf{Build Issue} These were more related to build issues
+	
+\end{itemize}
+
+\begin{table}[!h]
+\centering
+\caption{Details of bug categories for apache}
+\label{tab:apachebugcategories}
+\begin{tabular}{ll}
+\textbf{Category} & \textbf{Count} \\
+Semantic          & 37             \\
+Feature Request   & 14             \\
+Performance       & 3              \\
+Resource Leak     & 5              \\
+Concurrency       & 3              \\
+Startup/Config    & 7              \\
+Uncategorized     & 25             \\
+Skipped           & 70             \\
+Documentation     & 14             \\
+Build Issue       & 5              \\
+\textbf{Total}    & \textbf{183}  
+\end{tabular}
+\end{table}
+
+The following table~\ref{tab:apachebuglist} is the detailed list of apache bugs with the categorization and short summarization of each bug along with the bug ID. 
+
+
+\begin{longtable}[c]{llll}
+\caption{Apache Bug List}
+\label{tab:apachebuglist}\\
+Bug ID & Component          & Summary                                                                                                        & Category          \\
+\endfirsthead
+%
+\endhead
+%
+
+8117   & core               & Apache stops accepting requests                                                                                & Semantic          \\
+21975  & mod\_rewrite       & mod\_rewrite RewriteMap from external program gets "confused"                                                  & Concurrency       \\
+33398  & Other              & Need to be able to set "scheme" for SSL offloading                                                             & feature requests  \\
+37331  & Documentation      & FAQ update: bad hyperlinks                                                                                     & Skipped           \\
+33110  & Other              & ab is limited to SSL version 2                                                                                 & Skipped           \\
+42898  & Documentation      & RewriteRule Pattern  is applied to URL path not to URL                                                         & Skipped           \\
+35465  & core               & 10038 socket select failed                                                                                     & Skipped           \\
+36506  & Documentation      & Documentation for mod\_rewrite implies "RewriteOptions inherit" will also inherit "RewriteEngine On"           & Skipped           \\
+43233  & Documentation      & possible typos in some files under htdocs/manual/                                                              & Skipped           \\
+41815  & core               & Apache won't start if log file too big                                                                         & Startup/Config    \\
+39516  & mod\_include       & Nested Include directives fail, 1.3.35 new regression                                                          & Startup/Config    \\
+48091  & Documentation      & Search doesn't work                                                                                            & Semantic          \\
+46268  & mod\_rewrite       & Local back-reference in RewriteCond pattern does not work                                                 & Semantic          \\
+49484  & core               & Remove custom IE6+ workaround from config file                                                                 & feature requests  \\
+38177  & mod\_log\_forensic & apache-1.3.33/34: mod\_log\_forensic module use of assert() vs. ap\_assert() introduces \_\_eprintf() gcc-ism? & Skipped           \\
+33824  & core               & binding to an invalid ip address in Linux                                                                      & Startup/Config    \\
+46306  & core               & If-Modified-Since: and If-None-Match: incorrect result                                                         & Semantic          \\
+49701  & Documentation      & Link to 2.2 Documentation from 1.3 documentation do not work                                                   & Skipped           \\
+35194  & core               & LimitRequestBody is not considered, if a Action Handler is called                                              & Skipped           \\
+35296  & core               & PATCH: fix ap\_auth\_nonce().                                                                                  & Skipped           \\
+32635  & Documentation      & Incorrect expression & Skipped           \\
+39789  & Other              & ab does not handle 304 Not Modified correctly in a keep-alive connection                                       & Semantic          \\
+33466  & Documentation      & Error in french version of the docs for & Skipped           \\
+34114  & Documentation      & Apache could interleave log entries when writing to a pipe.                                                    & Concurrency       \\
+34181  & mod\_include       & Limitation(?): cannot allow CGI execs in current virtualhost only                                              & feature request   \\
+46132  & core               & Allow force-no-vary without forcing HTTP 1.0                                                                   & feature request   \\
+37185  & core               & AddIcon, AddIconByType for OpenDocument format                                                                 & feature request   \\
+15242  & mod\_cgi           & mod\_cgi prevents handling of OPTIONS request                                                                  & feature request   \\
+24460  & Other              & apache\_1.3.29-win32-x86-no\_src.exe fails to execute                                                          & Skipped           \\
+23850  & Auth/Access        & Allow from at times need /32                                                                                   & Semantic          \\
+12329  & Other mods         & mod\_so fails for 1.3.26 (works for 1.3.14): reports modules as garbled                                        & Startup           \\
+7195   & mod\_proxy         & mod\_proxy removes Set-cookie headers                                                                          & Semantic          \\
+9541   & Other              & httpd on Win XP transmit garbage if element size 32K                                               & Semantic          \\
+9790   & mod\_proxy         & Cookies set in Servlets through proxies                                                                        & Uncategorized     \\
+21737  & core               & cgi process defunct                                                                                            & Resource Leak     \\
+22186  & core               & Solaris kernel 108528-05 causes Apache to hang                                                                 & Uncategorized     \\
+10470  & mod\_proxy         & proxy module will not correctly serve mixed case file names                                                    & Semantic          \\
+12202  & core               & If-None-Match requests always return 304 with FileETag None directive                                          & Semantic          \\
+13120  & mod\_cgi           & CGI procs defunctioning                                                                                        & Uncategorized     \\
+10509  & core               & exploit                                                                                                        & Semantic          \\
+14453  & mod\_rewrite       & mod\_rewrite external programs disrupted by URLs with newlines in                                              & Semantic          \\
+10890  & Build              & if "et" locale is used, configure fails                                                                        & feature request   \\
+7572   & mod\_proxy         & mod\_proxy does not reset timer when reading from client                                                       & Performance       \\
+14518  & mod\_rewrite       & QUERY\_STRING parts not incorporated by mod\_rewrite                                                           & Uncategorized     \\
+39490  & core               & Wildcards (*) are ignored in Include directive since 1.3.35                                                    & Startup/Config    \\
+10073  & core               & upgrade from 1.3.24 to 1.3.26 breaks include directive                                                         & Startup/Config    \\
+10453  & Auth/Access        & Backward-compatible GET requests broken in 1.3.26                                                              & Semantic          \\
+9647   & mod\_proxy         & win 1.3.24 broke mod\_proxy when connecting to aspx page on IIS                                                & Uncategorized     \\
+13053  & Build              & build of apache fails regardless of building static or shared                                                  & Skipped           \\
+11668  & mod\_proxy         & mod proxy \& mod\_rewite generate a invalid http response                                                      & Performance       \\
+14887  & Build              & Empty Makefile when building (./configure)                                                                     & Build Issue       \\
+10240  & mod\_proxy         & mod\_proxy sending wrong answer for requests to cached partial content                                         & Semantic          \\
+9181   & mod\_headers       & Unable to set headers on non-2XX responses.                                                                    & feature request   \\
+7492   & mod\_rewrite       & Rewritemap mismerges paths (c:/ not recognized as rooted)                                                      & Uncategorized     \\
+9497   & mod\_proxy         & mod\_proxy does not maintain the request field (old bug \#6841) & Semantic\\
+27896  & core               & Access violation in Apache with long directory path                                                            & Uncategorized     \\
+31858  & Auth/Access        & regular expression matching broken on amd64                                                                    & Semantic          \\
+28880  & Documentation      & Backreference in RedirectMatch always inserts \$1 at the end of destination url                                & Semantic          \\
+10128  & mod\_proxy         & mod\_proxy, no-cache and 304                                                                                   & Semantic          \\
+31911  & mod\_rewrite       & RewriteRule problem in 1.3.32                                                                                  & Semantic          \\
+31344  & core               & mod\_rewrite PATH\_INFO issue in 1.3.31 - not in 1.3.29                                                        & Semantic          \\
+30627  & core               & possible bug in handling ALARM signals on Solaris 9                                                            & Concurrency       \\
+9365   & mod\_proxy         & Change in behaviour of ProxyPass and ProxyPassReverse                                                          & Semantic          \\
+28218  & core               & errors in regular expressions for LocationMatch cause silent failures                                          & Uncategorized     \\
+25036  & Documentation      & man pages for ab and apachectl say section number (1) not (8)                                                  & Documentation     \\
+10961  & core               & Redirect inside of Directory XYZ does not pass environment back to the browser            & Semantic          \\
+29517  & Documentation      & fix 'en-uk' to read 'en-gb'                                                                                    & Documentation     \\
+18337  & Documentation      & AddModule order important within apache configure file                                                         & feature request   \\
+8176   & core               & logic error in reclaim\_child\_processes function called during shutdown                                       & Resource Leak     \\
+37798  & mod\_mime          & Add quite popular CHM extension to mime.types                                                                  & feature request   \\
+17897  & core               & mod\_cgi broken on acl based file systems                                                                      & Uncategorized     \\
+13290  & mod\_cgi           & unknown extensions do not reset AddHandler matches                                                             & Documentation     \\
+29667  & mod\_proxy         & Proxy detects local URI as remote for vhosts not running on default port                                       & Uncategorized     \\
+10449  & Other              & suexec allows environment variables not in the safe list                                                       & feature request   \\
+28293  & Other              & Wrong filesize in directory listing                                                                            & feature request   \\
+9076   & Auth/Access        & 'satisfy any' without AuthType set causes 500                                                                  & Semantic          \\
+14600  & core               & Apache does not show or send files mounted from a NetWare server.                                              & Uncategorized     \\
+27811  & Documentation      & SSI tutorial has mystery reference to "last article"                                                           & Documentation     \\
+16661  & Other mods         & use of strstr() in spot\_cookie() mis-identifies cookies in other cookie names or cookie values                & Uncategorized     \\
+30920  & core               & Digest authentication via mod\_digest no longer works in 1.3.31.                                               & Uncategorized     \\
+8449   & Documentation      & SSI howto documentation bug: "ctime" should be "strftime"                                                      & Documentation     \\
+26079  & mod\_mime          & RealMedia files reported as RealAudio                                                                          & Semantic          \\
+10156  & Build              & Apache HTTPD 1.3 needs to learn about Caldera OpenUNIX 8                                                       & Startup/Config    \\
+26462  & mod\_rewrite       & RewriteMap urlmap txt of same age get confused between vhosts                                                  & Semantic          \\
+17564  & Other mods         & Somtimes mod\_negotiation fails  select right variant                                                          & Uncategorized     \\
+19512  & Auth/Access        & AllowOverride doesn't work in Location, but there's no error                              & Uncategorized     \\
+14629  & core               & Listen with IP address, no port, uses first octet as port                                                      & Uncategorized     \\
+9446   & Documentation      & Cosmetical fix of httpd.conf comments                                                                          & Documentation     \\
+30996  & Documentation      & Documentation for mod\_auth\_digest needs update (compatible browsers)                                         & Documentation     \\
+10092  & Build              & Windows Installer 2.0 not compatable with 1.3.26 msi                                                           & Build Issue       \\
+13351  & Other              & FancyIndexing-generated HTML-code not valid as HTML 4.01                                                       & Uncategorized     \\
+16435  & Documentation      & TRACE not working in Limit                                                                & Documentation     \\
+22276  & core               & segfault in new\_connection with unusual vhost config                                                          & Security/Semantic \\
+10096  & Documentation      & Module identifier for mod\_actions incorrect                                                                   & Uncategorized     \\
+16908  & Other mods         & mod\_mime\_magic incorrectly handles unrecognized files                                                        & Uncategorized     \\
+11988  & Documentation      & force-response-1.0 ingored if request uses HTTP/1.1                                                            & Documentation     \\
+14976  & mod\_proxy         & ProxyPass segfault on ftp:// urls                                                                              & Semantic          \\
+29577  & core               & 1.3.31 does no longer discard POST data on denied access                                                       & Semantic          \\
+28876  & Documentation      & RLimit directives are working in .htaccess file.                                                               & Documentation     \\
+32097  & Build              & Wrong compilation flags when build on not yet released FreeBSD 6.0                                             & Build Issue       \\
+8329   & Other mods         & mime\_magic gives 500 and no error\_log on Microsoft .ANI cursor files                                         & Uncategorized     \\
+10259  & core               & charset always being added to Content-Type on redirects                                                        & Uncategorized     \\
+14648  & mod\_rewrite       & mod\_rewrite does not proxy included requests                                                                  & Semantic          \\
+23871  & core               & ap\_SHA1 broken on 64-bit                                                                                      & Uncategorized     \\
+16937  & Auth/Access        & Broken(?) 401 response from Apache 1.3.27 when digest auth required                                            & Semantic          \\
+16013  & mod\_autoindex     & Fooling mod\_autoindex + IndexIgnore                                                                           & Semantic          \\
+22805  & core               & file descriptors are erroneously closed                                                                        & Resource Leak     \\
+15577  & Documentation      & bug in auth how-to perl code                                                                                   & Documentation     \\
+17720  & Other              & please add application/ogg mimetype                                                                            & feature request   \\
+7180   & Documentation      & Broken link in the documentation at mod/core.html                                                              & Documentation     \\
+21443  & Other mods         & compilation of mod\_auth\_db.c fails for Berkeley DB version 4                                                 & Build Issue       \\
+29313  & mod\_log\_forensic & mod\_log\_forensic cause segmentation faults                                                                   & Skipped           \\
+20127  & core               & PID file paths different on starting and stopping using apachectl                                              & Skipped           \\
+15011  & core               & Apache processes not timing out on Solaris 8                                                                   & Skipped           \\
+24165  & Other mods         & mod\_access docs SetEnvIf uses regex                                                                           & Semantic          \\
+18631  & mod\_proxy         & Empty header fix rolled out                                                                                    & Uncategorized     \\
+16984  & Build              & suexec.c error                                                                                                 & Build Issue       \\
+12617  & mod\_proxy         & Incorrect comparisons in support/rotatelogs.c                                                                  & Semantic          \\
+29403  & Documentation      & foo.fr.html, language \_en\_ -- should be fr                                                                   & Documentation     \\
+12072  & core               & Apache hangs when run with ssl-support on 64bit Linux for zSeries                                              & Uncategorized     \\
+8037   & Documentation      & documentation of Script directive does not define arguments well enough                                        & Documentation     \\
+18634  & mod\_proxy         & Expediate Pragma:no-cache rolled out                                                                           & Skipped           \\
+27266  & Documentation      & ErrorHeader headers being added to 200 code responses                                                          & Skipped           \\
+12386  & Documentation      & CustomLog: piping to gzip does not work as documented                                                          & Skipped           \\
+10561  & core               & Possible over-zealous protocol checking                                                                        & Skipped           \\
+7234   & Other mods         & RewriteMap broken                                                                                              & Skipped           \\
+7796   & Build              & Support XHTML media type (RFC 3236) in default install                                                         & Skipped           \\
+12074  & Build              & Compilation fails due to a \_Isinf not found                                                                   & Skipped           \\
+28491  & core               & Largefiles with Partial Content and Content-Range Header                                                       & Skipped           \\
+10186  & core               & HTTP-Version in request line is presumed case sensitive                                                        & Semantic          \\
+30877  & Auth/Access        & htpasswd clears passwd file on Sun when /var/tmp is full                                                       & Semantic          \\
+9889   & Other              & apache problem under OpenBSD 3.1 latest stable.                                                                & Skipped           \\
+23472  & core               & httpd.conf-dist has the wrong language code and MIME charset  for Korean                                       & Skipped           \\
+27501  & Documentation      & Incorrect credit and link for "Getting More out of Apache" tutorial                                            & Skipped           \\
+12395  & mod\_rewrite       & "RewriteEngine off" forbidden if "Options -FollowSymLinks"                                                     & Skipped           \\
+24821  & mod\_cgi           & memory handling very slow if cgi-script needs big chunk of memory.                                             & Resource Leak     \\
+12704  & Documentation      & Error in AcceptMutex description                                                                               & Skipped           \\
+13683  & Documentation      & Virtual host missing from RemoveType context                                                                   & Skipped           \\
+9424   & Documentation      & Typo in the Auth Howto                                                                                         & Skipped           \\
+12706  & Build              & test\_char.h doesn't get created on fast build machine                                                         & Skipped           \\
+10980  & Documentation      & Trivial documentation error (anchor)                                                                           & Skipped           \\
+16398  & Documentation      & Mozilla does support Digest auth now                                                                           & Skipped           \\
+9977   & Other              & suexec uses strerror(), which is not in SunOS4                                                                 & Skipped           \\
+22194  & core               & \*.conf directory confuses (and crashes) httpd.                                                                & Skipped           \\
+27812  & Documentation      & duplicate ssi.html.html shows up in search results                                                             & Skipped           \\
+12722  & Documentation      & Very minor issue with the description of the Run Time Config Cmd: Header                                       & Skipped           \\
+16795  & Documentation      & ErrorDocument does not work in Internet Explorer                                                               & Skipped           \\
+8889   & Documentation      & Broken links in http://httpd.apache.org/dev/apidoc/                                                            & Skipped           \\
+14442  & Documentation      & Satisfy example wrong                                                                                          & Skipped           \\
+12822  & Documentation      & documentation suggests insecure file permissions                                                               & Skipped           \\
+18628  & mod\_proxy         & Obsolete comment re-committed                                                                                  & Skipped           \\
+7422   & Build              & --with-layout=RedHat is not current                                                                            & Skipped           \\
+8927   & Documentation      & DefaultType defaults to "text/plain" not to "text/html" as per the documentation                               & Skipped           \\
+20763  & Documentation      & suggestion for docs                                                                                            & Skipped           \\
+17006  & Documentation      & original and rewritten URLs transposed                                                                         & Skipped           \\
+29409  & Documentation      & Include Wildcard added in 1.3.27                                                                               & Skipped           \\
+12966  & Documentation      & typo in FilesMatch syntax in french documentation                                                              & Skipped           \\
+10038  & Other              & ab benchmaker hangs on 10K https URLs with keepalive                                                           & Skipped           \\
+17866  & core               & Bogus: "cannot use a full URL in a 401 ErrorDocument directive" ?                                              & Semantic          \\
+7252   & Documentation      & Should fopen() in this example really be ap\_pfopen ()?                                                        & Skipped           \\
+22061  & Documentation      & About alias mapping the /                                                                                      & Skipped           \\
+9012   & Build              & apxs ignores IfDefined ... tags when placing LoadModule lines                             & Skipped           \\
+11626  & Documentation      & Bug report URL incorect                                                                                        & Skipped           \\
+26326  & Other              & Issue in the Redirect clause                                                                                   & feature request   \\
+27542  & mod\_proxy         & multiple-homed Web hosts - con refused to first IP doesn't fall through to second                              & Semantic          \\
+12712  & core               & {[}PATCH{]} Include conf.d/*.conf                                                                              & Uncategorized     \\
+25268  & Other              & video/vnd.mpegurl mxu m4u in mime.types and mime.types-dist                                                    & Skipped           \\
+24442  & core               & UseCanonical enhancement                                                                                       & Skipped           \\
+9648   & Documentation      & User CGI FAQ should mention suexec problem                                                                     & Skipped           \\
+32070  & Other              & RFE: add more bugzilla Platform options (AMD64, IA64)                                                          & Skipped           \\
+14358  & Other              & rotatelogs using TZ settings                                                                                   & Skipped           \\
+25772  & mod\_rewrite       & REMOTE\_PORT                                                                                                   & Skipped           \\
+27023  & mod\_proxy         & Cookie could not delivered if the cookie made before proxy module.                                             & Skipped           \\
+9537   & core               & Additional ServerTokens                                                                                        & Skipped           \\
+29640  & core               & Changes to apache core to allow sorted array elements                                                          & Skipped           \\
+23902  & core               & Add .dmg to application/octet-stream in mime.types                                                             & Skipped           \\
+31483  & mod\_mime          & add svgz in mime.types file                                                                                    & Skipped           \\
+22529  & Documentation      & RewriteRule problem when the URI is the same as the document root                                              & Skipped           \\
+12695  & Documentation      & FD\_SIZESET info as requested                                                                                  & Skipped           \\
+17462  & mod\_rewrite       & Prevent mod\_rewrite from deadlooping                                                                          & Performance       \\
+7628   & Other              & daemontools patch no longer applies cleanly to 1.3.24                                                          & Skipped           \\
+19339  & mod\_cgi           & stdin on CGI opened in text mode                                                                               & Skipped           \\
+35023  & mod\_rewrite       & mod\_rewrite memory leak                                                                                       & Resource Leak    
+\end{longtable}
+
+\subsection{MySQL Buglist and details}
+\label{sec:mysqlbugs}
+
+
+\begin{table}[]
+\centering
+\caption{Categories and count of mysql bugs}
+\label{tab:mysqlbugcategories}
+\begin{tabular}{ll}
+Category        & Count \\
+Semantic        & 73    \\
+Performance     & 10    \\
+Resource-Leak   & 6     \\
+Concurrency     & 7     \\
+Startup/Config  & 2     \\
+Fault Tolerance & 2     \\
+Replication     & 2    
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:mysqlbugcategories} shows the mysql table categories list. Apart from the categories mentioned earlier in section~\ref{sec:parikshanSurvey} the following further categories have been added here as a more detailed categories:
+
+\begin{itemize}
+		
+	\item \textbf{Fault Tolerance} Bugs in mysql cluster deployment related to fault tolerance
+	\item \textbf{Replication} Bug in mysql cluster deployment related to replication
+	
+\end{itemize}
+
+Below is a table~\ref{tab:mysqlbuglist} with a list of all the bugs and their categories, all bugs which have not been categorized were skipped at random or because they could not be categorized. 
+
+% Please add the following required packages to your document preamble:
+% \usepackage[normalem]{ulem}
+% \useunder{\uline}{\ul}{}
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+% Please add the following required packages to your document preamble:
+% \usepackage[normalem]{ulem}
+% \useunder{\uline}{\ul}{}
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{p{1cm}p{10cm}p{1cm}}
+\caption{MySQL buglist}
+\label{tab:mysqlbuglist}\\
+ID & Summary & Category \\
+\endfirsthead
+%
+\endhead
+%
+71156 & FTBFS: ft2build.h: No such file or directory & Build \\
+71155 & Unit test test\_promote is failing &  \\
+71154 & Can't see full Model Name in Workbench 6 Home &  \\
+71149 & Assertion `((Item\_result\_field*)item)-result\_field' fails in create\_tmp\_field & Semantic \\
+71148 & I believe this is nonsense &  \\
+71147 & Where is the list? &  \\
+71141 & Invisible schema list on dark GTK theme &  \\
+71131 & Poor error message in CallableStatement.java &  \\
+71129 & Binary data output from XML-RPC calls &  \\
+71128 & Command "mysqlfabric manage start" hangs on Windows &  \\
+71127 & Checkpoint routine can lead to deadlock &  \\
+71126 & Command "mysqlfabric" not recognized on Windows platform &  \\
+71125 & A server must belong to a single group &  \\
+71124 & callproc function with bytes parameters &  \\
+71121 & Postgres To MySQL migration failed &  \\
+71119 & Workbench crashes and quits after first application load &  \\
+71118 & MEM agent: do not report a missing master.info file if using TABLE replication &  \\
+71113 & Executable bit set for example config files &  \\
+71112 & Various test suite files have execute bit set but aren't executable &  \\
+71109 & Documentation for attributes as part of COM\_CHANGE\_USER is missing &  \\
+71106 & Label for cancel button is not displayed correctly &  \\
+71104 & error on database start activate crashing recovery. & startup \\
+71103 & Wrong syntax is used as example in the manual &  \\
+71102 & Unknown column 'no' in 'field list' in MySql.Data.Entity Migration column rename &  \\
+71097 & Wrong results for a simple query with GROUP BY & semantic \\
+71095 & Wrong results with PARTITION BY LIST COLUMNS() & semantic \\
+71094 & ssl.cmake related warnings &  \\
+71092 & InnoDB FTS introduced new mutex sync level in 5.6.15, broke UNIV\_SYNC\_DEBUG & concurrency \\
+71089 & CMake warning when generating Makefile &  \\
+71084 & Wrong java.sql.Date stored if client and server time zones differ & semantic \\
+71076 & st\_intersects works improperly & semantic \\
+71072 & Please, make sure Launchpad sources are updated before announcing release &  \\
+71071 & MySQL installer hangs on installati\_on (community editions) &  \\
+71070 & kill of truncate table will lead to binary log written while rows remains & semantic \\
+71054 & `HELP SHOW` still contains removed statements &  \\
+71050 & json\_extract returning same column twice if key names are not fully distinct. & semantic \\
+71047 & shutdown hang if semisync is enabled and slave abort & replication \\
+71045 & Wrong default value is displayed for "thread\_stack" option on 64-bit OS &  \\
+71038 & Add an option for custom collations detection & performance \\
+71037 & can not start mysql when no Previous\_gtids\_log\_event in the binlog &  \\
+71036 & Error on changing varchar(5000) to text &  \\
+71032 & !NULL and NOT NULL &  \\
+71029 & TRUNCATE command still active &  \\
+71028 & error result when "count + distinct + case when" need merge\_walk & semantic \\
+71025 & Docs for mysqldump's --single-transaction option are misleading in 5.5/5.6 &  \\
+71022 & mysqldbcompare fails check on same view on different schema name & semantic \\
+71017 & mysqldump creates useless metadata locks & semantic \\
+71015 & Typo in manual (mutxes- mutexes) &  \\
+71014 & two many times of memset decreate the performance under heavy insert & resource-leak \\
+71010 & sql/sql\_resolver.cc refers to partition engine fields when building without it &  \\
+71004 & Only ONE table from a database won't import & semantic \\
+71003 & Please refresh and remove events after closing them &  \\
+70993 & bad x on close on MySQL-workbench &  \\
+70991 & Manual seems to recommend IDEMPOTENT mode for all cases of master-master &  \\
+70983 & Assertion `0' fails on creating a temporary table via trigger & semantic \\
+70982 & Table created as INNODB, dropped, recreated as myISAM, subsequent select fails &  \\
+70978 & Can't drop multiple views &  \\
+70977 & MySQL Workbench crashes very very often when you try to rename index or fk & semantic \\
+70972 & Multiple Selection Bug &  \\
+70970 & Cursor goes to the end of table's comment field if it's already populated &  \\
+70969 & Shadow declaration of OperationNotSupportedException in RowDataDynamic &  \\
+70967 & Crashes on right click &  \\
+70965 & Togglable Sidebar/panels buttons wrongly selected at startup &  \\
+70954 & Fabric should use a better default TCP port &  \\
+70952 & MYSQLTEST MAN PAGE CONTAINS INTERNAL DIRECTORY NAME &  \\
+70946 & Driver Returns Wrong Length for Output Parameter Streams &  \\
+70942 & accounts table shows NULL users and hosts &  \\
+70941 & Invalid SQL query when eager loading two nested collections & semantic \\
+70939 & psi keys were incorrectly passed to function set\_psi\_keys &  \\
+70936 & innochecksum.exe cannot handle =4G files (and prints wrong error message) &  \\
+70934 & I typed "dbssc qc mysql56" and saw the following information &  \\
+70932 & MySQL Workbench Patches ( build fixes, removal of deprecated glib functions ) &  \\
+70930 & count distinct get error result & semantic \\
+70927 & Connector/J COM\_CHANGE\_USER handling is broken & semantic \\
+70925 & Importing tables with GUID to excel - exception & semantic \\
+70924 & Server object does not have a clean design to represent scaling out servers &  \\
+70922 & MySQL binlog error causing slave replication to exit & replication \\
+70920 & Mysql Workbench repeatdly crashes at startup &  \\
+70912 & Autocomplete won't go away sometimes &  \\
+70906 & when the mysql server is running, i start it again,the pid file will be deleted &  \\
+70904 & can't create a new view in the model &  \\
+70903 & Forward Engineer SQL Script disregards "Do Not Create Users" instruction &  \\
+70899 & unnecessary buf\_flush\_list() during recovery & performance \\
+70898 & Manual declares size in KB valid for innodb\_data\_file\_path, but it does not work &  \\
+70896 & MySQL Workbench does not export stored routines &  \\
+70888 & NullReferenceException when try to save entity with TINYINT or BIGINT as PK &  \\
+70885 & Mouse flickering between mouse pointer and "Text Cursor" &  \\
+70879 & Error Code: 1785 when executing simple UPDATE statement &  \\
+70878 & mysql-replication-listener compiler warnings patch &  \\
+70873 & No (online) documentation -- please always install "doclib" module. &  \\
+70872 & segmentation fault (crash) on adding new table to empty EER diagram &  \\
+70867 & Wrong OS error number reported in error log during failure at startup &  \\
+70866 & sql/rpl\_slave.cc &  \\
+70860 & --tc-heuristic-recover option values are broken &  \\
+70859 & -DWITH\_EXAMPLE\_STORAGE\_ENGINE=1 is ignored & semantic \\
+70855 & MySQL Workbench CE 6.0.7 crashes when launching &  \\
+70854 & Tc\_log\_page\_size should be unflushable or server crashes if 2 XA SEs installed & semantic \\
+70852 & Poor grammar in docs &  \\
+70848 & Reduce the work inside critical section in my\_fopen() and my\_register\_filename() & performance \\
+70841 & When picking colors in EER Diagram for layers and tables MySQL Workbench crashes &  \\
+70839 & JSON\_VALID allows to have two elements with the same key &  \\
+70836 & ALTER IGNORE TABLE behavior &  \\
+70835 & Incorrect SQLException subclass thrown for query interrupted & semantic \\
+70830 & Coverity analysis results and patches &  \\
+70828 & UNION syntax missing required parentheses &  \\
+70819 & SHOW ENGINE INNODB MUTEX does NOT work with timed\_mutex properly & semantic \\
+70817 & Inconsistent behaviour of NULL with binary strings &  \\
+70814 & /etc/init.d/mysql does not recognize pid-file under {[}mysqld\_safe{]} in my.cnf &  \\
+70810 & missing "event" permission in Users and Privileges manager &  \\
+70795 & Entity Framework migration with Foreign Key fails &  \\
+70789 & Wrong verb &  \\
+70784 & Adjust documentation and possibly defaults for sync\_\{master,relay\_log\}\_info &  \\
+70780 & Creating custom graphs documentation error in MySQL Enterprise Monitor 3.0 &  \\
+70776 & semi-sync may segfault when turned off &  \\
+70772 & Mysql workbench crashes when opening a connection &  \\
+70770 & Wrong/Obsolete product names on the MySQL Yum repository download page &  \\
+70768 & Persistent optimizer statistics often causes LOCK\_open stalls & concurrency \\
+70763 & declare handler demo should show warning &  \\
+70762 & Yum installation documentation uses incorrect product name/branding &  \\
+70759 & NDB API Example programs do not compile &  \\
+70757 & InnoDB Memcached leaks memory if innodb\_api\_enable\_binlog = 1 & resource-leak \\
+70753 & MySQLWorkBench crashes upon launch on Mac OS 10.8.4 &  \\
+70747 & All round buggy table "Inserts" &  \\
+70745 & Add authentication plugin info to mysqluserclone &  \\
+70744 & SHOW GRANTS should indicate a authentication plugin &  \\
+70743 & Instruction for pam authentication plugin should enable cleartext plugin &  \\
+70741 & InnoDB background stats thread is not properly documented &  \\
+70738 & PAM configuration for pam authentication plugin doesn't work &  \\
+70733 & Partition examples should include a primary key &  \\
+70729 & InnoDB Buffer Pool Usage screen text should be modified &  \\
+70728 & InnoDB Buffer Pool Usage Graph doc does not reflect actual behavior &  \\
+70727 & updating same row multiple times not working &  \\
+70722 & ' The method or operation is not implemented. ' when using LINQ with OrderBy. &  \\
+70711 & mysqlbinlog prints invalid SQL from relay logs when GTID is enabled & semantic \\
+70710 & The login-path option is missing from mysql(1) manpage &  \\
+70705 & Performance impact of row constructors is not properly documented &  \\
+70701 & DatabaseMetaData.getSQLKeywords() doesn't match MySQL 5.6 reserved words &  \\
+70696 & Restriction on FK parents being Unique key not documented &  \\
+70695 & MySQL Connections non visible but clickable &  \\
+70694 & MYSQLFABRIC IS NOT EXECUTABLE ON WINDOWS &  \\
+70693 & agent looking in the wrong place for the master details &  \\
+70691 & MEM3 agent seems to populate mysql.inventory.name with 'hostId' not 'hostid' &  \\
+70688 & ndbinfo\_offline variable undocumented &  \\
+70685 & incorrectly printed binlog dump information &  \\
+70683 & The description is wrong for --server-public-key-path=file\_name &  \\
+70682 & The description for --version-check in the summary table is wrong &  \\
+70672 & MySQL-devel package missing incluse/mysql/hash.h &  \\
+70671 & Wrong UI for ENUM type on Model  User defined types &  \\
+70669 & Slave can't continue replication after master's crash recovery & fault-tolerance \\
+70668 & Installation instructions for mono should mention dmcs &  \\
+70664 & mysql embedded mysql\_stmt\_execute return "malformed communication packet" error & semantic \\
+70662 & Memory leak using 5.2.6 ODBC connector & resource-leak \\
+70658 & Add description of options that control optimizer trace & \\
+70657 & SELECT DISTINCT...GROUP BY returns wrong results in some cases & semantic \\
+70648 & mysqldbcopy copy routines after view & semantic \\
+70647 & -DWITH\_DEBUG=1 has more effects than -DCMAKE\_BUILD\_TYPE=Debug &  \\
+70642 & Bad memory access when get out params. & semantic \\
+70641 & 5.6 partitions use much more memory than 5.1 & semantic \\
+70640 & --slave-skip-errors won't skip missing database/table &  \\
+70639 & THR\_LOCK\_mutex is used before being initialized &  \\
+70634 & 'make test' does not work &  \\
+70628 & Wrong instrumentation interface for mysql\_cond\_timedwait &  \\
+70622 & error result when use between...and againest bigint unsigned & semantic \\
+70616 & planet.mysql.com removing posts &  \\
+70614 & Documentation typo &  \\
+70608 & This query returns a row in 5.5 but not 5.6 or current 5.7 & semantic \\
+70602 & .Net connector does not add auto\_increment to bigint columns &  \\
+70601 & Dashboard: startup can be very slow, not clear when initialisation complete &  \\
+70600 & monitor shutdown does not give enough time to shutdown tomcat &  \\
+70596 & ProgrammingError: Character set 'utf8mb4' unsupported. &  \\
+70595 & MySQL Installer 1.3 can't download Server 5.1 &  \\
+70591 & Coverity analysis results and patches &  \\
+70590 & Installation of MySql for Visual Studio Failed &  \\
+70588 & Index merge used on partitionned table can return wrong result set & semantic \\
+70583 & INSERT ON DUPLICATE KEY UPDATE failing after MySQL 5.6 upgrade. &  \\
+70577 & Read/Write mutexes on Binlog delegate classes are not counted on perf schema &  \\
+70574 & JSON\_MERGE treats document without opening bracket as valid &  \\
+70573 & Typo in README for JSON\_MERGE &  \\
+70570 & JSON\_VALID allows \u two-hex-digit while standard allows only \u four-hex-digit &  \\
+70569 & JSON\_VALID allows mixed case in the keyword names &  \\
+70568 & JSON\_VALID treats invalid values as valid &  \\
+70567 & JSON\_VALID is too strict for some of objects &  \\
+70564 & future\_group\_master\_log\_pos not set properly &  \\
+70553 & EXPLAIN UPDATE shows "Using join buffer" while it is not used &  \\
+70552 & host\_cache\_size value is ignored &  \\
+70550 & Data mismatch between C NDB API and MySQL CLI. &  \\
+70547 & AccessViolationException when using GetSchema API &  \\
+70545 & Missing support for read-only transactions &  \\
+70542 & MySQL does not compile on OSX 10.9 GM &  \\
+70537 & No users created under MySQL system database for RPM based installation &  \\
+70536 & can't use LOGICAL\_CLOCK if gtid is enabled &  \\
+70530 & dashboard: Improve logging of failed login attempts &  \\
+70529 & executemany() INSERT INTO fails w/o VALUES (e.g. INSERT .. SELECT) & semantic \\
+70523 & logging of the MEM agent is very verbose and does not give functional info &  \\
+70519 & Workbench omitting new lines &  \\
+70518 & Null reference exception when drawing layer under tables &  \\
+70516 & Conditional include of sys/resource.h uses incorrect guard define &  \\
+70515 & Workbench cannot handle fractional timestamp &  \\
+70512 & Windows source installation fails in trying to use /etc &  \\
+70507 & MEM should treat a rebuilt MySQL server as a continuation of the previous one &  \\
+70506 & Routine Groups "expanded" variable not honoured &  \\
+70505 & clarify default 18085 port usage and bind locally if no remote access needed &  \\
+70504 & service\_manager user is configured with unnecessary access to bundled server &  \\
+70502 & Documentation on required MySQL grants is not very cleaer &  \\
+70494 & st\_distance() function not documented &  \\
+70488 & Eine externe Komponente hat eine Ausnahme ausgelst &  \\
+70486 & When using json\_replace(), '\}' of the end disappear. &  \\
+70483 & Server gets segmentation fault if compiled -O2 &  \\
+70482 & Trying to create a FK relationship using InnoDB tables the EER incorrectly adds & semantic \\
+70451 & Password Validation Plugin doesn't play nice with the GRANT and REVOKE commads &  \\
+70450 & Manual does NOT list all kinds of inefficient queries over FEDERATED tables &  \\
+70443 & mysql client program ignores my.ini settings &  \\
+70439 & SQL Result Set can no longer be edited (Invalid "read only" status) &  \\
+70438 & "Omit Schema Qualifier" option doesn't apply to GRANT statements &  \\
+70436 & Incorrect mapping of windows timezone to Olson timezone &  \\
+70430 & Race condition between purge coordinator and InnoDB monitor crash on shutdown &  \\
+70429 & list handling incorrect in mysql\_prune\_stmt\_list() & resource-leak \\
+70427 & when using multi-threaded slave, gtid\_executed does not report the latest transa &  \\
+70426 & mismatch between slave\_worker\_info and replication\_execute\_status\_by\_worker &  \\
+70423 & performance\_schema.replication\_execute\_status\_by\_worker wrong thread ID & semantic \\
+70422 & ODBC 5.2.5 dmg installer fails on OSX 10.8.5 &  \\
+70421 & MySQL Workbench Action Output doesn't auto scroll &  \\
+70420 & are these uses of BTR\_MODIFY\_TREE needed? &  \\
+70418 & "New" MSI installer - platform confusion &  \\
+70417 & rw\_lock\_x\_lock\_func\_nowait() calls os\_thread\_get\_curr\_id() mostly needlessly & concurrency \\
+70414 & redundant code in ReplSemiSyncMaster::updateSyncHeader &  \\
+70412 & Windows Installer: default configuration file error - innodb\_autoextend\_encremen &  \\
+70411 & Choosing "Copy Query for Matches" on "Search Table Data" result row causes crash &  \\
+70410 & DDL queries increases rpl\_semi\_sync\_master\_yes\_tx by a value of 2 &  \\
+70409 & MySqlSessionStateStore : exception "Duplicate entry" &  \\
+70408 & Mysql installer: convert to commercial license &  \\
+70403 & No useful error message when memcached fails to start due to lack of memory & resource-leak \\
+70402 & new deprecation warnings introduce unwanted performance degradation side-effect & performance \\
+70398 & MySQL Installer installs service with 'forward slashes' in registry &  \\
+70397 & SHOW ENGINE PERFORMANCE\_SCHEMA STATUS doesn't work in Workbench &  \\
+70393 & MySQL JSON UDFs: json\_extract only accepts string arguments &  \\
+70392 & MySQL JSON UDFs binary is called libmy\_json\_udf.so but DDL uses libmy\_json.so &  \\
+70391 & uninstall and install semi-sync plugin causes slaves to break &  \\
+70390 & have\_csv and have\_partitioning documentation is swapped &  \\
+70388 & Unable to change font in query result window &  \\
+70381 & Setting null in selection the various fields in grid data result. &  \\
+70377 & fields of type TIME(3) don't read milliseconds &  \\
+70369 & Undocummented behavior of InnoDB tables using CHAR data type &  \\
+70366 & Trigger editor reverts last changes when trigger editor tab looses focus &  \\
+70365 & Cannot save empty script in Workbench &  \\
+70360 & an independent instance with semisync enabled still need ack from slave & semantic \\
+70355 & External Component Has Thrown An Exception &  \\
+70351 & ALTER TABLE ADD CONSTRAINT xxx FOREIGN KEY adds two constraints & semantic \\
+70341 & Key lengths lead to incomplete result sets; unhinted scans prefer such indexes &  \\
+70339 & mysqlindexcheck not displaying best/worst report for tables with no data & semantic \\
+70338 & autocomplete popup window freezes on screen &  \\
+70333 & InnoDB Fulltext search doesn't find records when savepoints are involved &  \\
+70332 & Crash when failing to establish a database connection via SSH &  \\
+70330 & Typo in mysqlfrm manual entry &  \\
+70329 & excessive memory usage when querying INFORMATION\_SCHEMA.INNODB\_FT\_INDEX & semantic \\
+70327 & Assersion error when setting future binlog file/pos with semisync &  \\
+70325 & Query history not restored after restart of MySQL Workbench &  \\
+70324 & AttributeError: ÔstrŐ object has no attribute ÔdecodeŐ &  \\
+70323 & Workbench unhandled exception if audit.log file missing &  \\
+70313 & Missing delimiter ; after routine in Workbench forward engeneer &  \\
+70311 & fts: Duplicate FTS\_DOC\_ID value on table / Cannot find index FTS\_DOC\_ID\_INDEX in & concurrency \\
+70310 & "Forward Engineer - SQL Create Script" bug with privileges &  \\
+70309 & Crash on start &  \\
+70308 & RACE CONDITION CAN CAUSE MYSQLD TO REMOVE SOCKET FILE ERRANTLY &  \\
+70307 & Another deadlock on FLUSH TABLES WITH READ LOCK + SHOW SLAVE STATUS & concurrency \\
+70298 & {[}ERROR{]} InnoDB: Failed to set O\_DIRECT on file & semantic \\
+70290 & Exception Populated : Unknown system variable 'transaction' & semantic \\
+70284 & Workbench 6.0.7.1 Crashes after -- New Model -- Add New Diagram &  \\
+70282 & MySQL Notifier opens and gives an error message "High Severity Error" &  \\
+70281 & sql\_safe\_updates documentation needs improvement &  \\
+70279 & incomplete source archive &  \\
+70277 & last argument of LOAD DATA ... SET ... statement repeated twice in binlog &  \\
+70274 & Out-of-place stanza in docs &  \\
+70271 & weird errors with CHARSET=gbk &  \\
+70262 & Workbench 6 crashes down while starting up &  \\
+70260 & Table disappears when ALTERing with foreign key checks off & semantic \\
+70258 & Requirement for PROCESS privilege not documented &  \\
+70257 & Could not change a trigger name &  \\
+70246 & workbench synchronize and reverse engineer is not working &  \\
+70244 & "Error getting DDL for object" on alter table with triggers &  \\
+70241 & innodb\_metrics::INDEX\_MERGE defined but not set & semantic \\
+70236 & Use\_count: Wrong count for key at 0x27547278, 3 should be 4 &  \\
+70232 & "Search table data" function fails &  \\
+70229 & mysql workbench will not start &  \\
+70228 & Is buf\_LRU\_free\_page() really supposed to make non-zip block sticky at the end? &  \\
+70226 & FTS: InnoDB: Trying to TRUNCATE a missing index of table & semantic \\
+70221 & Scrolling up after execute &  \\
+70220 & Grouping with a view may report 'Invalid use of group function' &  \\
+70218 & Semisync master plugin with many slaves causes plugin\_lock mutex contentions & performance \\
+70217 & Internal program error (failed ndbrequire) caused a Data Node to Shutdown &  \\
+70216 & Unnecessary overhead from persistent adaptive hash index latches &  \\
+70214 & Record in index was not found on rollback, trying to insert & semantic \\
+70213 & INFORMATION\_SCHEMA.innodb\_metrics documentation incomplete &  \\
+70209 & Incorrect description of innodb\_max\_dirty\_pages\_pct\_lwm and innodb\_flushing\_avg &  \\
+70207 & internal doc is not clear &  \\
+70206 & internal doc error &  \\
+70201 & WB Hangs In Headless Mode If Opening Corrupt File &  \\
+70193 & Crashing when opening another model file when one is already open &  \\
+70191 & Paper size when printing &  \\
+70189 & Alter table on large table produces error invalid map/setT iterator &  \\
+70186 & MySql Workbench 6.0 home page missing on startup -- no Administer Server section &  \\
+70179 & Workbench 6.0 CE keeps crashing upon opening &  \\
+70178 & InnoDB FTS Information Schema plugins cannot be loaded when built as Shared Lib &  \\
+70174 & unhandled exception TreeNodeRef\_set\_int for client connections with large time &  \\
+70172 & trx\_create() and trx\_free() are called at every memcached get request & performance \\
+70170 & Database with dot "." in name gets split. &  \\
+70168 & MySQL Community Server 5.6 Installer for windows crash on 64 bits Win 7 Prof &  \\
+70167 & Impossible to disable MASTER\_AUTO\_POSITION with gtid\_mode=OFF &  \\
+70163 & Application freezes up to 10 seconds &  \\
+70159 & Debug Routine throw data too long for column 'pvarname' at row 1 error & semantic \\
+70158 & select error sqlstate -37000 --used powerbuilder12.5 and Mysql ODBC 5.2.4 &  \\
+70152 & mysql\_upgrade fails on a server with disabled InnoDB &  \\
+70150 & Incorrectly reports the active configuration file &  \\
+70140 & Reentrant call exception in Workbench when inserting new row &  \\
+70139 & Performance of "ALTER TABLE..." queries & performance \\
+70138 & New-line auto-indent &  \\
+70132 & Execution of SHOW and DESCRIBE statements doesn't affect "Queries per Second" &  \\
+70129 & ROW\_FORMAT=COMPACT issues &  \\
+70127 & mysql-workbench 5.2.47 Segfaults All Over The Place &  \\
+70125 & Timestamp and datetime with microseconds still not supported in MWB 6.0 &  \\
+70124 & Timestamp and datetimes self-incompatible during replication &  \\
+70123 & MySQL utilities not available for OS X &  \\
+70122 & Model looses typed data entry when switching tabs to query tool &  \\
+70119 & Mouse cursor flashes in SQL Editor &  \\
+70118 & ifconfig is deprecated in favor of iproute on modern Linux &  \\
+70117 & Syntax error in MySQL 5.5, 5.6, 5.7 Reference Manual &  \\
+70116 & Workbench SQL Additons pane blank/missing keywords &  \\
+70113 & Memory leak in SQLPrepare with queries that use parameters & resource-leak \\
+70107 & Workbench &  \\
+70103 & MySQL Connector Python 1.0.10 Download URL 404 &  \\
+70100 & Error in C\# example code &  \\
+70097 & "Duplicate" button in Manage Server Connections does not work &  \\
+70095 & export - Alter table - doesnt show up &  \\
+70089 & Error msg when check/uncheck Schema on "Selection Database Objects to Import" &  \\
+70087 & InnoDB can not use the doublewrite buffer properly & fault-tolerance \\
+70074 & mysql\_secure\_installation only works within \$HOME &  \\
+70072 & Copy paste fields from one table to another in modeling &  \\
+70071 & Contradicting statements about OS support for windows authentication plugin &  \\
+70070 & List of supported Windows OS'es not updated &  \\
+70066 & Can't Open Workbench 6.0.6 on OS X 10.8.4 after Upgrade from 5.2.47 &  \\
+70063 & create table is slower in 5.6 &  \\
+70062 & sql\_mode option file cannot set to null &  \\
+70059 & EER modelling - can't update Routine Groups &  \\
+70058 & Getting mysqld --help as root exits with 1 &  \\
+70057 & Option Fields are cut because of GUI problem &  \\
+70055 & Expiration time ignored &  \\
+70050 & Community MySQL utilities includes both commercial and GPL readme files &  \\
+70049 & Commercial Workbench download links to community utilities &  \\
+70046 & Typo: boostrap &  \\
+70041 & Cannot use Chinese character in the connection string for the database & semantic \\
+70040 & Cannot create database with Chinese characters & semantic \\
+70039 & Fix for bug \#20964 was a breaking change &  \\
+70038 & Wrong select count distinct with a field included in two-column unique key & semantic \\
+70035 & Save snapshot of open editors on close doesn't work &  \\
+70034 & version information mismatch in README-innodb\_memcached & semantic \\
+70033 & Wrong build information on innodb/memcached &  \\
+70031 & SQL File Names are not shown in WB on Mac &  \\
+70028 & P\_S threads.INSTRUMENTED not set according to setup\_actors &  \\
+70026 & Auto reconnect does not work with 5.6 libmysqlclient &  \\
+70025 & Update on P\_S setup\_consumers and threads through JOIN only updates first row &  \\
+70024 & MySQL Workbench 6.0.6 Setup crashes on Windows Server 2012 Standard x64 &  \\
+70022 & MySQL workbench loses connections list &  \\
+70021 & Poor execution of a plan with unnecessary "range checked for each record" & performance \\
+70018 & PFS Overhead on frequent connect/disconnect & performance \\
+70016 & Workbench crashes when right-clicking on a function &  \\
+70014 & MySQL crashes on explain with JSON formatting (debug builds) & semantic \\
+70009 & Can't install mysql 5.6 on Oracle Linux 6.4 &  \\
+70007 & Missing tables in InnoDB dictionary cause assertion and restart of MySQL & semantic \\
+70005 & MySQL 5.5.33 issue with section 14.4.4.3. Identifying the File Format in Use &  \\
+70004 & Workbench 6.0.6 freezes in Server Status Tab &  \\
+70003 & MySQL Admin 'Options Files' has duplicated items, new Defaults needs adjusts &  \\
+70001 & Partitioned tables do not use ICP - severe performance loss after partitioning & semantic \\
+69995 & Wrong bug\# in changelog item ... &  \\
+69993 & innodb tries to access tablespace that does not exist or is just being dropped &  \\
+69990 & CREATE\_TIME and UPDATE\_TIME are wrong for partitioned tables & semantic \\
+69989 & wrong DBUG\_ENTER string in THD::increment\_questions\_counter &  \\
+69982 & STATS\_SAMPLE\_PAGES clause is not documented in the manual &  \\
+69972 & INSERT Rows with Unmatched Value on LIST Partitionin Results in No Rows Inserted &  \\
+69969 & Failing assertion: prebuilt-trx-conc\_state == 1 from subselect & concurrency \\
+69965 & Add new table, right-click causes error &  \\
+69958 & "AUTO INCREMENT" is not a serial number. &  \\
+69957 & "AUTO\_INCREMENT" is not a serial number. &  \\
+69956 & Attaching a MySQL table in MS Access fails if the table has an umlaut in name & semantic \\
+69954 & 4-way deadlock: zombies, purging binlogs, show processlist, show binlogs & concurrency \\
+69950 & Visual Studio 2010 crashes when reading rows from any table in Server Explorer & semantic \\
+69943 & Transactions skipped on slave after "stop/start slave" using GTID replication & semantic \\
+69941 & Inaccurate doc in reference manual for SSL performance &  \\
+69938 & `Got temporary error 899 'Rowid already allocated' from NDBCLUSTER' & semantic \\
+69937 & Cannot delete index that belongs to foreign key when another index exists &  \\
+69934 & Cannot edit default schema privileges for test and test\_\% &  \\
+69933 & workbench crashes &  \\
+69932 & Fulltext search using words with apostrophe (') does not work on INNODB tables & semantic \\
+69928 & "statement/com" event meaning is unclear & semantic \\
+69922 & Unknown column Extent1... & semantic \\
+69919 & Surface Pro - Modeling diagrams crash system on open &  \\
+69918 & Please add 'bit depth' to version string &  \\
+69915 & statement/com/Query counter doesn't increment & semantic \\
+69913 & temporary-files.html ignores --slave-load-tmpdir &  \\
+69911 & MEM page for "Editing Built-in Rules" has incorrect image &  \\
+69908 & MyISAM FTS queries with LIMIT clause, but no WHERE clause, return too few rows & semantic \\
+69907 & Error(1030): Got error -1 from storage engine & semantic \\
+69903 & Stack corruption in vio\_io\_wait on Mac OS X & semantic \\
+69902 & slave asserts after 5.6 upgrade &  \\
+69900 & Workbench hangs when trying to open context menu for a column in the live edit &  \\
+69899 & GRANT fails to set empty password for existing user & semantic \\
+69898 & change\_master() invokes ha\_innobase::truncate() in a DML transaction &  \\
+69895 & mysql 5.6.13 i386 ships with 64bit libraries &  \\
+69894 & Is MySQL 5.1.71 released? &  \\
+69892 & innodb stats interferes with innodb force recovery and drop/create tables &  \\
+69884 & Test for bug: http://bugs.mysql.com/bug.php?id=69883 &  \\
+69882 & Cannot decrease auto\_increment value even when table is empty & semantic \\
+69878 & More foolish installer issues .. SIGH &  \\
+69876 & Unable to get the database encoded name in MySQL 5.6 &  \\
+69873 & Replication stop with "Error in Xid\_log\_event: Commit could not be completed" &  \\
+69865 & Wrong default MESSAGE\_TEXT values for SIGNALs are listed in the manual &  \\
+69864 & Need to add a lock to access connections member in ENV structure &  \\
+69861 & LAST\_INSERT\_ID is replicated incorrectly if replication filters are used & semantic \\
+69855 & Official way to build with Valgrind (documentation) &  \\
+69854 & Gmock download extraction issue &  \\
+69852 & cmake build instructions errors &  \\
+69850 & "Close other tabs" function does not close all tabs &  \\
+69848 & mysql 5.6 slave out of memory error ? &  \\
+69847 & btr\_cur\_optimistic\_update() incorrectly documented to allow thr == NULL arg &  \\
+69846 & ICP does not work on UNIQUE indexes &  \\
+69844 & Problem with scripts/mysql\_install\_db --user=mysql &  \\
+69841 & SELECT COUNT(DISTINCT a,b) incorrectly counts rows containing NULL & semantic \\
+69840 & SQL Query Duration Appears incorrect &  \\
+69833 & Bad interaction between MIN/MAX and "HAVING SUM(DISTINCT)": wrong results & semantic \\
+69832 & Replicated Servers - ConnectionString Breaking Change &  \\
+69830 & MySQL RPM no longer provides lower case tags &  \\
+69829 & When moving a table into a Layer the position of various tables reset to 0,0 &  \\
+69814 & Failure to issue queries (selects) multiple times using OpenJpa & semantic \\
+69811 & Unable to repair replication after Lost\_Events incident using GTID &  \\
+69808 & Error when opening ASP.NET Web configuration tool &  \\
+69807 & Host cache counter isn't reset on valid connection & semantic \\
+69805 & SQLWARNING handler does NOT take precedence over NOT FOUND one &  \\
+69802 & dict\_table\_schema\_check calls dtype\_sql\_name needlessly - wasting a lot of cpu & performance \\
+69793 & Dragging SQL Editor Tabs can cause strange behavior. &  \\
+69789 & Unable to download MySQL for Visual Studio using the installer &  \\
+69785 & WB sends unnecessary COM\_PING operations & semantic \\
+69783 & mysqldbcompare cannot use passwords that contain hyphens (-) &  \\
+69782 & Old files not being removed from performance\_schema.file\_instances &  \\
+69780 & Fix for bug 14606334 in 5.6.11 breaks backward compatibility for InnoDB recovery & semantic \\
+69779 & Export fails for Excel files containing  4000 characters of text per cell &  \\
+69777 & Setting maxAllowedPacket below 8203 makes blobSendChunkSize negative & semantic \\
+69776 & Long table and column comments are not handled properly &  \\
+69773 & Generate SSL certs documentation: unique Common Names required &  \\
+69770 & P\_S.HOSTS table shows NULL hosts for unauthenticated client connections &  \\
+69769 & Removing connection requires relaunch of WorkBench &  \\
+69767 & Windows Installer does not allow for custom path like in individual components &  \\
+69766 & InnoDB complains "There was a problem in converting partition in charset ... & semantic
+\end{longtable}

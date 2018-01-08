@@ -18,7 +18,7 @@ We seek to allow developers to diagnose and resolve bugs in production service-o
 Our key insight is that for most service-oriented systems, a failure can be reproduced simply by replaying the network inputs passed to the application.
 For these failures, capturing very low-level sources of non-determinism (e.g. thread scheduling or general system calls, often with very high overhead) is unnecessary to successfully and automatically reproduce the buggy execution in a development environment.
 We evaluated this insight by studying 16 real-world bugs (see Section~\ref{sec:parikshanCasestudy}), which we were able to trigger by only duplicating and replaying network packets.
-Furthermore, we categorized 217 bugs from three real world applications, finding that most of these were similar in nature to the 16 that we reproduced. 
+Furthermore, we categorized 220 bugs from three real world applications, finding that most of these were similar in nature to the 16 that we reproduced. 
 This suggests that our approach would be applicable to the bugs in our survey as well (see Section~\ref{sec:parikshanSurvey}).
 %TODO - look into PRES to see if we can prove that capturing all sources of non-determinism is not important
 

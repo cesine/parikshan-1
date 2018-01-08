@@ -17,7 +17,7 @@ All evaluations were performed on CentOS 6.5.
 %In Section~\ref{sec:performance}, we evaluate live cloning on real-world applications and workloads as well as a micro-benchmark to understand its performance in different scenarios.
 %In Section~\ref{sec:timewindowPerformance}, we first provide debug-window sizes for varying workloads run on a live production system. 
 %For a more systematic understanding of the debug-window size, we also provide simulation results to show the relationship of buffer overflow with buffer size, the incoming workload, and the instrumentation overhead.
-%Finally, in Section~\ref{sec:survey}, we present a survey of 217 real-world bugs, picked from three different applications.
+%Finally, in Section~\ref{sec:survey}, we present a survey of 220 real-world bugs, picked from three different applications.
 %\xxx{What is the environment we evaluated in? Hardware? Software? Why do we have both real and simulated data?}
 
 \subsection{Live Cloning Performance}
@@ -161,6 +161,33 @@ The internal mode is much faster than the external mode, as both the production 
 We believe, that for higher I/O operations, with a large amount of ``dirty-pages'', network bandwidth becomes a bottleneck: leading to longer suspend times.
 Overall in our experiments, the internal mode is able to manage write operation up to 10 Mbps, with a total suspend-time of approx 5 seconds.
 Whereas, the external mode is only able to manage up to 5-6 Mbps, for a 5 sec suspend time.\\ \\
+
+\subsubsection{State-of-the-art live migration techniques}
+
+The \emph{live-cloning} technique presented in this thesis is a prototype system to show a proof-of-concept implementation based on standard pre-copy live migration provided through the CRIU project~\cite{criulive}. Live Migration implementation depends on several factors apart from the algorithm implementation, this includes network-bandwidth, hardware support, file-systems etc. In this sub-section we discuss the performance of state-of-art techniques in both real-world services and the academia. This will give us an idea of the performance of live cloning when leveraging ideal hardware/softwares and network infrastructures.
+
+In particular among enterprise IAAS service providers Google Compute uses live migration for maintenance purposes, and provides it as a service to it's users in it's Google Compute Engine Platform. While it is difficult to find any detailed evaluation studies for these platforms, Google Platform Engineers have shown that blackout times (live migration suspend time) have steadily decreased and the median live migration blackout times is now approximately 0.2s (March 2016)~\cite{googleblog}. Since \parikshan focuses on SOA applications, we also looked into empirical evidence of live migration performance on real-world workloads - RightScale a cloud management platform company tested GCE to see what performance users can expect, and if live migration downgrades user-experience for SOA applications. The setup included 2 load balancers, 10 php webservers, and a master/slave pair of mysql. Google engineers were asked to do live migration while a real-world workload was simulated on this setup. As per application logs there was no discernable impact of live migration on the http requests~\cite{googleanectodal}. As per description from the blog the only way that the authors came to know about the migration was because Google informed them that the machines were migrated twice.
+
+\begin{figure*}
+\includegraphics[width=\textwidth]{figs/googleComputeImprovement} 
+\caption{Reduction in median brownout times in Google Compute Platforms based on recent improvements till March 2013}
+\label{GoogleComputeImprovement}
+\end{figure*}
+
+
+Apart from Google Compute, RedHat Enterprise Services also offer zero-downtime seamless live migration as a service in user-space containers. A youtube demo video demonstrates CRIU being leveraged to seamlessly transfer a container with a video being streamed~\cite{criulive}, with no impact on the streaming service. RHEL plans to introduce this live migration as a service to the next docker engine.
+Open source IAAS solutions such as OpenStack~\cite{openstack} (which offers a multitude of compute hosting alternatives (Xen, KVM, LXC)) also offers live migration depending on the compute service. Additionally LXD, and OpenVZ (we have used OpenVZ) which are user-space container services are also introducing live migration as an option. 
+Video streaming, and gaming which are low latency applications are often considered as the gold-standard for live migration, and based on several youtube videos current state-of-art live migration demos support both uninterrupted user-experience when live migration is going on in the background. 
+%Overall this suggests that state-of-art techniques in live migration are already robust enough to support very low downtime and no impact on user-experience, and this is likely to get better with future research.
+Studies have shown that live migration actual downtime may vary considerably between applications, ranging from as low as 60 ms when migrating a Quake game server~\cite{quakeGame} to up to 3 seconds in case of particular HPC benchmarks. 
+While streaming and game services show that live migration can provide seamless low-latency live migration, we could not find production level data for real-world deployments showing live migration capability at stressed out workloads (the blog from RightScale earlier could be considered an instance of a real-world workload with live migration, and the same for Google Compute's overall down-time statistics).
+
+A relatively older 2009 study~\cite{slacost} on the cost of virtual machine live migration on SLA guarantees of cloud services (web 2.0 services) has shown that in most cases service availability and responsiveness during live migration is acceptable where it is governed by strict SLA guarantees. The results showed that in an instance of a nearly oversubscribed system (serving concurrently 600 users) despite a downtime of nearly 3 seconds the SLA guarantee for the 90\% percentile was met and there was not disruption of service. While a more stringent 99\% percentile SLA can still be met when the workload is slightly less (500 concurrent users).
+ A more recent piece of work~\cite{backforth} shows that significant optimization (upto 98\%) can be done in the performance of live migration for back-and-forth live migration. This is a common use-case when live migration is used for fault tolerance to turn over to a backup system. 
+
+%Previous academic work has clearly demonstrated that there is a correlation between the number of dirty pages and the live migration time, which can impact more stricter SLA guarantees.
+
+
 
 \begin{tcolorbox}[breakable, enhanced]
 	To answer \textbf{RQ1}, live cloning introduces a short suspend time in the production container dependent on the workload. 
