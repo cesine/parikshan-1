@@ -1,8 +1,8 @@
 all:
-	pdflatex main 
+	pdflatex main >/dev/null
 	bibtex main 
 	pdflatex main > /dev/null
-	pdflatex main > /dev/null
+	pdflatex main 
 
 html:
 	latex2html main
