@@ -13,7 +13,8 @@ As we presented in the previous section, the instrumentation procedure consists 
 We implemented this by compiling binaries using the \texttt{-finstrument-functions} flag. 
 Note that this can be done simply by appending this flag to the list of compiler flags (e.g., \texttt{CFLAG, CCFLAG, CXXFLAGS}) and most of cases it works without interfering with user code. 
 
-In details this compiler option places function calls to instrumentation functions (\texttt{\_cyg\_profile\_func\_enter} and \texttt{\_cyg\_profile\_func\_exit})  after the entry and before the exit of every function. 
+%In details this compiler option places function calls to instrumentation functions (\texttt{\_cyg\_profile\_func\_enter} and \texttt{\_cyg\_profile\_func\_exit})  after the entry and before the exit of every function.
+In details this compiler option places function calls to instrumentation functions after the entry and before the exit of every function.
 This includes inline functions (see second state in Figure \ref{fig:state_rep}). 
 Subsequently, our ColdPatcher uses a binary parser to read through all the target binaries, and search and replace the instruction offsets containing the instrumentation calls with NOP instructions (instruction 90). 
 Symbolic and debug information is read from the target binary using commonly available \texttt{objdmp} tools; 

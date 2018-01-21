@@ -45,10 +45,10 @@ Build Issue       & 5              \\
 The following table~\ref{tab:apachebuglist} is the detailed list of apache bugs with the categorization and short summarization of each bug along with the bug ID. 
 
 
-\begin{longtable}[c]{llll}
+\begin{longtable}[c]{p{1cm}p{3cm}p{6cm}p{4cm}}
 \caption{Apache Bug List}
 \label{tab:apachebuglist}\\
-Bug ID & Component          & Summary                                                                                                        & Category          \\
+Bug ID & Component & Summary & Category          \\
 \endfirsthead
 %
 \endhead
@@ -61,14 +61,14 @@ Bug ID & Component          & Summary                                           
 33110  & Other              & ab is limited to SSL version 2                                                                                 & Skipped           \\
 42898  & Documentation      & RewriteRule Pattern  is applied to URL path not to URL                                                         & Skipped           \\
 35465  & core               & 10038 socket select failed                                                                                     & Skipped           \\
-36506  & Documentation      & Documentation for mod\_rewrite implies ``RewriteOptions inherit" will also inherit ``RewriteEngine On"           & Skipped           \\
+36506  & Documentation      & Documentation ``RewriteOptions inherit" will also inherit ``RewriteEngine On"   & Skipped           \\
 43233  & Documentation      & possible typos in some files under htdocs/manual/                                                              & Skipped           \\
 41815  & core               & Apache won't start if log file too big                                                                         & Startup/Config    \\
 39516  & mod\_include       & Nested Include directives fail, 1.3.35 new regression                                                          & Startup/Config    \\
 48091  & Documentation      & Search doesn't work                                                                                            & Semantic          \\
 46268  & mod\_rewrite       & Local back-reference in RewriteCond pattern does not work                                                 & Semantic          \\
 49484  & core               & Remove custom IE6+ workaround from config file                                                                 & feature requests  \\
-38177  & mod\_log\_forensic & apache-1.3.33/34: mod\_log\_forensic module use of assert() vs. ap\_assert() introduces \_\_eprintf() gcc-ism? & Skipped           \\
+38177  & mod\_log\_forensic & module use of assert() vs. ap\_assert() introduces \_\_eprintf() gcc-ism? & Skipped           \\
 33824  & core               & binding to an invalid ip address in Linux                                                                      & Startup/Config    \\
 46306  & core               & If-Modified-Since: and If-None-Match: incorrect result                                                         & Semantic          \\
 49701  & Documentation      & Link to 2.2 Documentation from 1.3 documentation do not work                                                   & Skipped           \\
@@ -132,7 +132,7 @@ Bug ID & Component          & Summary                                           
 9076   & Auth/Access        & 'satisfy any' without AuthType set causes 500                                                                  & Semantic          \\
 14600  & core               & Apache does not show or send files mounted from a NetWare server.                                              & Uncategorized     \\
 27811  & Documentation      & SSI tutorial has mystery reference to ``last article"                                                           & Documentation     \\
-16661  & Other mods         & use of strstr() in spot\_cookie() mis-identifies cookies in other cookie names or cookie values                & Uncategorized     \\
+16661  & Other mods         & use of strstr() in spot\_cookie() mis-identifies cookies                 & Uncategorized     \\
 30920  & core               & Digest authentication via mod\_digest no longer works in 1.3.31.                                               & Uncategorized     \\
 8449   & Documentation      & SSI howto documentation bug: ``ctime" should be ``strftime"                                                      & Documentation     \\
 26079  & mod\_mime          & RealMedia files reported as RealAudio                                                                          & Semantic          \\
@@ -280,7 +280,7 @@ Below is a table~\ref{tab:mysqlbuglist} with a list of all the bugs and their ca
 % \useunder{\uline}{\ul}{}
 % \usepackage{longtable}
 % Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
-\begin{longtable}[c]{p{1cm}p{10cm}p{1cm}}
+\begin{longtable}[c]{p{1cm}p{8cm}p{3cm}}
 \caption{MySQL buglist}
 \label{tab:mysqlbuglist}\\
 ID & Summary & Category \\
@@ -291,7 +291,7 @@ ID & Summary & Category \\
 71156 & FTBFS: ft2build.h: No such file or directory & Build \\
 71155 & Unit test test\_promote is failing &  \\
 71154 & Can't see full Model Name in Workbench 6 Home &  \\
-71149 & Assertion `((Item\_result\_field*)item)-result\_field' fails in create\_tmp\_field & Semantic \\
+71149 & Assertion fails in create\_tmp\_field & Semantic \\
 71148 & I believe this is nonsense &  \\
 71147 & Where is the list? &  \\
 71141 & Invisible schema list on dark GTK theme &  \\
@@ -399,7 +399,7 @@ ID & Summary & Category \\
 70810 & missing ``event" permission in Users and Privileges manager &  \\
 70795 & Entity Framework migration with Foreign Key fails &  \\
 70789 & Wrong verb &  \\
-70784 & Adjust documentation and possibly defaults for sync\_\{master,relay\_log\}\_info &  \\
+70784 & Adjust documentation and possibly defaults for sync info &  \\
 70780 & Creating custom graphs documentation error in MySQL Enterprise Monitor 3.0 &  \\
 70776 & semi-sync may segfault when turned off &  \\
 70772 & Mysql workbench crashes when opening a connection &  \\
@@ -506,7 +506,7 @@ ID & Summary & Category \\
 70430 & Race condition between purge coordinator and InnoDB monitor crash on shutdown &  \\
 70429 & list handling incorrect in mysql\_prune\_stmt\_list() & resource-leak \\
 70427 & when using multi-threaded slave, gtid\_executed does not report the latest transa &  \\
-70426 & mismatch between slave\_worker\_info and replication\_execute\_status\_by\_worker &  \\
+70426 & mismatch between slave\_worker\_info and replication &  \\
 70423 & performance\_schema.replication\_execute\_status\_by\_worker wrong thread ID & semantic \\
 70422 & ODBC 5.2.5 dmg installer fails on OSX 10.8.5 &  \\
 70421 & MySQL Workbench Action Output doesn't auto scroll &  \\
@@ -697,7 +697,7 @@ ID & Summary & Category \\
 69895 & mysql 5.6.13 i386 ships with 64bit libraries &  \\
 69894 & Is MySQL 5.1.71 released? &  \\
 69892 & innodb stats interferes with innodb force recovery and drop/create tables &  \\
-69884 & Test for bug: http://bugs.mysql.com/bug.php?id=69883 &  \\
+69884 & Test for bug 69883 &  \\
 69882 & Cannot decrease auto\_increment value even when table is empty & semantic \\
 69878 & More foolish installer issues .. SIGH &  \\
 69876 & Unable to get the database encoded name in MySQL 5.6 &  \\
